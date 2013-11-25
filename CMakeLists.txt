@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(utils_path)
 
-find_package(catkin REQUIRED COMPONENTS utils_general)
+find_package(catkin REQUIRED COMPONENTS utils_general utils_generic)
 
 find_package(Boost COMPONENTS program_options system filesystem thread REQUIRED)
 catkin_package(
     INCLUDE_DIRS ..
-    LIBRARIES LibPath
+    LIBRARIES utils_path
+    CATKIN_DEPENDS utils_generic utils_general
 )
 
 find_package(Eigen REQUIRED)
@@ -15,7 +16,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_library(LibPath  ReedsShepp/CurveGenerator.cpp
+add_library(utils_path  ReedsShepp/CurveGenerator.cpp
     ReedsShepp/Curve.cpp
     ReedsShepp/CurveSegment.cpp
     ReedsShepp/CircleSegment.cpp
@@ -51,7 +52,7 @@ add_library(LibPath  ReedsShepp/CurveGenerator.cpp
     sampling/SamplingPlanner.cpp
 )
 
-target_link_libraries(LibPath LibUtil)
+target_link_libraries(utils_path ${catkin_LIBRARIES})
 
 #target_link_libraries(ReedsShepp    LibUtil)
 
@@ -68,8 +69,8 @@ else(NOT OpenCV_FOUND)
                              ReedsShepp/CostPrecomputation.cpp
                              ReedsShepp/CurveRenderer.cpp)
     target_link_libraries (CostPrecomputation
-        LibUtil
-        LibPath
+        utils_path
+        ${catkin_LIBRARIES}
         ${OpenCV_LIBS}
         ${Boost_LIBRARIES}
     )
@@ -79,8 +80,8 @@ else(NOT OpenCV_FOUND)
                              ReedsShepp/CurveTest.cpp
                              ReedsShepp/CurveRenderer.cpp)
     target_link_libraries (ReedsSheppCurveTest
-        LibUtil
-        LibPath
+        utils_path
+        ${catkin_LIBRARIES}
         ${OpenCV_LIBS}
     )
     add_executable (Path4wsSimulator
@@ -88,15 +89,15 @@ else(NOT OpenCV_FOUND)
                              common/path4ws_sim.cpp
     )
     target_link_libraries (Path4wsSimulator
-        LibUtil
-        LibPath
+        utils_path
+        ${catkin_LIBRARIES}
         ${OpenCV_LIBS}
     )
     add_executable (Evaluator
                              evaluation/evaluator.cpp)
     target_link_libraries (Evaluator
-        LibUtil
-        LibPath
+        utils_path
+        ${catkin_LIBRARIES}
         yaml-cpp
         ${Boost_LIBRARIES}
         ${OpenCV_LIBS})

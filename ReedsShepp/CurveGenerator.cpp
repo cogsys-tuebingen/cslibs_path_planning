@@ -58,6 +58,11 @@ void CurveGenerator::set_trace(int value)
     m_trace = value;
 }
 
+void CurveGenerator::set_max_curve_arc(double arc)
+{
+    m_max_curve_arc = arc;
+}
+
 void CurveGenerator::set_use_map_cost(bool arg)
 {
     m_use_map_cost = arg;
@@ -177,7 +182,7 @@ Curve* CurveGenerator::find_path(const Pose2d& start, const Pose2d& goal, const 
     assert(!m_curves.empty());
 
     Curve* best_curve = NULL;
-    double best_weight = INFINITY;
+    double best_weight = NOT_FREE;
 
     for(std::vector<Curve>::iterator c = m_curves.begin(); c != m_curves.end(); ++c) {
         c->m_start = start;
@@ -201,12 +206,18 @@ Curve* CurveGenerator::find_path(const Pose2d& start, const Pose2d& goal, const 
         double weight = c->check_if_admissible();
 
         if(weight < best_weight) {
-            best_curve = &*c;
-            best_weight = weight;
+            std::cout << "span: " << c->curve_arc() << std::endl;
+            double curve_arc = c->curve_arc();
+            if(curve_arc < m_max_curve_arc) {
+                best_curve = &*c;
+                best_weight = weight;
+            }
         }
     }
 
-    assert(best_curve != NULL);
+    if(best_curve == NULL) {
+        return NULL;
+    }
 
     return new Curve(*best_curve);
 }

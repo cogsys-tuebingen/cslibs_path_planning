@@ -10,6 +10,8 @@ catkin_package(
     CATKIN_DEPENDS utils_generic utils_general
 )
 
+set(CMAKE_BUILD_TYPE Release)
+
 find_package(Eigen REQUIRED)
 include_directories(
   ${EIGEN_INCLUDE_DIR}

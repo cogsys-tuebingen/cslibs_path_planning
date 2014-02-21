@@ -686,9 +686,9 @@ int main(int argc, char* argv[])
 //        typedef search_algorithms::AStarTaxi Search;
     //    typedef search_algorithms::Dijkstra4d Search;
     //    typedef search_algorithms::AStarMax Search;
-    typedef search_algorithms::DTA Search;
+ //   typedef search_algorithms::DTA Search;
 //        typedef search_algorithms::AStarNHHH Search;
-    //    typedef search_algorithms::AStarNH Search;
+        typedef search_algorithms::AStarNH Search;
     //    typedef search_algorithms::AStarNHOverEstimate Search;
     //    typedef search_algorithms::AStarNHNoEndOrientation Search;
 
@@ -696,7 +696,7 @@ int main(int argc, char* argv[])
     Evaluator<search_algorithms::T> eval##T(w / Evaluator<search_algorithms::T>::SCALE, h / Evaluator<search_algorithms::T>::SCALE, res, speed-1); \
     eval##T.render(#T); }
 
-    RENDER(DTA, 2);
+   // RENDER(DTA, 2);
 //    RENDER(BFS, 1);
 //    RENDER(Dijkstra, 1);
 //    RENDER(Dijkstra4d, 5);

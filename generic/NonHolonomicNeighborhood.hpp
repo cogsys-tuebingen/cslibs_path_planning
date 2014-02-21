@@ -43,7 +43,7 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
     }
 
     template <class NodeType>
-    static double advance(NodeType* reference, int i, double& x_, double& y_, double& theta_, bool& forward_) {
+    static double advance(NodeType* reference, int i, double& x_, double& y_, double& theta_, bool& forward_, bool initial) {
         double t;
 
         double cost = distance_step_pixel;
@@ -56,16 +56,24 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
             break;
         case 1: case 4: // right
             t = reference->theta - DELTA_THETA;
+            // penalize driving curves
+            cost *= 1.1 ;
             break;
         case 2: case 5: // left
             t = reference->theta + DELTA_THETA;
+            // penalize driving curves
+            cost *= 1.1 ;
             break;
 
         case 6: case 8: // right
             t = reference->theta - DELTA_THETA/2;
+            // penalize driving curves
+            cost *= 1.1 ;
             break;
         case 7: case 9: // left
             t = reference->theta + DELTA_THETA/2;
+            // penalize driving curves
+            cost *= 1.1 ;
             break;
         }
 
@@ -75,7 +83,7 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
         // check driving direction
         forward_ = (i < 3);
 
-        bool direction_switch = reference->forward != forward_;
+        bool direction_switch = reference->forward != forward_ && !initial;
 
         if(direction_switch) {
             // only allow to drive straight, if direction changes!
@@ -94,12 +102,12 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
             y_ = reference->y - std::sin(t) * distance_step_pixel;
 
             // penalize driving backwards
-            cost *= 1.2 ;
+            cost *= 1.5;
         }
 
         // penalize directional changes
-        if(direction_switch && !forward_) {
-            cost *= 1.4;
+        if(direction_switch/* && !forward_*/) {
+            cost *= 4.0;
         }
 
         theta_ = t;
@@ -109,10 +117,12 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
 
     template <class T, class Map, class NodeType>
     static void iterateFreeNeighbors(T& algo, Map& map, NodeType* reference) {
+        bool initial = algo.getStart() == reference;
+
         for(unsigned i = 0; i < SIZE; ++i) {
             double to_x,to_y, to_theta;
             bool forward;
-            double cost = advance(reference, i, to_x,to_y,to_theta,forward);
+            double cost = advance(reference, i, to_x,to_y,to_theta,forward, initial);
 
             if(cost < 0) {
                 continue;

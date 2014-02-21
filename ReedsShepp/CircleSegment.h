@@ -74,6 +74,16 @@ public:
      */
     virtual float weight(bool ignore_obstacles);
 
+    /**
+     * Length of the arc
+     */
+    double length() const;
+
+    /**
+     * Angle of the arc
+     */
+    double arc() const;
+
 
     /// SETTERS
     void set_center(Point2d& center);

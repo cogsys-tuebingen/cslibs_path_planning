@@ -118,10 +118,20 @@ float CircleSegment::weight(bool ignore_obstacles)
         if(m_use_map_cost)
             return cost * m_weight * m_cost_curve / m_map->getResolution();
         else
-            return fabs(m_arc_length) * m_radius * cost * m_cost_curve;
+            return length() * cost * m_cost_curve;
     } else {
         return NOT_FREE;
     }
+}
+
+double CircleSegment::length() const
+{
+    return fabs(m_arc_length) * m_radius;
+}
+
+double CircleSegment::arc() const
+{
+    return fabs(m_arc_length);
 }
 
 

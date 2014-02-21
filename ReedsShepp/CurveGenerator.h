@@ -55,7 +55,7 @@ public:
      * @param max_distance_between_waypoints Maximum distance between two connected waypoints
      * @param ignore_obstacles true <-> Find the shortest path, <b>ignoring</b> obstacles (default: false)
      *
-     * @returns a Reeds-Shepp-Curve that describes the shortest path
+     * @returns a Reeds-Shepp-Curve that describes the shortest path, or NULL if no free path exists
      */
     Curve* find_path(const Pose2d& start, const Pose2d& goal, const GridMap2d *map,
                      bool ignore_obstacles = false);
@@ -72,6 +72,7 @@ public:
     void set_cost_curve(double cost_curve);
     void set_cost_straight(double cost_straight);
     void set_trace(int value);
+    void set_max_curve_arc(double arc);
 
 private:
     std::vector< Curve > m_curves;
@@ -84,6 +85,7 @@ private:
     double m_cost_backwards;
     double m_cost_curve;
     double m_cost_straight;
+    double m_max_curve_arc;
 
     int m_trace;
 };

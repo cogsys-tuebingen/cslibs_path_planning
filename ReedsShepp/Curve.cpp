@@ -271,6 +271,19 @@ double Curve::weight() const
     return m_weight;
 }
 
+double Curve::curve_arc() const
+{
+    double len = 0;
+    for(std::vector<CurveSegment*>::const_iterator it = m_sequence.begin();
+            it != m_sequence.end(); ++it) {
+        const CircleSegment* circle = dynamic_cast<const CircleSegment*>(*it);
+        if(circle) {
+            len += circle->arc();
+        }
+    }
+    return len;
+}
+
 void Curve::reset_iteration()
 {
     for(std::vector<CurveSegment*>::const_iterator it = m_sequence.begin();

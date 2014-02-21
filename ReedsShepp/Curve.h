@@ -60,6 +60,11 @@ public:
     double weight() const;
 
     /**
+     * Get the angle of all curves combined (angle of circle segments)
+     */
+    double curve_arc() const;
+
+    /**
      * Start iterating over the points on this curve
      */
     virtual void reset_iteration();

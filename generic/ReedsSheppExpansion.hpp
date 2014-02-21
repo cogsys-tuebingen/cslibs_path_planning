@@ -9,7 +9,7 @@
 
 namespace lib_path {
 
-template <int N>
+template <int N, bool exp_forward, bool exp_backward>
 struct ReedsSheppExpansion
 {
     ReedsSheppExpansion()
@@ -19,21 +19,41 @@ struct ReedsSheppExpansion
 
         initial_cost = -1.0;
 
-        //////// CSC
-        forwards_generator.parse("LSL");
-        forwards_generator.parse("LSR");
-        forwards_generator.parse("RSL");
-        forwards_generator.parse("RSR");
+        if(exp_forward) {
+            forwards_generator.parse("LSL");
+            forwards_generator.parse("LSR");
+            forwards_generator.parse("RSL");
+            forwards_generator.parse("RSR");
 
-        backwards_generator.parse("|LSL");
-        backwards_generator.parse("|LSR");
-        backwards_generator.parse("|RSL");
-        backwards_generator.parse("|RSR");
+            forwards_generator.set_max_curve_arc(M_PI);
+        }
 
+        if(exp_backward) {
+            backwards_generator.parse("|LSL");
+            backwards_generator.parse("|LSR");
+            backwards_generator.parse("|RSL");
+            backwards_generator.parse("|RSR");
+
+            backwards_generator.set_max_curve_arc(M_PI);
+        }
     }
 
     template <class T, class Map>
     bool expand(const T* start, const T* goal, const Map* map_ptr) {
+        forward = start->forward;
+
+        if(!exp_forward) {
+            if(forward) {
+                return false;
+            }
+        }
+        if(!exp_backward) {
+            if(!forward) {
+                return false;
+            }
+        }
+
+
         ++current;
 
         double cost = start->h;
@@ -47,7 +67,7 @@ struct ReedsSheppExpansion
             min_cost = cost;
 
             n = N * (min_cost / initial_cost);
-//            std::cout << initial_cost << " vs. " << cost << " -> N from " << N << " to " << n << std::endl;
+            //            std::cout << initial_cost << " vs. " << cost << " -> N from " << N << " to " << n << std::endl;
         }
 
         if(current < n) {
@@ -55,19 +75,18 @@ struct ReedsSheppExpansion
         }
 
         current = 0;
-        forward = start->forward;
-
         if(forward) {
             return find(forwards_generator, start, goal, map_ptr);
         } else {
-            return find(backwards_generator, start, goal, map_ptr);
+            return false;
+            //            return find(backwards_generator, start, goal, map_ptr);
         }
     }
 
 
     template <class T, class Map>
     bool find(CurveGenerator& generator, const T* start, const T* goal, const Map* map_ptr) {
-        float radius = 1.5f /*meter*/;
+        float radius = 0.9f /*meter*/;
         float max_dist = 0.15f /*meter*/;
 
         generator.set_circle_radius(radius);
@@ -77,6 +96,10 @@ struct ReedsSheppExpansion
         generator.set_cost_curve(1.3);
 
         lib_path::Curve* curve = generator.find_path(*start, *goal, map_ptr, false);
+
+        if(!curve) {
+            return false;
+        }
 
         poses.clear();
         curve->reset_iteration();

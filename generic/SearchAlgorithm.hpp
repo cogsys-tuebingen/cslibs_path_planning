@@ -112,6 +112,17 @@ public:
         goal = map_.lookup(to);
     }
 
+    NodeT* getStart() const
+    {
+        return start;
+    }
+
+
+    NodeT* getGoal() const
+    {
+        return goal;
+    }
+
     /**
      * @brief findPath searches a path between to points
      * @param from
@@ -144,8 +155,13 @@ protected:
         open.clear();
 
         // initialize start and goal nodes
-        start = map_.lookup(from);
-        goal = map_.lookup(to);
+        try {
+            start = map_.lookup(from);
+            goal = map_.lookup(to);
+        } catch(const typename MapManager::OutsideMapException& e) {
+            std::cout << "start or goal cell is outside the map" << std::endl;
+            return empty();
+        }
 
         Heuristic::setMap(map_.getMap(), *goal);
 
@@ -196,6 +212,8 @@ protected:
                 current->theta = expansion.begin()->theta;
 
                 PathT path = backtrack(start, current);
+                path.pop_back();
+                path.pop_back();
                 path += expansion;
                 return path;
             }

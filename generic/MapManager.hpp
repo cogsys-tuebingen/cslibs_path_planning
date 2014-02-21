@@ -26,6 +26,11 @@ template <class NodeT, class MapType>
 class Manager
 {
 public:
+    struct OutsideMapException : public std::exception
+    {
+    };
+
+public:
     typedef MapType MapT;
     typedef NodeT NodeType;
 
@@ -131,14 +136,15 @@ struct GridMapManager :
 
     void initMap(bool replace) {
         bool alloc = data == NULL || replace;
-        bool delete_first = alloc && data == NULL;
+        bool delete_first = alloc && data != NULL;
 
         if(delete_first) {
+            std::cout << "delete old map" << std::endl;
             delete[] data;
         }
 
         if(alloc) {
-            std::cout << "allocate new map" << std::endl;
+            std::cout << "[GMM] allocate new map" << std::endl;
             data = new NodeType[w * h];
         }
         for(unsigned y = 0; y < h; ++y) {
@@ -156,23 +162,22 @@ struct GridMapManager :
     NodeType* lookup(const PointT& reference) {
         unsigned y = reference.y;
         unsigned x = reference.x;
-        assert(x >= 0);
-        assert(y >= 0);
-        assert(x < w);
-        assert(y < h);
+        if((x < 0) || (y < 0) || (x >= w) || (y >= h)) {
+            throw typename ManagerT::OutsideMapException();
+        }
         return &data[index(x,y)];
     }
 
     NodeType* lookup(const int x, const int y) {
-        assert(x >= 0);
-        assert(y >= 0);
-        assert(x < w);
-        assert(y < h);
+        if((x < 0) || (y < 0) || (x >= w) || (y >= h)) {
+            throw typename ManagerT::OutsideMapException();
+        }
         return &data[index(x,y)];
     }
     NodeType* lookup(const double x, const double y, double ignored = 0) {
-        assert(x >= 0);
-        assert(y >= 0);
+        if((x < 0) || (y < 0)) {
+            throw typename ManagerT::OutsideMapException();
+        }
         return lookup((int) std::floor(x), (int) std::floor(y));
     }
 };
@@ -203,14 +208,15 @@ public:
         double dtheta = 2 * M_PI / theta_slots;
 
         bool alloc = data == NULL || replace;
-        bool delete_first = alloc && data == NULL;
+        bool delete_first = alloc && data != NULL;
 
         if(delete_first) {
+            std::cout << "delete old map" << std::endl;
             delete[] data;
         }
 
         if(alloc) {
-            std::cout << "allocate new map" << std::endl;
+            std::cout << "[SSM] allocate new map" << std::endl;
             data = new NodeType[w * h * theta_slots];
         }
 
@@ -225,12 +231,9 @@ public:
 
 
     inline unsigned index(unsigned x, unsigned y, unsigned t) {
-        assert(x >= 0);
-        assert(y >= 0);
-        assert(x < w);
-        assert(y < h);
-        assert(t >= 0);
-        assert(t < theta_slots);
+        if((x < 0) || (y < 0) || (x >= w) || (y >= h) || (t < 0) || (t >= theta_slots)) {
+            throw typename ManagerT::OutsideMapException();
+        }
         return y * w + x + t*w*h;
     }
     inline unsigned angle2index(double theta) {
@@ -246,17 +249,15 @@ public:
     }
 
     NodeType* lookup(const int x, const int y, double theta) {
-        assert(x >= 0);
-        assert(y >= 0);
-        assert(x < w);
-        assert(y < h);
+        if((x < 0) || (y < 0) || (x >= w) || (y >= h)) {
+            throw typename ManagerT::OutsideMapException();
+        }
         return &data[index(x,y,angle2index(theta))];
     }
     NodeType* lookup(const double x, const double y, double theta) {
-        assert(x >= 0);
-        assert(y >= 0);
-        assert(x < w);
-        assert(y < h);
+        if((x < 0) || (y < 0) || (x >= w) || (y >= h)) {
+            throw typename ManagerT::OutsideMapException();
+        }
         return lookup((int) std::floor(x), (int) std::floor(y), theta);
     }
 };
@@ -290,14 +291,15 @@ public:
         dimension = w * h * theta_slots;
 
         bool alloc = data == NULL || replace;
-        bool delete_first = alloc && data == NULL;
+        bool delete_first = alloc && data != NULL;
 
         if(delete_first) {
+            std::cout << "delete old map" << std::endl;
             delete[] data;
         }
 
         if(alloc) {
-            std::cout << "allocate new map" << std::endl;
+            std::cout << "[DSSM] allocate new map" << std::endl;
             data = new NodeType[2 * dimension];
         }
 
@@ -315,13 +317,12 @@ public:
 
 
     inline unsigned index(unsigned x, unsigned y, unsigned t=0, bool forward=true) {
-        assert(x >= 0);
-        assert(y >= 0);
-        assert(x < w);
-        assert(y < h);
-        assert(t >= 0);
-        assert(t < theta_slots);
+        if((x < 0) || (y < 0) || (x >= w) || (y >= h) || (t < 0) || (t >= theta_slots)) {
+            throw typename ManagerT::OutsideMapException();
+        }
+
         return y * w + x + t*w*h + (forward ? 0 : dimension);
+
     }
     inline unsigned angle2index(double theta) {
         return (MathHelper::AngleClamp(theta) + M_PI) / (2 * M_PI) * (theta_slots - 1);
@@ -342,17 +343,16 @@ public:
     }
 
     NodeType* lookup(const int x, const int y, double theta, bool forward) {
-        assert(x >= 0);
-        assert(y >= 0);
-        assert(x < w);
-        assert(y < h);
-        return &data[index(x,y,angle2index(theta), forward)];
+        int t = angle2index(theta);
+        if((x < 0) || (y < 0) || (x >= w) || (y >= h) || (t < 0) || (t >= theta_slots)) {
+            throw typename ManagerT::OutsideMapException();
+        }
+        return &data[index(x,y,t, forward)];
     }
     NodeType* lookup(const double x, const double y, double theta, bool forward) {
-        assert(x >= 0);
-        assert(y >= 0);
-        assert(x < w);
-        assert(y < h);
+        if((x < 0) || (y < 0) || (x >= w) || (y >= h)) {
+            throw typename ManagerT::OutsideMapException();
+        }
         return lookup((int) std::floor(x), (int) std::floor(y), theta, forward);
     }
 

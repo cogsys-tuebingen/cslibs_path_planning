@@ -150,6 +150,11 @@ public:
     bool isInMap( const double x, const double y ) const
         { return (x - origin_.x)/res_ < width_ && (y - origin_.y)/res_ < height_; }
 
+    unsigned char* getData()
+    {
+        return data_.data();
+    }
+
 protected:
     /// Number of cells in x-direction
     unsigned int width_;

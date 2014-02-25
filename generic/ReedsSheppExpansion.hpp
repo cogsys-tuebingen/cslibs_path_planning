@@ -86,7 +86,7 @@ struct ReedsSheppExpansion
 
     template <class T, class Map>
     bool find(CurveGenerator& generator, const T* start, const T* goal, const Map* map_ptr) {
-        float radius = 0.9f /*meter*/;
+        float radius = 1.3f /*meter*/;
         float max_dist = 0.15f /*meter*/;
 
         generator.set_circle_radius(radius);

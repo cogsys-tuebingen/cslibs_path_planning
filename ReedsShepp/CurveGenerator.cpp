@@ -206,7 +206,6 @@ Curve* CurveGenerator::find_path(const Pose2d& start, const Pose2d& goal, const 
         double weight = c->check_if_admissible();
 
         if(weight < best_weight) {
-            std::cout << "span: " << c->curve_arc() << std::endl;
             double curve_arc = c->curve_arc();
             if(curve_arc < m_max_curve_arc) {
                 best_curve = &*c;

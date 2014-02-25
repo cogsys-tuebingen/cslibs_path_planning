@@ -40,6 +40,7 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
     static double setResolution(double res) {
         resolution = res;
         distance_step_pixel = distance_step / resolution;
+        return res;
     }
 
     template <class NodeType>

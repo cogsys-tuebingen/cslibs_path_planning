@@ -40,7 +40,7 @@ public:
     };
 
     Manager()
-        : map_(NULL), data(NULL), w(0), h(0), theta_slots(1)
+        : w(0), h(0), theta_slots(1), map_(NULL), data(NULL)
     {}
 
     virtual ~Manager() {
@@ -316,8 +316,8 @@ public:
     }
 
 
-    inline unsigned index(unsigned x, unsigned y, unsigned t=0, bool forward=true) {
-        if((x < 0) || (y < 0) || (x >= w) || (y >= h) || (t < 0) || (t >= theta_slots)) {
+    inline unsigned index(int x, int y, int t=0, bool forward=true) {
+        if((x < 0) || (y < 0) || (x >= (int) w) || (y >= (int) h) || (t < 0) || (t >= (int) theta_slots)) {
             throw typename ManagerT::OutsideMapException();
         }
 
@@ -344,7 +344,7 @@ public:
 
     NodeType* lookup(const int x, const int y, double theta, bool forward) {
         int t = angle2index(theta);
-        if((x < 0) || (y < 0) || (x >= w) || (y >= h) || (t < 0) || (t >= theta_slots)) {
+        if((x < 0) || (y < 0) || (x >= (int) w) || (y >= (int) h) || (t < 0) || (t >= (int) theta_slots)) {
             throw typename ManagerT::OutsideMapException();
         }
         return &data[index(x,y,t, forward)];

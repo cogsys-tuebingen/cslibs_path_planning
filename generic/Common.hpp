@@ -29,7 +29,7 @@ struct NeighborhoodBase {
         PR_ADDED_TO_OPEN_LIST, PR_IGNORED, PR_CLOSED
     };
 
-    static double setResolution(double res) {}
+    static double setResolution(double res) {return res;}
 };
 
 struct NoExpansion {

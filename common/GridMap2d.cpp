@@ -19,6 +19,11 @@ lib_path::GridMap2d::~GridMap2d()
     /* Nothing to do */
 }
 
+bool GridMap2d::isFree(const unsigned int x, const unsigned int y, double theta) const
+{
+    return isFree(x,y);
+}
+
 void GridMap2d::setAreaValue( MapArea2d &area )
 {
     area.begin();

@@ -122,6 +122,7 @@ public:
      * @return True if the cell is free. False otherwise.
      */
     virtual bool isFree( const unsigned int x, const unsigned int y ) const = 0;
+    virtual bool isFree( const unsigned int x, const unsigned int y, double theta ) const;
 
     /**
      * @brief Return if a map cell is occupied or not.

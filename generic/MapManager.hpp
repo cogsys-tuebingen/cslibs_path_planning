@@ -16,9 +16,6 @@
 #include "../common/GridMap2d.h"
 #include "../common/Bresenham2d.h"
 
-/// SYSTEM
-#include <opencv2/opencv.hpp>
-
 namespace lib_path
 {
 
@@ -72,10 +69,11 @@ public:
     virtual void initMap(bool replace) = 0;
 
     bool isFree(const NodeType* reference) {
-        return map_->isFree(reference->x, reference->y);
+        //return map_->isFree(reference->x, reference->y);
+        return isFree(reference->x, reference->y, reference->theta);
     }
-    bool isFree(int x, int y) {
-        return map_->isFree(x, y);
+    bool isFree(int x, int y, double theta) {
+        return map_->isFree(x,y,theta);
     }
 
     bool isFree(const double sx, const double sy, const double ex, const double ey) {
@@ -86,10 +84,17 @@ public:
 
         bresenham.setGrid(map_, std::floor(sx), std::floor(sy), std::floor(ex),std::floor(ey));
 
+        double theta = std::atan2(ey-sy,ex-sx);
+
+        unsigned x,y;
         while(bresenham.next()) {
-            if(bresenham.isOccupied()) {
+            bresenham.coordinates(x,y);
+            if(!map_->isFree(x,y,theta)) {
                 return false;
             }
+//            if(bresenham.isOccupied()) {
+//                return false;
+//            }
         }
 
         return true;

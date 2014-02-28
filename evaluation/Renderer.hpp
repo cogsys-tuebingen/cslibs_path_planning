@@ -261,7 +261,7 @@ struct MapRenderer : public SearchAlgorithm {
         for(unsigned y=0; y<map_h; y++) {
             for(unsigned x=0; x<map_w; x++) {
                 cv::Vec3b col;
-                if(map_.isFree(x, y)) {
+                if(map_.isFree(x, y, 0)) {
                     col = cv::Vec3b::all(255);
 
                     NodeT c;
@@ -408,7 +408,7 @@ struct MapRenderer : public SearchAlgorithm {
                 int my = y + dy;
 
                 cv::Vec3b col;
-                if(map_.getMap()->isInMap(mx, my) && map_.isFree(mx, my)) {
+                if(map_.getMap()->isInMap(mx, my) && map_.isFree(mx, my, 0)) {
                     NodeT c;
                     c.x = mx;
                     c.y = my;

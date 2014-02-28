@@ -30,6 +30,7 @@ add_library(utils_path  ReedsShepp/CurveGenerator.cpp
     common/Path.cpp
     common/GridMap2d.cpp
     common/SimpleGridMap2d.cpp
+    common/CollisionGridMap2d.cpp
     common/Bresenham2d.cpp
     a_star/AStar.cpp
     a_star/Node.cpp

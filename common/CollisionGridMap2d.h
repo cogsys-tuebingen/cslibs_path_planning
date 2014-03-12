@@ -36,22 +36,19 @@ public:
      * @param h Number of cells in y-direction.
      * @param r Size of one cell in meter.
      */
-    CollisionGridMap2d( const unsigned int w, const unsigned int h, const double r, double half_length, double half_width );
+    CollisionGridMap2d( const unsigned int w, const unsigned int h, const double r, double forward, double backward, double width);
     ~CollisionGridMap2d();
 
     virtual bool isFree( const unsigned int x, const unsigned int y, const double theta ) const;
 
 private:
-    double hw_;
-    double hl_;
-
     RobotArea* areas_[ANGLE_DISCRETIZATION];
 };
 
 
 class RobotArea : public MapArea2d {
 public:
-    RobotArea(CollisionGridMap2d const*  parent, double hl, double hw, double theta);
+    RobotArea(CollisionGridMap2d const*  parent, double forward, double backward, double width, double theta);
 
     void setPosition(int x, int y);
     virtual void begin();
@@ -66,7 +63,8 @@ private:
     double x_;
     double y_;
     double hw_;
-    double hl_;
+    double fw_;
+    double bw_;
     double theta_;
     bool init_;
 

@@ -58,23 +58,23 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
         case 1: case 4: // right
             t = reference->theta - DELTA_THETA;
             // penalize driving curves
-            cost *= 1.1 ;
+          //  cost *= 1.1 ;
             break;
         case 2: case 5: // left
             t = reference->theta + DELTA_THETA;
             // penalize driving curves
-            cost *= 1.1 ;
+          //  cost *= 1.1 ;
             break;
 
         case 6: case 8: // right
             t = reference->theta - DELTA_THETA/2;
             // penalize driving curves
-            cost *= 1.1 ;
+           // cost *= 1.1 ;
             break;
         case 7: case 9: // left
             t = reference->theta + DELTA_THETA/2;
             // penalize driving curves
-            cost *= 1.1 ;
+          //  cost *= 1.1 ;
             break;
         }
 

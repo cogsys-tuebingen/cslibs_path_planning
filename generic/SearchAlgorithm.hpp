@@ -85,7 +85,7 @@ public:
 
 public:
     GenericSearchAlgorithm()
-        : start(NULL), goal(NULL), expansions(0), multi_expansions(0), updates(0)
+        : start(NULL), goal(NULL), has_cost_(false), expansions(0), multi_expansions(0), updates(0)
     {
     }
 
@@ -100,6 +100,11 @@ public:
     virtual void setMap(const MapT* map) {
         map_.setMap(map);
         NeighborhoodType::setResolution(map->getResolution());
+    }
+
+    virtual void setCostFunction(boost::function<double(int, int)> cost) {
+        cost_ = cost;
+        has_cost_ = true;
     }
 
     virtual void setStart(const PointT& from) {
@@ -245,13 +250,22 @@ protected:
     }
 
 public:
+    double getCost(NodeT* node) {
+        if(has_cost_) {
+            return cost_(node->x, node->y);
+        } else {
+            return 0;
+        }
+    }
+
     NeighborhoodBase::ProcessingResult
     processNeighbor(NodeT* current, NodeT* neighbor, double delta) {
 
         neighbor->mark(NodeT::MARK_WATCHED);
 
         double res = map_.getResolution();
-        double distance = current->distance + delta * res;
+        double cost = getCost(neighbor);
+        double distance = current->distance + delta * res + cost;
         bool closer = distance < neighbor->distance;
 
         bool inOpenList = neighbor->isMarked(NodeT::MARK_OPEN);
@@ -308,6 +322,9 @@ protected:
     MapManager map_;
     NodeT* start;
     NodeT* goal;
+
+    bool has_cost_;
+    boost::function<double(int, int)> cost_;
 
     int expansions;
     int multi_expansions;

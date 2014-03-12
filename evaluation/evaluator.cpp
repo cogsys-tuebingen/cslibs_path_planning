@@ -652,8 +652,8 @@ bool Evaluator<Search>::paintLoop(PathT* path)
 
 int main(int argc, char* argv[])
 {
-    int w = 600;
-    int h = 400;
+    int w = 1024;
+    int h = 1024;
     double res = 0.1;
 
     if(argc > 1) {

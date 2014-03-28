@@ -189,6 +189,10 @@ protected:
         start->distance = 0;
         start->mark(NodeT::MARK_OPEN);
 
+
+        start->theta = from.theta;
+        goal->theta = to.theta;
+
         open.add(start);
 
         Intermission::call(intermission);
@@ -227,7 +231,11 @@ protected:
             if(NeighborhoodType::isNearEnough(goal, current)) {
                 if(goal != current) {
                     // close, but not the real goal -> change prev pointer
-                    goal->prev = current;
+                    if(current->prev) {
+                        goal->prev = current->prev;
+                    } else {
+                        goal->prev = current;
+                    }
                     std::cout << "near goal: theta=" << current->theta << ", goal=" << goal->theta << std::endl;
                 }
                 std::cout << "found goal: theta=" << current->theta << ", goal=" << goal->theta << std::endl;

@@ -82,6 +82,10 @@ inline Pose2d operator * (float factor, const Pose2d &pose) {
   return p;
 }
 
+inline double dot(const Pose2d& lhs, const Pose2d& rhs) {
+    return lhs.x * rhs.x + lhs.y * rhs.y;
+}
+
 inline std::ostream& operator << (std::ostream& ostr, const Pose2d& p){
   ostr << "(" << p.x << " / " << p.y << " / " << (M_PI * 2.0f * p.theta) << "°)";
   return ostr;

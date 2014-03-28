@@ -21,6 +21,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/foreach.hpp>
 #include <boost/function.hpp>
+#include <boost/thread.hpp>
 
 namespace lib_path
 {
@@ -170,7 +171,7 @@ protected:
 
         Heuristic::setMap(map_.getMap(), *goal);
 
-        // search can be aborted, if eather one is occupied
+        // search can be aborted, if either one is occupied
         if(!map_.isFree(start)) {
             std::cout << "start cell is not free" << std::endl;
         }
@@ -199,6 +200,8 @@ protected:
 
         // iterate until no more points can be looked at
         while(!open.empty()) {
+            boost::this_thread::interruption_point();
+
             // mark the next node closed
             NodeT* current = open.next();
             current->unMark(NodeT::MARK_OPEN);

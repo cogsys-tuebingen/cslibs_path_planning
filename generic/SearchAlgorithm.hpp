@@ -172,13 +172,16 @@ protected:
         Heuristic::setMap(map_.getMap(), *goal);
 
         // search can be aborted, if either one is occupied
+        bool blocked = false;
         if(!map_.isFree(start)) {
             std::cout << "start cell is not free" << std::endl;
+            blocked = true;
         }
         if(!map_.isFree(goal)) {
             std::cout << "goal cell is not free" << std::endl;
+            blocked = true;
         }
-        if(!map_.isFree(start) || !map_.isFree(goal)) {
+        if(blocked) {
             return empty();
         }
 
@@ -244,7 +247,7 @@ protected:
                 std::cout << "found goal: theta=" << current->theta << ", goal=" << goal->theta << std::endl;
 
                 // generate the path
-                return backtrack(start, goal);
+                return backtrack(start, current);
             }
 
             // look at every free neighbor

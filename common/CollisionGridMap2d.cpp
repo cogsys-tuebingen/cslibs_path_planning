@@ -58,15 +58,25 @@ void RobotArea::begin() {
     pts_.push_back(br);
 
 
-    pts_.push_back(0.5 * (fl+fr));
-    pts_.push_back(0.5 * (bl+br));
-    pts_.push_back(0.5 * (fl+bl));
-    pts_.push_back(0.5 * (br+fr));
+    int steps = 6;
+    double inc = 1.0 / steps;
+    double i = 0.0;
+    for(int j = 0; j < steps; ++j) {
+	    pts_.push_back(fr + i * (fl-fr));
+        pts_.push_back(br + i * (bl-br));
+        pts_.push_back(bl + i * (fl-bl));
+        pts_.push_back(fr + i * (br-fr));
+
+        i += inc;
+    }
+
+    
 }
 
 void RobotArea::paint(bool free) {
     assert(init_);
 
+    static int max_step = 1000;
     static int step = 0;
 
     int rows = parent_->getHeight();
@@ -86,7 +96,13 @@ void RobotArea::paint(bool free) {
         cv::resize(dbg_img, dbg_img, cv::Size(), scale, scale, CV_INTER_NN);
     }
 
-    cv::circle(dbg_img, cv::Point2f(scale*x_,scale*y_), 1, cv::Scalar(0x00, 0xCC, 0xFF), CV_FILLED, CV_AA);
+    if(!free) {
+        for(int i = 0; i < pts_.size(); ++i) {
+            const Eigen::Vector2d& pt = centre + pts_[i];
+            cv::circle(dbg_img, cv::Point2f(scale*pt(0),scale*pt(1)), 1, cv::Scalar(0x00, 0x00, 0xFF), CV_FILLED, CV_AA);
+        }
+    }
+//    cv::circle(dbg_img, cv::Point2f(scale*x_,scale*y_), 1, cv::Scalar(0x00, 0xCC, 0xFF), CV_FILLED, CV_AA);
     //cv::circle(dbg_img, cv::Point2f(scale*(x_ + 4* std::cos(theta_)),scale*(y_ + 4* std::sin(theta_))), 3, cv::Scalar(0x00, 0xCC, 0xFF), CV_FILLED, CV_AA);
 
     if(!free) {
@@ -98,9 +114,12 @@ void RobotArea::paint(bool free) {
         cv::line(dbg_img, cv::Point2f(scale*(centre+br)(0), scale*(centre+br)(1)), cv::Point2f(scale*(centre+bl)(0), scale*(centre+bl)(1)), col, 1, CV_AA);
     }
 
-    if(++step > 10000) {
+    if(step == 0) {        
         cv::imshow("dbg", dbg_img);
         cv::waitKey(20);
+    }
+
+    if(++step > max_step) {
         step = 0;
     }
 

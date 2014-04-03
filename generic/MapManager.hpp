@@ -304,7 +304,7 @@ public:
         }
 
         if(alloc) {
-            std::cout << "[DSSM] allocate new map" << std::endl;
+            std::cout << "[DSSM] allocate new map of size " << (2 * dimension * sizeof(NodeType) / 1e6) << " MB" << std::endl;
             data = new NodeType[2 * dimension];
         }
 

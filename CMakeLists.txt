@@ -12,7 +12,10 @@ catkin_package(
 
 set(CMAKE_BUILD_TYPE Release)
 
-find_package(Eigen REQUIRED)
+find_package(Eigen)
+if(NOT ${Eigen_FOUND})
+  find_package(Eigen3 REQUIRED)
+endif()
 include_directories(
   ${EIGEN_INCLUDE_DIR}
   ${catkin_INCLUDE_DIRS}
@@ -101,9 +104,9 @@ else(NOT OpenCV_FOUND)
     target_link_libraries (Evaluator
         utils_path
         ${catkin_LIBRARIES}
-        yaml-cpp
         ${Boost_LIBRARIES}
-        ${OpenCV_LIBS})
+        ${OpenCV_LIBS}
+        yaml-cpp)
 
 
 

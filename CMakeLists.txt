@@ -12,7 +12,7 @@ catkin_package(
 
 set(CMAKE_BUILD_TYPE Release)
 
-find_package(Eigen)
+find_package(Eigen QUIET)
 if(NOT ${Eigen_FOUND})
   find_package(Eigen3 REQUIRED)
 endif()

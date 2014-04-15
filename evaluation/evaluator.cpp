@@ -17,7 +17,7 @@
 /// SYSTEM
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
-#include <yaml-cpp/yaml.h>
+#include <utils_yaml/yamlplus.h>
 
 using namespace lib_path;
 
@@ -308,7 +308,7 @@ bool Evaluator<Search>::loadMap()
     YAML::Parser parser(fin);
 
     YAML::Node doc;
-    if(!parser.GetNextDocument(doc)) {
+    if(!getNextDocument(parser, doc)) {
         return false;
     }
 
@@ -664,12 +664,12 @@ int main(int argc, char* argv[])
         YAML::Parser parser(ss);
 
         YAML::Node doc;
-        if(!parser.GetNextDocument(doc)) {
+        if(!getNextDocument(parser, doc)) {
             std::cout << "cannot read input \"" << ss.str() << "\"" << std::endl;
             return 1;
         }
 
-#define READ(name) if(doc.FindValue(name)) doc[name]
+#define READ(name) if(exists(doc, name)) doc[name]
 
         READ("w") >> w;
         READ("h") >> h;

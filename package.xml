@@ -13,7 +13,9 @@
 
   <build_depend>utils_general</build_depend>
   <build_depend>utils_generic</build_depend>
+  <build_depend>utils_yaml</build_depend>
 
   <run_depend>utils_general</run_depend>
   <run_depend>utils_generic</run_depend>
+  <run_depend>utils_yaml</run_depend>
 </package>

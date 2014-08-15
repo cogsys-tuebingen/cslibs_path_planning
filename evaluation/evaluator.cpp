@@ -345,7 +345,7 @@ template <class Search>
 typename Evaluator<Search>::KEY_EVENT Evaluator<Search>::wait()
 {
 
-    int key = cv::waitKey(20) & 0xFF;
+    int key = cv::waitKey(35) & 0xFF;
     KEY_EVENT res = keyCallback(key);
 
     if(res == KEY_EVENT_EXIT || cvGetWindowHandle(window.c_str()) == NULL) {
@@ -680,17 +680,17 @@ int main(int argc, char* argv[])
         std::cout << "w=" << w << ", h=" << h << ", res=" << res << std::endl;
     }
 
-//        typedef search_algorithms::BFS Search;
-    //    typedef search_algorithms::Dijkstra Search;
-    //    typedef search_algorithms::AStar Search;
-//        typedef search_algorithms::AStarTaxi Search;
-    //    typedef search_algorithms::Dijkstra4d Search;
-    //    typedef search_algorithms::AStarMax Search;
- //   typedef search_algorithms::DTA Search;
-//        typedef search_algorithms::AStarNHHH Search;
-        typedef search_algorithms::AStarNH Search;
-    //    typedef search_algorithms::AStarNHOverEstimate Search;
-    //    typedef search_algorithms::AStarNHNoEndOrientation Search;
+//    typedef search_algorithms::BFS Search;
+//    typedef search_algorithms::Dijkstra Search;
+//    typedef search_algorithms::AStar Search;
+//    typedef search_algorithms::AStarTaxi Search;
+//    typedef search_algorithms::Dijkstra4d Search;
+//    typedef search_algorithms::AStarMax Search;
+    typedef search_algorithms::DTA Search;
+//    typedef search_algorithms::AStarNHHH Search;
+//    typedef search_algorithms::AStarNH Search;
+//    typedef search_algorithms::AStarNHOverEstimate Search;
+//    typedef search_algorithms::AStarNHNoEndOrientation Search;
 
 #define RENDER(T,speed) { \
     Evaluator<search_algorithms::T> eval##T(w / Evaluator<search_algorithms::T>::SCALE, h / Evaluator<search_algorithms::T>::SCALE, res, speed-1); \

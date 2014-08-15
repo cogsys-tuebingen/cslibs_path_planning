@@ -20,10 +20,6 @@ public:
         std::vector<T>::insert(this->end(), rhs.begin(), rhs.end());
     }
 
-    void push_back(const T &x)
-    {
-        std::vector<T>::push_back(x);
-    }
 };
 
 typedef GenericPath<Pose2d> Path;

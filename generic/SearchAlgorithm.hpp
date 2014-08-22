@@ -82,7 +82,7 @@ public:
 
     typedef typename MapManager::MapT MapT;
 
-    typedef GenericPath<NodeT> PathT;
+    typedef std::vector<NodeT> PathT;
 
 public:
     GenericSearchAlgorithm()

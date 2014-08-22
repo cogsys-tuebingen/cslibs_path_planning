@@ -9,24 +9,13 @@
 
 namespace lib_path {
 
-template <class T>
-class GenericPath : public std::vector<T>
+typedef std::vector<Pose2d> Path;
+
+template <typename Node>
+inline void operator += (std::vector<Node>& lhs, const std::vector<Node>& rhs)
 {
-public:
-    typedef T NodeT;
-
-    void operator += (GenericPath<T>& rhs)
-    {
-        std::vector<T>::insert(this->end(), rhs.begin(), rhs.end());
-    }
-
-    void push_back(const T &x)
-    {
-        std::vector<T>::push_back(x);
-    }
-};
-
-typedef GenericPath<Pose2d> Path;
+    lhs.insert(lhs.end(), rhs.begin(), rhs.end());
+}
 
 }
 

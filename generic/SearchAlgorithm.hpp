@@ -22,6 +22,7 @@
 #include <boost/foreach.hpp>
 #include <boost/function.hpp>
 #include <boost/thread.hpp>
+#include <stdexcept>
 
 namespace lib_path
 {
@@ -83,6 +84,38 @@ public:
     typedef typename MapManager::MapT MapT;
 
     typedef GenericPath<NodeT> PathT;
+
+public:
+    struct StartOutOfMapException : public std::logic_error
+    {
+        StartOutOfMapException()
+            : std::logic_error("start cell is outside the map")
+        { }
+    };
+    struct GoalOutOfMapException : public std::logic_error
+    {
+        GoalOutOfMapException()
+            : std::logic_error("goal cell is outside the map")
+        { }
+    };
+    struct StartNotFreeException : public std::logic_error
+    {
+        StartNotFreeException()
+            : std::logic_error("start cell is not free")
+        { }
+    };
+    struct GoalNotFreeException : public std::logic_error
+    {
+        GoalNotFreeException()
+            : std::logic_error("goal cell is not free")
+        { }
+    };
+    struct StartAndGoalNotFreeException : public std::logic_error
+    {
+        StartAndGoalNotFreeException()
+            : std::logic_error("start and goal cell are not free")
+        { }
+    };
 
 public:
     GenericSearchAlgorithm()
@@ -163,26 +196,29 @@ protected:
         // initialize start and goal nodes
         try {
             start = map_.lookup(from);
+        } catch(const typename MapManager::OutsideMapException& e) {
+            throw StartOutOfMapException();
+        }
+
+        try {
             goal = map_.lookup(to);
         } catch(const typename MapManager::OutsideMapException& e) {
-            std::cout << "start or goal cell is outside the map" << std::endl;
-            return empty();
+            throw GoalOutOfMapException();
         }
+
 
         Heuristic::setMap(map_.getMap(), *goal);
 
         // search can be aborted, if either one is occupied
-        bool blocked = false;
-        if(!map_.isFree(start)) {
-            std::cout << "start cell is not free" << std::endl;
-            blocked = true;
-        }
-        if(!map_.isFree(goal)) {
-            std::cout << "goal cell is not free" << std::endl;
-            blocked = true;
-        }
-        if(blocked) {
-            return empty();
+        bool start_blocked = !map_.isFree(start);
+        bool goal_blocked = !map_.isFree(goal);
+
+        if(start_blocked && !goal_blocked) {
+            throw StartNotFreeException();
+        } else if(goal_blocked && !start_blocked) {
+            throw GoalNotFreeException();
+        } else if(start_blocked && goal_blocked) {
+            throw StartAndGoalNotFreeException();
         }
 
         // else init the border cases
@@ -290,8 +326,8 @@ public:
         if(!inOpenList || closer) {
             assert(neighbor != current);
             if(inOpenList) {
-//                open.remove(neighbor);
-//                neighbor->unMark(NodeT::MARK_OPEN);
+                //                open.remove(neighbor);
+                //                neighbor->unMark(NodeT::MARK_OPEN);
                 updates++;
             }
 

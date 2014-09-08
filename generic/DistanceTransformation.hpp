@@ -80,7 +80,7 @@ protected:
 
         for(int row = 0; row < h; ++row) {
             for(int col = 0; col < w; ++col) {
-                if(map_.isFree(col, row)) {
+                if(map_.isFree(col, row, 0)) {
                     LOOKUP(col, row)->distance = std::numeric_limits<double>::max();
                 } else {
                     LOOKUP(col, row)->distance = INFINITY;

@@ -65,8 +65,8 @@ struct NonHolonomicNeighborhoodNoEndOrientation :
 
 namespace search_algorithms {
 
-static const int N = 1;
-static const int M = 20 * N;
+static const int N = 10;
+static const int M = 100 * N;
 static const int INIT_STEPS = 150;
 
 typedef BFSNeighborhood<8,1> BFSNeighbor;

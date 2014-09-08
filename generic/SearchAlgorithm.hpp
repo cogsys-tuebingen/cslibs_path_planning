@@ -227,8 +227,6 @@ protected:
                 current->theta = expansion.begin()->theta;
 
                 PathT path = backtrack(start, current);
-                path.pop_back();
-                path.pop_back();
                 path += expansion;
                 return path;
             }

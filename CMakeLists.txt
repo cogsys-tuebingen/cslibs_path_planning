@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(utils_path)
 
-find_package(catkin REQUIRED COMPONENTS utils_general utils_generic utils_yaml)
+find_package(catkin REQUIRED COMPONENTS utils_general utils_generic)
 
 find_package(Boost COMPONENTS program_options system filesystem thread REQUIRED)
 catkin_package(
@@ -9,6 +9,9 @@ catkin_package(
     LIBRARIES utils_path
     CATKIN_DEPENDS utils_generic utils_general
 )
+
+find_package(OpenCV)
+set(YAML_LIBRARIES -L/usr/local/lib/ yaml-cpp)
 
 set(CMAKE_BUILD_TYPE Release)
 
@@ -21,7 +24,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_library(utils_path  ReedsShepp/CurveGenerator.cpp
+set(SOURCES ReedsShepp/CurveGenerator.cpp
     ReedsShepp/Curve.cpp
     ReedsShepp/CurveSegment.cpp
     ReedsShepp/CircleSegment.cpp
@@ -57,6 +60,19 @@ add_library(utils_path  ReedsShepp/CurveGenerator.cpp
     sampling/CentroidRadiusGoalRegion.cpp
     sampling/SamplingPlanner.cpp
 )
+if(OpenCV_FOUND)
+    set(SOURCES ${SOURCES}
+        common/CollisionGridMap2d.cpp
+    )
+endif(OpenCV_FOUND)
+
+add_library(utils_path  ${SOURCES})
+
+if(OpenCV_FOUND)
+    target_link_libraries(utils_path ${OpenCV_LIBRARIES})
+endif(OpenCV_FOUND)
+
+
 
 target_link_libraries(utils_path ${catkin_LIBRARIES})
 
@@ -64,7 +80,6 @@ target_link_libraries(utils_path ${catkin_LIBRARIES})
 
 #install(TARGETS ReedsShepp LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 
-find_package(OpenCV)
 if(NOT OpenCV_FOUND)
     message( "OpenCV NOT found, not building test program" )
 
@@ -106,7 +121,7 @@ else(NOT OpenCV_FOUND)
         ${catkin_LIBRARIES}
         ${Boost_LIBRARIES}
         ${OpenCV_LIBS}
-        yaml-cpp)
+        ${YAML_LIBRARIES})
 
 
 

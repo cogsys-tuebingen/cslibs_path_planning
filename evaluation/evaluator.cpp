@@ -17,7 +17,7 @@
 /// SYSTEM
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
-#include <utils_yaml/yamlplus.h>
+#include <yaml-cpp/yaml.h>
 
 using namespace lib_path;
 
@@ -304,16 +304,12 @@ bool Evaluator<Search>::loadMap()
     w = orig_map.cols;
     h = orig_map.rows;
 
-    std::ifstream fin((file_ + ".yaml").c_str());
-    YAML::Parser parser(fin);
-
-    YAML::Node doc;
-    if(!getNextDocument(parser, doc)) {
+    YAML::Node doc = YAML::Load(file_ + ".yaml");
+    if(!doc.IsDefined()) {
         return false;
     }
 
-    double res_tmp;
-    doc["resolution"] >> res_tmp;
+    double res_tmp = doc["resolution"].as<double>();
 
     if(res_tmp != res) {
         return false;
@@ -321,13 +317,13 @@ bool Evaluator<Search>::loadMap()
 
     res = res_tmp;
 
-    doc["start"][0] >> start.x;
-    doc["start"][1] >> start.y;
-    doc["start"][2] >> start.theta;
+    start.x = doc["start"][0].as<double>();
+    start.y = doc["start"][1].as<double>();
+    start.theta = doc["start"][2].as<double>();
 
-    doc["goal"][0] >> goal.x;
-    doc["goal"][1] >> goal.y;
-    doc["goal"][2] >> goal.theta;
+    goal.x = doc["goal"][0].as<double>();
+    goal.y = doc["goal"][1].as<double>();
+    goal.theta = doc["goal"][2].as<double>();
 
     map_info.setOrigin(Point2d(0, 0));
     map_info.setResolution(res);
@@ -661,19 +657,18 @@ int main(int argc, char* argv[])
         for(int i=1; i < argc; ++i) {
             ss << argv[i] << " ";
         }
-        YAML::Parser parser(ss);
 
-        YAML::Node doc;
-        if(!getNextDocument(parser, doc)) {
+        YAML::Node doc = YAML::Load(ss.str());
+        if(!doc.IsDefined()) {
             std::cout << "cannot read input \"" << ss.str() << "\"" << std::endl;
             return 1;
         }
 
-#define READ(name) if(exists(doc, name)) doc[name]
+#define READ(name, var) if(doc[name].IsDefined()) var = doc[name].as<double>()
 
-        READ("w") >> w;
-        READ("h") >> h;
-        READ("res") >> res;
+        READ("w", w);
+        READ("h", h);
+        READ("res", res);
 
 #undef READ
 

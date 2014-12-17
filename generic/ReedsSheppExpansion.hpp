@@ -116,7 +116,7 @@ struct ReedsSheppExpansion
     template <class PathT>
     void get(PathT* out)
     {
-        typedef typename PathT::NodeT NodeT;
+        typedef typename PathT::value_type NodeT;
         BOOST_FOREACH(const Pose2d& pose, poses) {
             NodeT node;
             NodeT::init(node, pose.x, pose.y, pose.theta, forward);

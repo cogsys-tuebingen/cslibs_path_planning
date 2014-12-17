@@ -18,12 +18,21 @@
 namespace lib_path
 {
 
-template  <int distance, int steerangle, class Imp>
+struct NonHolonomicNeighborhoodMoves
+{
+    enum AllowedMoves {
+        FORWARD = 3,
+        FORWARD_BACKWARD = 6,
+        FORWARD_BACKWARD_HALFSTEPS = 10
+    };
+};
+
+template  <int distance, int steerangle, int allowed_moves, class Imp>
 struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
 {
     enum { DISTANCE = distance };
     enum { STEER_ANGLE = steerangle };
-    enum { SIZE = 6 };
+    enum { SIZE = allowed_moves };
     //    enum { SIZE = 10 };
 
     template <class PointT>
@@ -154,17 +163,17 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
     }
 };
 
-template  <int d, int s, class I>
-double NonHolonomicNeighborhoodBase<d,s,I>::resolution = 0;
+template  <int d, int s, int moves, class I>
+double NonHolonomicNeighborhoodBase<d,s,moves,I>::resolution = 0;
 
-template  <int d, int s, class I>
-double NonHolonomicNeighborhoodBase<d,s,I>::distance_step_pixel = 0;
+template  <int d, int s, int moves, class I>
+double NonHolonomicNeighborhoodBase<d,s,moves,I>::distance_step_pixel = 0;
 
 
 
-template <int distance = 100, int steerangle = 10>
+template <int distance = 100, int steerangle = 10, int moves = NonHolonomicNeighborhoodMoves::FORWARD_BACKWARD>
 struct NonHolonomicNeighborhood
-        : public NonHolonomicNeighborhoodBase<distance, steerangle,
+        : public NonHolonomicNeighborhoodBase<distance, steerangle, moves,
         NonHolonomicNeighborhood<distance, steerangle> >
 {
 };

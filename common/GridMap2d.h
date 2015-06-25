@@ -139,6 +139,7 @@ public:
      * @return True if there is no information. False otherwise.
      */
     virtual bool isNoInformation( const unsigned int x, const unsigned int y ) const = 0;
+    virtual bool isNoInformation( const unsigned int x, const unsigned int y, double theta ) const;
 
     /**
      * @brief Convert a point in map coordinates to cell coordinates.

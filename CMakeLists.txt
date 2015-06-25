@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(utils_path)
 
-find_package(catkin REQUIRED COMPONENTS utils_general utils_generic)
+find_package(catkin REQUIRED COMPONENTS utils_general utils_generic cmake_modules)
 
 find_package(Boost COMPONENTS program_options system filesystem thread REQUIRED)
 catkin_package(

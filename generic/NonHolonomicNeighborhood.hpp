@@ -67,23 +67,23 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
         case 1: case 4: // right
             t = reference->theta - DELTA_THETA;
             // penalize driving curves
-          //  cost *= 1.1 ;
+            //  cost *= 1.1 ;
             break;
         case 2: case 5: // left
             t = reference->theta + DELTA_THETA;
             // penalize driving curves
-          //  cost *= 1.1 ;
+            //  cost *= 1.1 ;
             break;
 
         case 6: case 8: // right
             t = reference->theta - DELTA_THETA/2;
             // penalize driving curves
-           // cost *= 1.1 ;
+            // cost *= 1.1 ;
             break;
         case 7: case 9: // left
             t = reference->theta + DELTA_THETA/2;
             // penalize driving curves
-          //  cost *= 1.1 ;
+            //  cost *= 1.1 ;
             break;
         }
 
@@ -138,18 +138,23 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
                 continue;
             }
 
-            if(map.contains(to_x, to_y) && map.isFree(reference->x,reference->y, to_x,to_y)) {
-                NodeType* n = map.lookup(to_x, to_y, to_theta, forward);
+            if(map.contains(to_x, to_y)) {
+                bool free = map.isFree(reference->x,reference->y, to_x,to_y);
+                bool unknown = map.isUnknown(reference->x,reference->y, to_x,to_y);
+                bool can_be_used = free || (unknown && forward);
+                if(can_be_used) {
+                    NodeType* n = map.lookup(to_x, to_y, to_theta, forward);
 
-                if(n == NULL || !map.isFree(n)) {
-                    continue;
-                }
+                    if(n == NULL || !map.isFree(n)) {
+                        continue;
+                    }
 
-                if(algo.processNeighbor(reference, n, cost) == PR_ADDED_TO_OPEN_LIST)  {
-                    n->x = to_x;
-                    n->y = to_y;
-                    n->theta = to_theta;
-                    n->forward = forward;
+                    if(algo.processNeighbor(reference, n, cost) == PR_ADDED_TO_OPEN_LIST)  {
+                        n->x = to_x;
+                        n->y = to_y;
+                        n->theta = to_theta;
+                        n->forward = forward;
+                    }
                 }
             }
         }

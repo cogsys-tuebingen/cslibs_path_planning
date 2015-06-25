@@ -100,6 +100,27 @@ public:
         return true;
     }
 
+    bool isUnknown(const double sx, const double sy, const double ex, const double ey) {
+        assert(sx >= 0);
+        assert(sy >= 0);
+        assert(ex >= 0);
+        assert(ey >= 0);
+
+        bresenham.setGrid(map_, std::floor(sx), std::floor(sy), std::floor(ex),std::floor(ey));
+
+        double theta = std::atan2(ey-sy,ex-sx);
+
+        unsigned x,y;
+        while(bresenham.next()) {
+            bresenham.coordinates(x,y);
+            if(map_->isNoInformation(x,y,theta)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     bool contains(const int x, const int y) {
         return map_->isInMap(x, y);
     }

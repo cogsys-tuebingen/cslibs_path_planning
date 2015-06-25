@@ -23,6 +23,10 @@ bool GridMap2d::isFree(const unsigned int x, const unsigned int y, double theta)
 {
     return isFree(x,y);
 }
+bool GridMap2d::isNoInformation(const unsigned int x, const unsigned int y, double theta) const
+{
+    return isNoInformation(x,y);
+}
 
 void GridMap2d::setAreaValue( MapArea2d &area )
 {

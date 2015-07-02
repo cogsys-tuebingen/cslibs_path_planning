@@ -40,6 +40,7 @@ public:
     ~CollisionGridMap2d();
 
     virtual bool isFree( const unsigned int x, const unsigned int y, const double theta ) const;
+    virtual bool isNoInformation(const unsigned int x, const unsigned int y, const double theta) const;
 
 private:
     RobotArea* areas_[ANGLE_DISCRETIZATION];

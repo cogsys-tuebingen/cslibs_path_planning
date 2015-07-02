@@ -108,8 +108,8 @@ struct DirectNeighborhood<8, distance>
     typedef DirectNeighborhoodBase<8, distance, Self> Parent;
     using Parent::DISTANCE;
 
-    static const double COST_DIAG = M_SQRT2* DISTANCE;
-    static const double COST_HORI = DISTANCE;
+    static constexpr double COST_DIAG = M_SQRT2* DISTANCE;
+    static constexpr double COST_HORI = DISTANCE;
 
     static int dx(int x,int i) {
         switch(i) {

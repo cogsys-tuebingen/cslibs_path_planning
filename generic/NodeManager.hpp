@@ -82,6 +82,14 @@ struct GenericManager {
         return next;
     }
 
+    typename Container::const_iterator begin() const {
+        return container.begin();
+    }
+
+    typename Container::const_iterator end() const {
+        return container.end();
+    }
+
 private:
     Container container;
 };

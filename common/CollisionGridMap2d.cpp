@@ -195,3 +195,22 @@ bool CollisionGridMap2d::isFree(const unsigned int x, const unsigned int y, cons
     //a->paint(free);
     return free;
 }
+
+
+bool CollisionGridMap2d::isNoInformation(const unsigned int x, const unsigned int y, const double theta) const
+{
+    if(!isInMap((int) x,(int) y) || SimpleGridMap2d::isOccupied(x, y)) {
+        return false;
+    }
+
+    double t = theta;
+    while(t < 0) t += 2*M_PI;
+    while(t >= 2*M_PI) t -= 2*M_PI;
+
+    // check boundary
+    RobotArea* a = areas_[(int) round(t)];
+    a->setPosition(x,y);
+    bool free = isAreaFreeOrUnknown(*a);
+    //a->paint(free);
+    return free;
+}

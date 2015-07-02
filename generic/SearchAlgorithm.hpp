@@ -136,9 +136,8 @@ public:
         NeighborhoodType::setResolution(map->getResolution());
     }
 
-    virtual void setCostFunction(boost::function<double(int, int)> cost) {
-        cost_ = cost;
-        has_cost_ = true;
+    virtual void setCostFunction(bool is_cost_function) {
+        has_cost_ = is_cost_function;
     }
 
     virtual void setStart(const PointT& from) {
@@ -160,6 +159,17 @@ public:
     NodeT* getGoal() const
     {
         return goal;
+    }
+
+
+    OpenNodesManager& getOpenList()
+    {
+        return open;
+    }
+
+    MapManager& getMapManager()
+    {
+        return map_;
     }
 
     /**
@@ -210,8 +220,8 @@ protected:
         Heuristic::setMap(map_.getMap(), *goal);
 
         // search can be aborted, if either one is occupied
-        bool start_blocked = !map_.isFree(start);
-        bool goal_blocked = !map_.isFree(goal);
+        bool start_blocked = map_.isOccupied(start);
+        bool goal_blocked = map_.isOccupied(goal);
 
         if(start_blocked && !goal_blocked) {
             throw StartNotFreeException();
@@ -300,7 +310,11 @@ protected:
 public:
     double getCost(NodeT* node) {
         if(has_cost_) {
-            return cost_(node->x, node->y);
+            double c = map_.getValue(node->x, node->y);
+            if(c < 0) {
+                throw std::runtime_error("negative costs are not allowed");
+            }
+            return c;
         } else {
             return 0;
         }
@@ -308,12 +322,11 @@ public:
 
     NeighborhoodBase::ProcessingResult
     processNeighbor(NodeT* current, NodeT* neighbor, double delta) {
-
         neighbor->mark(NodeT::MARK_WATCHED);
 
         double res = map_.getResolution();
-        double cost = getCost(neighbor);
-        double distance = current->distance + delta * res + cost;
+        double cost = delta * res + getCost(neighbor);
+        double distance = current->distance + cost;
         bool closer = distance < neighbor->distance;
 
         bool inOpenList = neighbor->isMarked(NodeT::MARK_OPEN);
@@ -330,6 +343,7 @@ public:
                 //                neighbor->unMark(NodeT::MARK_OPEN);
                 updates++;
             }
+
 
             neighbor->prev = current;
 
@@ -372,7 +386,6 @@ protected:
     NodeT* goal;
 
     bool has_cost_;
-    boost::function<double(int, int)> cost_;
 
     int expansions;
     int multi_expansions;

@@ -166,10 +166,10 @@ class NodeTraits
         char dummy[2];
     };
 
-    template <typename Class> static Small testH(typeof(&Class::h)) ;
+    template <typename Class> static Small testH(__typeof__(&Class::h)) ;
     template <typename Class> static Big testH(...);
 
-    template <typename Class> static Small testF(typeof(&Class::forward)) ;
+    template <typename Class> static Small testF(__typeof__(&Class::forward)) ;
     template <typename Class> static Big testF(...);
 
 

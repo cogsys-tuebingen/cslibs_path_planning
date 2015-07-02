@@ -1,11 +1,23 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(utils_path)
 
+## Enforce that we use C++11
+include(CheckCXXCompilerFlag)
+check_cxx_compiler_flag("-std=c++11" COMPILER_SUPPORTS_CXX11)
+check_cxx_compiler_flag("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+if(COMPILER_SUPPORTS_CXX11)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+elseif(COMPILER_SUPPORTS_CXX0X)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+else()
+  message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+endif()
+
 find_package(catkin REQUIRED COMPONENTS utils_general utils_generic cmake_modules)
 
 find_package(Boost COMPONENTS program_options system filesystem thread REQUIRED)
 catkin_package(
-    INCLUDE_DIRS ..
+    INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/..
     LIBRARIES utils_path
     CATKIN_DEPENDS utils_generic utils_general
 )

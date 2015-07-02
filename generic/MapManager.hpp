@@ -51,6 +51,10 @@ public:
         return map_;
     }
 
+    uint8_t getValue(const double sx, const double sy) {
+        return map_->getValue(sx, sy);
+    }
+
     void setMap(const MapT* map) {
         map_ = map;
 
@@ -74,6 +78,14 @@ public:
     }
     bool isFree(int x, int y, double theta) {
         return map_->isFree(x,y,theta);
+    }
+
+
+    bool isOccupied(const NodeType* reference) {
+        return isOccupied(reference->x, reference->y, reference->theta);
+    }
+    bool isOccupied(int x, int y, double theta) {
+        return map_->isOccupied(x,y,theta);
     }
 
     bool isFree(const double sx, const double sy, const double ex, const double ey) {
@@ -100,7 +112,7 @@ public:
         return true;
     }
 
-    bool isUnknown(const double sx, const double sy, const double ex, const double ey) {
+    bool isFreeOrUnknown(const double sx, const double sy, const double ex, const double ey) {
         assert(sx >= 0);
         assert(sy >= 0);
         assert(ex >= 0);
@@ -113,12 +125,18 @@ public:
         unsigned x,y;
         while(bresenham.next()) {
             bresenham.coordinates(x,y);
-            if(map_->isNoInformation(x,y,theta)) {
-                return true;
+            if(!map_->isNoInformation(x,y,theta) && !map_->isFree(x,y,theta)) {
+                std::cerr << "not free or unknown: " << x << " / " << y
+                          << "(" << (int) map_->getValue(x,y) << ")" << std::endl;
+                std::cerr << map_->isNoInformation(x,y,theta)  << ", " << map_->isFree(x,y,theta) << ", "
+                          << map_->isOccupied(x,y,theta)  << std::endl;
+                std::cerr << "end not free or unknown: " << x << " / " << y << "("
+                          << (int) map_->getValue(x,y) << ")" << std::endl;
+                return false;
             }
         }
 
-        return false;
+        return true;
     }
 
     bool contains(const int x, const int y) {

@@ -131,6 +131,7 @@ public:
      * @return True if the cell is occupied. False otherwise.
      */
     virtual bool isOccupied( const unsigned int x, const unsigned int y ) const = 0;
+    virtual bool isOccupied( const unsigned int x, const unsigned int y, double theta ) const;
 
     /**
      * @brief Return if we don't have any information about a map cell.
@@ -240,6 +241,8 @@ public:
     virtual void getAreaValues( MapArea2d& area ) const;
 
     virtual bool isAreaFree( MapArea2d& area ) const;
+
+    virtual bool isAreaFreeOrUnknown( MapArea2d& area ) const;
 
     virtual bool isAreaOccupied( MapArea2d& area ) const;
 };

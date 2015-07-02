@@ -61,7 +61,7 @@ private:
         char dummy[2];
     };
 
-    template <typename Class> static Small test4init(typeof(&Class::init));
+    template <typename Class> static Small test4init(__typeof__(&Class::init));
     template <typename Class> static Big test4init(...);
 
     template <bool, class HH>

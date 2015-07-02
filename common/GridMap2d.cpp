@@ -7,6 +7,7 @@
 
 // Project
 #include "GridMap2d.h"
+#include <iostream>
 
 using namespace lib_path;
 
@@ -22,6 +23,10 @@ lib_path::GridMap2d::~GridMap2d()
 bool GridMap2d::isFree(const unsigned int x, const unsigned int y, double theta) const
 {
     return isFree(x,y);
+}
+bool GridMap2d::isOccupied(const unsigned int x, const unsigned int y, double theta) const
+{
+    return isOccupied(x,y);
 }
 bool GridMap2d::isNoInformation(const unsigned int x, const unsigned int y, double theta) const
 {
@@ -68,6 +73,18 @@ bool GridMap2d::isAreaFree( MapArea2d &area ) const
     while ( area.next()) {
         area.getCell( x, y );
         if ( isInMap( x, y ) && !isFree( x, y ))
+            return false;
+    }
+    return true;
+}
+
+bool GridMap2d::isAreaFreeOrUnknown(MapArea2d &area ) const
+{
+    area.begin();
+    int x, y;
+    while ( area.next()) {
+        area.getCell( x, y );
+        if ( isInMap( x, y ) && isOccupied(x, y))
             return false;
     }
     return true;

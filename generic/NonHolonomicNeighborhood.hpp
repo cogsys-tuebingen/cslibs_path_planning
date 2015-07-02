@@ -40,10 +40,10 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
         typedef OrientedNode<PointT> NodeType;
     };
 
-    static const double DELTA_THETA = STEER_ANGLE / 10.0 * M_PI / 180.0;
+    static constexpr double DELTA_THETA = STEER_ANGLE / 10.0 * M_PI / 180.0;
 
     static double resolution;
-    static const double distance_step = distance / 100.0;
+    static constexpr double distance_step = distance / 100.0;
     static double distance_step_pixel;
 
     static double setResolution(double res) {
@@ -140,12 +140,12 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
 
             if(map.contains(to_x, to_y)) {
                 bool free = map.isFree(reference->x,reference->y, to_x,to_y);
-                bool unknown = map.isUnknown(reference->x,reference->y, to_x,to_y);
-                bool can_be_used = free || (unknown && forward);
+                bool free_or_unknown = map.isFreeOrUnknown(reference->x,reference->y, to_x,to_y);
+                bool can_be_used = free_or_unknown;// free || (free_or_unknown && forward);
                 if(can_be_used) {
                     NodeType* n = map.lookup(to_x, to_y, to_theta, forward);
 
-                    if(n == NULL || !map.isFree(n)) {
+                    if(n == NULL/* || map.isOccupied(n)*/) {
                         continue;
                     }
 

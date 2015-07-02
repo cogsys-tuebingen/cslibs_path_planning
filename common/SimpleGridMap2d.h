@@ -54,6 +54,13 @@ public:
         { upper_thres_ = thres; }
 
     /**
+     * @brief Set the no information value.
+     * @param val The new value.
+     */
+    void setNoInformationValue( const int val )
+        { no_information_ = val; }
+
+    /**
      * @brief Set the size on one cell.
      * @param r Size of one cell in meter.
      */
@@ -114,14 +121,29 @@ public:
         { origin_ = p; }
 
     bool isFree( const unsigned int x, const unsigned int y ) const {
-        return getValue( x, y ) <= lower_thres_;
+        uint8_t val = getValue( x, y );
+
+        if(no_information_ != -1 && val == no_information_) {
+            return false;
+        }
+        return val <= lower_thres_;
     }
 
-    bool isOccupied( const unsigned int x, const unsigned int y ) const
-        { return getValue( x, y ) >= upper_thres_ ; }
+    bool isOccupied( const unsigned int x, const unsigned int y ) const {
+        uint8_t val = getValue( x, y );
+        if(no_information_ != -1 && val == no_information_) {
+            return false;
+        }
+        return val >= upper_thres_;
+    }
 
     bool isNoInformation( const unsigned int x, const unsigned int y ) const {
         uint8_t value = getValue( x, y );
+
+        if(no_information_ != -1 && value == no_information_) {
+            return true;
+        }
+
         return  value > lower_thres_ && value < upper_thres_;
     }
 
@@ -176,6 +198,9 @@ protected:
 
     /// Upper threshold. Every cell with an value greater or equal to this threshold is occupied.
     uint8_t upper_thres_;
+
+    /// If exactly this value is encountered, interpret it as unknown
+    int no_information_;
 };
 
 } // namespace "lib_path"

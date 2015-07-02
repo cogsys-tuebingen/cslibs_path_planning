@@ -45,11 +45,13 @@
 
 using namespace lib_path;
 
+namespace {
 cv::Mat img;
 Pose2d start, goal;
 int trace = -1;
-bool ignore = false;
+bool ignore_obstacles = false;
 double res = 0.02f;
+}
 
 void mouseHandler(int event, int x, int y, int flags, void* param)
 {
@@ -200,7 +202,7 @@ int main(int argc, char* argv[])
         }
 
         generator.set_trace(trace);
-        lib_path::Curve* curve = generator.find_path(start, goal, &map_info, ignore);
+        lib_path::Curve* curve = generator.find_path(start, goal, &map_info, ignore_obstacles);
 
         // Test copy constructor
         lib_path::Curve c(*curve);
@@ -261,7 +263,7 @@ int main(int argc, char* argv[])
             break;
 
         case 'i':
-            ignore = !ignore;
+            ignore_obstacles = !ignore_obstacles;
             break;
 
         case '+':

@@ -179,7 +179,14 @@ public:
      * @return
      */
     virtual PathT findPath(const PointT& from, const PointT& to) {
-        return findPathImp<generic::NoIntermission>(from, to, boost::function<void()>());
+        if(NeighborhoodType::reversed) {
+            PathT path = findPathImp<generic::NoIntermission>(to, from, boost::function<void()>());
+            std::reverse(path.begin(), path.end());
+            return path;
+
+        } else {
+            return findPathImp<generic::NoIntermission>(from, to, boost::function<void()>());
+        }
     }
 
     /**
@@ -190,8 +197,14 @@ public:
      * @return
      */
     virtual PathT findPath(const PointT& from, const PointT& to, boost::function<void()> intermission) {
-        //return findPathImp<generic::CallbackIntermission<INTERMISSION_N_STEPS> >(from, to, intermission);
-        return findPathImp<generic::CallbackIntermission<INTERMISSION_N_STEPS, INTERMISSION_START_STEPS> >(from, to, intermission);
+        if(NeighborhoodType::reversed) {
+            PathT path = findPathImp<generic::CallbackIntermission<INTERMISSION_N_STEPS, INTERMISSION_START_STEPS> >(to, from, intermission);
+            std::reverse(path.begin(), path.end());
+            return path;
+
+        } else {
+            return findPathImp<generic::CallbackIntermission<INTERMISSION_N_STEPS, INTERMISSION_START_STEPS> >(from, to, intermission);
+        }
     }
 
 protected:

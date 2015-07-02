@@ -30,6 +30,8 @@ struct DirectNeighborhoodBase : public NeighborhoodBase
     enum { SIZE = N };
     enum { DISTANCE = distance };
 
+    static constexpr bool reversed = false;
+
     template <class PointT>
     struct NodeHolder {
         typedef PointT NodeType;

@@ -27,12 +27,15 @@ struct NonHolonomicNeighborhoodMoves
     };
 };
 
-template  <int distance, int steerangle, int allowed_moves, class Imp>
+template  <int distance, int steerangle, int allowed_moves, bool _reversed, class Imp>
 struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
 {
     enum { DISTANCE = distance };
     enum { STEER_ANGLE = steerangle };
     enum { SIZE = allowed_moves };
+
+    static constexpr bool reversed = _reversed;
+
     //    enum { SIZE = 10 };
 
     template <class PointT>
@@ -55,6 +58,10 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
     template <class NodeType>
     static double advance(NodeType* reference, int i, double& x_, double& y_, double& theta_, bool& forward_, bool initial) {
         double t;
+
+        if(initial && (i != 0 && i != 3)) {
+            return -1;
+        }
 
         double cost = distance_step_pixel;
 
@@ -102,15 +109,15 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
             }
         }
 
+        double dir = forward_ ? 1.0 : -1.0;
+        if(reversed) {
+            dir *= -1.0;
+        }
 
-        if(forward_) {
-            x_ = reference->x + std::cos(t) * distance_step_pixel;
-            y_ = reference->y + std::sin(t) * distance_step_pixel;
+        x_ = reference->x + dir * std::cos(t) * distance_step_pixel;
+        y_ = reference->y + dir * std::sin(t) * distance_step_pixel;
 
-        } else {
-            x_ = reference->x - std::cos(t) * distance_step_pixel;
-            y_ = reference->y - std::sin(t) * distance_step_pixel;
-
+        if(!forward_) {
             // penalize driving backwards
             cost *= 1.5;
         }
@@ -127,7 +134,7 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
 
     template <class T, class Map, class NodeType>
     static void iterateFreeNeighbors(T& algo, Map& map, NodeType* reference) {
-        bool initial = algo.getStart() == reference;
+        bool initial = algo.getStart() == reference || algo.getGoal() == reference;
 
         for(unsigned i = 0; i < SIZE; ++i) {
             double to_x,to_y, to_theta;
@@ -168,17 +175,17 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
     }
 };
 
-template  <int d, int s, int moves, class I>
-double NonHolonomicNeighborhoodBase<d,s,moves,I>::resolution = 0;
+template  <int d, int s, int moves, bool reversed, class I>
+double NonHolonomicNeighborhoodBase<d,s,moves, reversed,I>::resolution = 0;
 
-template  <int d, int s, int moves, class I>
-double NonHolonomicNeighborhoodBase<d,s,moves,I>::distance_step_pixel = 0;
+template  <int d, int s, int moves, bool reversed, class I>
+double NonHolonomicNeighborhoodBase<d,s,moves,reversed,I>::distance_step_pixel = 0;
 
 
 
-template <int distance = 100, int steerangle = 10, int moves = NonHolonomicNeighborhoodMoves::FORWARD_BACKWARD>
+template <int distance = 100, int steerangle = 10, int moves = NonHolonomicNeighborhoodMoves::FORWARD_BACKWARD, bool reversed=false>
 struct NonHolonomicNeighborhood
-        : public NonHolonomicNeighborhoodBase<distance, steerangle, moves,
+        : public NonHolonomicNeighborhoodBase<distance, steerangle, moves, reversed,
         NonHolonomicNeighborhood<distance, steerangle> >
 {
 };

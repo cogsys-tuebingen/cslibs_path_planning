@@ -12,8 +12,7 @@
 
 #ifndef INTERSECTOR_H
 #define INTERSECTOR_H
-#include<Eigen/StdVector>
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector2d)
+
 #include "circle.h"
 #include "line.h"
 namespace path_geom {

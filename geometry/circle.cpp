@@ -24,11 +24,23 @@ Circle::Circle(const Eigen::Vector2d& center, double radius, Shape::Direction di
 
 void Circle::toPoints(double resolution, std::vector<Eigen::Vector2d> &points)
 {
-    double arc_length = 2*M_PI*radius_;
+    double arc_angle;
+    if (dir_==Shape::FORWARD) {
+        arc_angle = end_angle_-start_angle_;
+    } else {
+        arc_angle = start_angle_ -end_angle_;
+    }
+
+    if (arc_angle<0)
+        arc_angle+=2*M_PI;
+    if (arc_angle>2*M_PI)
+        arc_angle-=2*M_PI;
+
+    double arc_length = arc_angle*radius_;
     int steps = arc_length/resolution;
-    double dtheta = 2*M_PI/steps;
+    double dtheta = dir_*arc_angle/steps;
     points.resize(steps);
-    double theta = 0;
+    double theta = start_angle_;
     for (int i=0;i<steps;++i) {
         points[i].x() = radius_*cos(theta);
         points[i].y() = radius_*sin(theta);

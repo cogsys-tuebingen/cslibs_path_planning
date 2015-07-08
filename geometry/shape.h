@@ -12,8 +12,8 @@
 #ifndef SHAPE_H
 #define SHAPE_H
 #include <Eigen/Core>
-#include <vector>
-
+#include<Eigen/StdVector>
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector2d)
 
 
 // ***todo templatisieren http://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
@@ -25,8 +25,9 @@ class Shape
 public:
 
     enum Direction {
-        FORWARD,
-        BACKWARD
+        BACKWARD=-1,
+        FORWARD=1
+
     };
 
     virtual void toPoints(double resolution, std::vector<Eigen::Vector2d>& points) = 0;

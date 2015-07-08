@@ -12,6 +12,7 @@
 
 #ifndef CIRCLE2D_H
 #define CIRCLE2D_H
+#include <cmath>
 #include "../geometry/shape.h"
 
 
@@ -25,10 +26,13 @@ public:
 
     Eigen::Vector2d center() const {return center_;}
     double radius() const {return radius_;}
+    double startAngle() {return start_angle_;}
+    double endAngle() {return end_angle_;}
 protected:
     Eigen::Vector2d center_;
     double radius_;
     Shape::Direction dir_;
+    double start_angle_=0.0, end_angle_=2*M_PI;
 };
 }
 #endif // CIRCLE2D_H

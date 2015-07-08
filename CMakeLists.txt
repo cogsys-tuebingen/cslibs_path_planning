@@ -63,6 +63,10 @@ set(SOURCES ReedsShepp/CurveGenerator.cpp
     generic/MapManager.hpp
     generic/NodeManager.hpp
     generic/ReedsSheppExpansion.hpp
+    geometry/circle.cpp
+    geometry/intersector.cpp
+    geometry/line.cpp
+    geometry/tangentor.cpp
     evaluation/Renderer.hpp
     evaluation/Util.hpp
     evaluation/MapGenerators.hpp
@@ -129,6 +133,15 @@ else(NOT OpenCV_FOUND)
     add_executable (Evaluator
                              evaluation/evaluator.cpp)
     target_link_libraries (Evaluator
+        utils_path
+        ${catkin_LIBRARIES}
+        ${Boost_LIBRARIES}
+        ${OpenCV_LIBS}
+        ${YAML_LIBRARIES})
+
+    add_executable (Geomtest
+                             geometry/test_geometry.cpp)
+    target_link_libraries (Geomtest
         utils_path
         ${catkin_LIBRARIES}
         ${Boost_LIBRARIES}

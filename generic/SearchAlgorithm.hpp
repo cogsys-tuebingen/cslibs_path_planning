@@ -120,8 +120,7 @@ public:
 public:
     GenericSearchAlgorithm()
         : start(NULL), goal(NULL), has_cost_(false), expansions(0), multi_expansions(0), updates(0)
-    {
-    }
+    {}
 
     /**
      * @brief empty
@@ -377,6 +376,159 @@ protected:
     int expansions;
     int multi_expansions;
     int updates;
+};
+
+template <class Param>
+class GenericDynSearchAlgorithm:
+        public GenericSearchAlgorithm<Param>
+{
+private:
+    void TopKey(double &key1, double &key2){
+        if(open.empty()){
+            key1 = INFINITY;
+            key2 = INFINITY;
+        }else{
+            NodeT* Top = open.top();
+            Top->getKey(key1,key2);
+        }
+    }
+
+    bool less_keys(double &left_key1, double &left_key2, double &right_key1, double &right_key2){
+        if(left_key1<right_key1){
+            return true;
+        }else if(left_key1 == right_key1){
+            if(left_key2<right_key2){
+                return true;
+            }else{
+                return false;
+            }
+        }
+        return false;
+    }
+
+    bool continue_while(){
+        double topKey1,topKey2,startKey1,startKey2;
+
+        TopKey(topKey1,topKey2);
+        start->CalcKey(startKey1,startKey2);
+
+        return less_keys(topKey1,topKey2,startKey1,startKey2) || start->rhs == start->distance;
+    }
+    void findPathImp(){
+        double delta,dist;
+        double res = map_.getResolution();
+        while(continue_while()){
+            NodeT* current = open.next();
+            current->unMark(NodeT::MARK_OPEN);
+            current->mark(NodeT::MARK_CLOSED);
+            if(current->distance > current->rhs){
+                current->distance = current->rhs;
+                NeighborhoodType::iterateFreeNeighbors(*this, map_, current);
+            }else{
+                current->distance = INFINITY;
+                delta = NeighborhoodType::getDelta(map_, dynamic_cast<NodeT*>(current->prev), current);
+                dist = current->prev->distance + delta * res;
+                UpdateVertex(current,dist);
+                NeighborhoodType::iterateFreeNeighbors(*this, map_, current);
+            }
+        }
+    }
+public:
+
+    typedef GenericSearchAlgorithm<Param> GenAlg;
+
+    typedef typename GenAlg::MapManager MapManager;
+    typedef typename GenAlg::Heuristic Heuristic;
+    typedef typename GenAlg::NeighborhoodType NeighborhoodType;
+    typedef typename GenAlg::PathT PathT;
+    typedef typename GenAlg::NodeT NodeT;
+    typedef typename GenAlg::PointT PointT;
+
+    using GenAlg::start;
+    using GenAlg::goal;
+    using GenAlg::map_;
+    using GenAlg::open;
+    using GenAlg::empty;
+
+    GenericDynSearchAlgorithm():GenAlg(){}
+
+    void init(const PointT& from, const PointT& to) {
+        //init von DSTAR
+        open.clear();
+        start = map_.lookup(from);
+        goal = map_.lookup(to);
+
+        NodeT::init(*start, from);
+        NodeT::init(*goal, to);
+
+        goal->rhs = 0;
+
+        Heuristic::compute(goal, start, map_.getMap()->getResolution());
+        Heuristic::compute(start, start, map_.getMap()->getResolution());
+
+        goal->CalcKey();
+
+        goal->mark(NodeT::MARK_OPEN);
+
+        open.add(goal);
+    }
+
+    void UpdateVertex(NodeT* neighbor, double dist){
+        if(neighbor!=goal){
+           neighbor->rhs = dist;//only one antecesor
+        }
+        if (neighbor->isMarked(NodeT::MARK_OPEN)){
+            open.remove(neighbor);
+        }
+        if(neighbor->distance != neighbor->rhs){
+            neighbor->CalcKey();
+            neighbor->mark(NodeT::MARK_OPEN);
+            open.add(neighbor);
+        }
+    }
+
+    NeighborhoodBase::ProcessingResult
+    processNeighbor(NodeT* current, NodeT* neighbor, double delta) {
+
+        neighbor->mark(NodeT::MARK_WATCHED);
+
+        double res = map_.getResolution();
+        //double cost = this->getCost(neighbor);//Costmap
+        double distance = current->distance + delta * res;
+        bool closer = distance < neighbor->distance;
+
+        bool inOpenList = neighbor->isMarked(NodeT::MARK_OPEN);
+        bool inClosedList = neighbor->isMarked(NodeT::MARK_CLOSED);
+
+        if(inClosedList && !closer) {
+            return NeighborhoodBase::PR_CLOSED;
+        }
+
+        if(!inOpenList || closer) {
+            neighbor->prev = current;
+            Heuristic::compute(neighbor, start, res);
+            UpdateVertex(neighbor,distance);
+            return NeighborhoodBase::PR_ADDED_TO_OPEN_LIST;
+        }
+
+        return NeighborhoodBase::PR_IGNORED;
+    }
+
+    PathT findPath(){
+        PathT path;
+
+        findPathImp();
+
+        if(start->prev){
+            NodeT* current = start;
+            path.push_back(*current);
+            while(current!=goal){
+                current = dynamic_cast<NodeT*>(current->prev);
+                path.push_back(*current);
+            }
+        }
+        return path;
+    }
 };
 
 }

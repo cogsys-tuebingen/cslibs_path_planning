@@ -59,6 +59,24 @@ struct DirectNeighborhoodBase : public NeighborhoodBase
             }
         }
     }
+
+    //D-Star
+    template <class Map, class NodeType>
+    static double getDelta(Map& map, NodeType* reference, NodeType* destiny){
+        int x = reference->x;
+        int y = reference->y;
+        for(unsigned i = 0; i < SIZE; ++i) {
+            int xx = Imp::dx(x,i);
+            int yy = Imp::dy(y,i);
+            if(map.contains(xx, yy)) {
+                NodeType* n = map.lookup(xx, yy);
+                if(n==destiny) {
+                    return Imp::delta(i);
+                }
+            }
+        }
+        return Imp::delta(8);
+    }
 };
 
 

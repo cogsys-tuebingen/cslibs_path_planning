@@ -23,13 +23,9 @@ namespace path_geom {
 class Shape
 {
 public:
-
-    enum Direction {
-        BACKWARD=-1,
-        FORWARD=1
-
-    };
-
+    static const int BACKWARD=-1;
+    static const int FORWARD = 1;
+    static constexpr double DEFAULT_TOLERANCE = 1e-5;
     virtual void toPoints(double resolution, std::vector<Eigen::Vector2d>& points) = 0;
 
 };

@@ -68,9 +68,20 @@ void Intersector::intersect(const Circle &c1, const Circle &c2, std::vector<Eige
     }
 }
 
-void Intersector::intersect(const Line& line, const Circle& circle,std::vector<Eigen::Vector2d> &res_points)
-{
 
+void Intersector::intersectArcs(const Circle &c1, const Circle &c2, std::vector<Vector2d> &res_points, double tol)
+{
+    std::vector<Vector2d> ipoints;
+    intersect(c1,c2,ipoints,tol);
+    for (auto& p : ipoints) {
+
+    }
+}
+
+
+void Intersector::intersect(const Line& line, const Circle& circle,std::vector<Eigen::Vector2d> &res_points, double tol)
+{
+    tol = fabs(tol);
     Vector2d p1=line.start();
     Vector2d p2=line.end();
     Vector2d c1=circle.center();
@@ -82,13 +93,13 @@ void Intersector::intersect(const Line& line, const Circle& circle,std::vector<E
     double c = c1.squaredNorm()+p1.squaredNorm()-2*c1.dot(p1)-r*r;
     res_points.clear();
     double bb4ac = b*b-4*a*c;
-    std::cout << " bb4ac "<<bb4ac << std::endl;
-    if (bb4ac<0) {
+    // ***todo not easy to account for numerical errors here ...
+    if (bb4ac<-tol*tol) {
         return;
-    } else if (fabs(bb4ac)<1e-10) {
+    } else if (fabs(bb4ac)<tol*tol) {
 
         double mu = -b/(2*a);
-        std::cout << "mu "<<mu << std::endl;
+
         if (mu>=0.0 && mu <=1.0) {
             res_points.resize(1);
             res_points[0]=p1+mu*p1p2;
@@ -99,7 +110,7 @@ void Intersector::intersect(const Line& line, const Circle& circle,std::vector<E
     } else {
         double mu1 = (-b - sqrt(bb4ac)) / (2 * a);
         double mu2 = (-b + sqrt(bb4ac)) / (2 * a);
-        std::cout << "mu1 "<<mu1 << " mu2 "<<mu2 << std::endl;
+        // ***todo incorporate tolerance here as well?
         if (mu1<0.0 && mu2<0.0) {
             return;
         }

@@ -21,8 +21,20 @@ class Intersector
 public:
 
     static void intersect (const Circle& c1, const Circle& c2,
-                           std::vector<Eigen::Vector2d>& res_points, double tol = 1e-5);
-    static void intersect(const Line& line, const Circle& circle,std::vector<Eigen::Vector2d> &res_points);
+                           std::vector<Eigen::Vector2d>& res_points, double tol = Shape::DEFAULT_TOLERANCE);
+    static void intersect(const Line& line, const Circle& circle,std::vector<Eigen::Vector2d> &res_points,
+                          double tol = Shape::DEFAULT_TOLERANCE);
+    /**
+     * @brief intersect circles, takes into account the start and end angles of the circles
+     * @param c1
+     * @param c2
+     * @param res_points
+     * @param tol
+     */
+    static void intersectArcs (const Circle& c1, const Circle& c2,
+                           std::vector<Eigen::Vector2d>& res_points, double tol = Shape::DEFAULT_TOLERANCE);
+
+
 
 };
 }

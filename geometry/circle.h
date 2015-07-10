@@ -55,7 +55,7 @@ protected:
     int dir_;
     double start_angle_=0.0, end_angle_=2*M_PI;
 
-    double getAngleOfPoint(const Eigen::Vector2d& p);
+    double getAngleOfPoint(const Eigen::Vector2d& p) const;
 };
 }
 #endif // CIRCLE2D_H

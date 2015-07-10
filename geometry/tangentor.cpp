@@ -10,6 +10,7 @@
 
 */
 #include <iostream>
+#include <limits>
 #include "tangentor.h"
 
 
@@ -63,7 +64,7 @@ void Tangentor::tangentArc(const path_geom::Line &line, const path_geom::Circle 
 
             // start point ist the touch point between line and tangent circle
             tangent_circle.setStartAngle(line.footPoint(tangent_circle.center()));
-            std::cout << "foot point "<< line.footPoint(tangent_circle.center()) << std::endl;
+            //std::cout << "foot point "<< line.footPoint(tangent_circle.center()) << std::endl;
             // line connecting centers of both circles
             Line ccline(tangent_circle.center(),circle.center());
             std::vector<Eigen::Vector2d> ipoints;
@@ -151,13 +152,42 @@ void Tangentor::tangentInnerArcs(const Circle &circle1, const Circle &circle2, d
         // directions of circles are incompatible
         return;
     }
+    std::vector<Circle> arcs;
     std::vector<path_geom::Circle> tangent_circles;
     tangentInnerCircles(circle1,circle2, radius,tangent_circles,tol);
+    std::cout << "tangentinnerarcs: found "<< tangent_circles.size()<<" circles"<<std::endl;
     for (auto& tangent_circle : tangent_circles) {
         // find the end point of the arc
         std::vector<Eigen::Vector2d> ipoints;
-
-        Intersector::intersectArcs(circle2, tangent_circle, ipoints,tol);
+        //std::cout << "circle1 center "<<circle1.center() << " tangent circle "<<tangent_circle.center() << std::endl;
+        //std::cout << "radius circle1 "<<circle1.radius() << " radius tangentcircle2 "<< tangent_circle.radius()<<std::endl;
+        Intersector::intersectArcs(circle1, tangent_circle, ipoints,tol);
+        //std::cout << "intersection points circle 1 to arc:"<<ipoints.size() << std::endl;
+        if (ipoints.size()==1) {
+            tangent_circle.setStartAngle(ipoints[0]);
+            Intersector::intersectArcs(tangent_circle, circle2, ipoints,tol);
+          //  std::cout << "intersection points arc to circle 2 :"<<ipoints.size() << std::endl;
+            if (ipoints.size()==1) {
+                tangent_circle.setEndAngle(ipoints[0]);
+                arcs.push_back(tangent_circle);
+            }
+        }
     }
+    if (arcs.size()==1) {
+        res.push_back(arcs.front());
+    } else if (arcs.size()>=2) {
+        // somehow two arcs , use the shorter one
+        double max_arc_angle = std::numeric_limits<double>::max();
+        size_t min_idx = 0;
+        for (size_t i=0;i<arcs.size();++i) {
+            double arc_angle = arcs[i].getArcAngle();
+            if (arc_angle<max_arc_angle) {
+                min_idx = i;
+                max_arc_angle =arc_angle;
+            }
+        }
+        res.push_back(arcs[min_idx]);
+    }
+    // no else.. res is empty
 
 }

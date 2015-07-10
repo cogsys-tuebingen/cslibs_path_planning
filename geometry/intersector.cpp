@@ -23,47 +23,49 @@ void Intersector::intersect(const Circle &c1, const Circle &c2, std::vector<Eige
     //Calculate distance between centres of circle
     Vector2d c1c2 = c2.center()-c1.center();
     double d = (c1c2).norm();
+    if (d<tol) {
+        return;
+    }
     double r1 = c1.radius();
     double r2 = c2.radius();
     double m = r1+r2;
-    double n = fabsf(r1-r2);
+    double n = fabs(r1-r2);
     res_points.clear();
     //No solns
-    if ( d > m )
+    if ( d > m+tol )
         return;
     //Circle are contained within each other
-    if ( d < n )
+    if ( d+tol < n )
         return;
     //Circles are the same
     if ( fabs(d)<tol && fabs(r1 -r2)<tol )
         return;
     //Solve for a
     double a = ( r1 * r1 - r2 * r2 + d * d ) / (2 * d);
-    //Solve for h
-    float h = sqrt( r1 * r1 - a * a );
-
-
 
     //Calculate point p, where the line through the circle intersection points crosses the line between the circle centers.
     Vector2d p(c1.center().x() + ( a / d ) * ( c1c2.x()),
             c1.center().y() + ( a / d ) * ( c1c2.y() ));
 
     //1 soln , circles are touching
-    if ( fabs(r1 + r2 -d)<tol) {
+    if ( fabs(r1 + r2 -d)<tol|| d+fabs(r1-r2)<tol) {
         res_points.push_back(p);
 
         return;
     } else {
-        res_points.push_back(p+h/d*Vector2d(c1c2.y(),-1.0*c1c2.x()));
-        res_points.push_back(p+h/d*Vector2d(-1.0*c1c2.y(),c1c2.x()));
-        /*        p1.x = p.x + ( h / d ) * ( c2.centre.y - c1.centre.y );
-        p1.y = p.y - ( h / d ) * ( c2.centre.x - c1.centre.x );
-
-        p2.x = p.x - ( h / d ) * ( c2.centre.y - c1.centre.y );
-        p2.y = p.y + ( h / d ) * ( c2.centre.x - c1.centre.x );
-
-        *sol1 = p1;
-        *sol2 = p2;*/
+        double h_sq = r1 * r1 - a * a;
+        if (fabs(h_sq)<tol*tol) {
+            h_sq= 0.0;
+        } else if (h_sq<-(tol*tol)) {
+            return;
+        }
+        double h = sqrt(h_sq);
+        if (h<tol) {
+            res_points.push_back(p);
+        } else {
+            res_points.push_back(p+h/d*Vector2d(c1c2.y(),-1.0*c1c2.x()));
+            res_points.push_back(p+h/d*Vector2d(-1.0*c1c2.y(),c1c2.x()));
+        }
 
     }
 }
@@ -71,10 +73,19 @@ void Intersector::intersect(const Circle &c1, const Circle &c2, std::vector<Eige
 
 void Intersector::intersectArcs(const Circle &c1, const Circle &c2, std::vector<Vector2d> &res_points, double tol)
 {
+    res_points.clear();
     std::vector<Vector2d> ipoints;
     intersect(c1,c2,ipoints,tol);
-    for (auto& p : ipoints) {
 
+    for (auto& ip : ipoints) {
+        // check each intersection point if it is part of both arcs
+//        std::cout << "ipoitn to check "<<ip << std::endl;
+        Vector2d d1=c1.center()-ip;
+        Vector2d d2=c2.center()-ip;
+
+        if (c1.isPointOnArc(ip) && c2.isPointOnArc(ip)) {
+            res_points.push_back(ip);
+        }
     }
 }
 

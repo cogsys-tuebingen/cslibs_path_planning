@@ -24,6 +24,11 @@
     template <int DrawInterval, int DrawStartInterval, class Neighborhood, class AnalyticExpansion = NoExpansion, class PointT = Pose2d, class MapT = GridMap2d>\
     class name##Search_Debug : public name##Search<Neighborhood, AnalyticExpansion, PointT, MapT, DrawInterval, DrawStartInterval> {};
 
+#define DEFINE_DYN_ALGORITHM(name, Heuristic, MapManager, QueueManager) \
+    template <class Neighborhood, class AnalyticExpansion = NoExpansion, class PointT = Pose2d, class MapT = GridMap2d, int DrawInterval=0, int DrawStartInterval=0> \
+    class name##Search : public GenericDynSearchAlgorithm<GenericParameter<PointT,Heuristic,MapT,Neighborhood,AnalyticExpansion,QueueManager,MapManager,DrawInterval, DrawStartInterval> > {};\
+    template <int DrawInterval, int DrawStartInterval, class Neighborhood, class AnalyticExpansion = NoExpansion, class PointT = Pose2d, class MapT = GridMap2d>\
+    class name##Search_Debug : public name##Search<Neighborhood, AnalyticExpansion, PointT, MapT, DrawInterval, DrawStartInterval> {};
 
 #define DEFINE_CONCRETE_ALGORITHM(name, PointT, MapT, Neighborhood, AnalyticExpansion, Heuristic, MapManager, QueueManager) \
     template <int DrawInterval=0, int DrawStartInterval = 0> \
@@ -62,6 +67,11 @@ DEFINE_ALGORITHM(AStar2dInf,
 DEFINE_ALGORITHM(AStar,
                  HeuristicL2,
                  DirectionalStateSpaceManager,
+                 PriorityQueueManager)
+
+DEFINE_DYN_ALGORITHM(DStar2D,
+                 DHeuristicL2,
+                 GridMapManager,
                  PriorityQueueManager)
 //typedef MaxHeuristic<HeuristicL2, HeuristicNonHolonomicNoObstacles> MH1;
 typedef MaxHeuristic<HeuristicL2, HeuristicHolonomicObstacles> MH1;

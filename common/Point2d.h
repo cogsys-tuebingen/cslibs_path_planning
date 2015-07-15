@@ -104,6 +104,14 @@ public:
         p.y = -y;
         return p;
     }
+
+    bool operator == (const Point2d& rhs) const{
+        return x==rhs.x && y==rhs.y;
+    }
+
+    bool operator != (const Point2d& rhs) const{
+        return !(*this == rhs);
+    }
 };
 
 inline std::ostream& operator << (std::ostream& ostr, const Point2d& p)

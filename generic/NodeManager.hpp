@@ -81,6 +81,10 @@ struct GenericManager {
         container.pop();
         return next;
     }
+    //D-Lite
+    Node* top() {
+        return container.top();
+    }
 
     typename Container::const_iterator begin() const {
         return container.begin();

@@ -50,6 +50,57 @@ struct HeuristicNode : public Node<PointT> {
 };
 
 /**
+ * @brief The HeuristicNode struct augments a class by adding more fields for managing heuristics (D-Star)
+ */
+template <class PointT>
+struct DHeuristicNode : public HeuristicNode<PointT> {
+    using Node<PointT>::distance;//Für D-Star, das ist g von Node
+    using HeuristicNode<PointT>::h;
+
+    typedef PointT PointType;
+    typedef DHeuristicNode<PointT> NodeType;
+
+    virtual double getTotalCost() const {
+        return key1+(key2/key1);//Adaptierung für die 2 Keys (Experimental!)
+    }
+
+    void CalcKey(double &key1_o, double &key2_o) const {
+        key2_o = rhs<distance?rhs:distance;
+        key1_o = key2_o + h;
+    }
+
+    void CalcKey(){
+        key2 = rhs<distance?rhs:distance;
+        key1 = key2 + h;
+    }
+
+    void getKey(double &key1_o, double &key2_o) const {
+        key1_o = key1;
+        key2_o = key2;
+    }
+
+    template <class AnyPoint>
+    static void init(DHeuristicNode<PointT> &memory, const AnyPoint& p) {
+        Node<PointT>::init(memory, p);
+        memory.h = 0;
+        memory.rhs = INFINITY;
+        memory.key1 = INFINITY;
+        memory.key2 = INFINITY;
+    }
+
+    template <typename V>
+    static void init(DHeuristicNode<PointT> &memory, V x, V y) {
+        Node<PointT>::init(memory, x, y);
+        memory.h = 0;
+        memory.rhs = INFINITY;
+        memory.key1 = INFINITY;
+        memory.key2 = INFINITY;
+    }
+
+    double rhs, key1, key2;
+};
+
+/**
  * @brief The HeuristicMapTraits class has type information for Maps
  */
 template <class H>
@@ -111,6 +162,26 @@ struct HeuristicL2 {
     template <class PointT>
     struct NodeHolder {
         typedef HeuristicNode<PointT> NodeType;
+    };
+
+    template <class A, class B>
+    static void compute(A* current, const B* goal, double res) {
+        current->h = res * hypot(current->x - goal->x, current->y - goal->y);
+    }
+
+    template <class Map, class NodeT>
+    static void setMap(const Map* map, const NodeT& goal) {
+        /// will be optimized out
+    }
+};
+
+/**
+ * @brief The HeuristicL2 struct represents the L2 norm (euclidean)(D-Star)
+ */
+struct DHeuristicL2 {
+    template <class PointT>
+    struct NodeHolder {
+        typedef DHeuristicNode<PointT> NodeType;
     };
 
     template <class A, class B>

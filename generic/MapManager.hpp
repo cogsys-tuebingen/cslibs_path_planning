@@ -126,12 +126,6 @@ public:
         while(bresenham.next()) {
             bresenham.coordinates(x,y);
             if(!map_->isNoInformation(x,y,theta) && !map_->isFree(x,y,theta)) {
-                std::cerr << "not free or unknown: " << x << " / " << y
-                          << "(" << (int) map_->getValue(x,y) << ")" << std::endl;
-                std::cerr << map_->isNoInformation(x,y,theta)  << ", " << map_->isFree(x,y,theta) << ", "
-                          << map_->isOccupied(x,y,theta)  << std::endl;
-                std::cerr << "end not free or unknown: " << x << " / " << y << "("
-                          << (int) map_->getValue(x,y) << ")" << std::endl;
                 return false;
             }
         }

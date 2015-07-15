@@ -26,8 +26,8 @@ void testCircle()
     Eigen::Vector2d p2=c+Eigen::Vector2d(2*radius*cos(phi1), radius*sin(phi1));
     Eigen::Vector2d p3=c+Eigen::Vector2d(radius*cos(phi2), radius*sin(phi2));
 
-    Circle c1(c,radius,Shape::FORWARD);
-    Circle c2(c,radius,Shape::BACKWARD);
+    Circle c1(c,radius,path_geom::ARC_LEFT);
+    Circle c2(c,radius,path_geom::ARC_RIGHT);
     c1.setStartAngle(270.0*M_PI);
     c1.setEndAngle(45*M_PI/180.0);
     c2.setStartAngle(270.0*M_PI);
@@ -54,12 +54,62 @@ void testCircle()
         std::cout << "Failure point on arc4"<<std::endl;
     }
 
+    PathPose pose1;
+    pose1.pos_.x()=1.0;
+    pose1.pos_.y()=0.0;
+    pose1.theta_=M_PI/2.0 ;
+    PathPose pose2;
+    pose2.pos_.x()=1.0;
+    pose2.pos_.y()=1.0;
+    pose2.theta_=3*M_PI/4.0 ;
+
+    double r1=1.0;
+    double r2=sqrt(2.0);
+    int move_dir = path_geom::FORWARD;
+    Circle arc1 = Circle::createArcFrom(pose1,r1,M_PI,path_geom::ARC_LEFT);
+    Circle arc1neg = Circle::createArcFrom(pose1,r1,M_PI,path_geom::ARC_RIGHT);
+
+    bool success1=(PathPose(0,0,0).isIdentical(arc1.center()));
+    assert(success1==true);
+    assert((PathPose(2.0,0,0).isIdentical(arc1neg.center())));
+
+    Circle arc2 = Circle::createArcFrom(pose2,r2,M_PI,path_geom::ARC_LEFT);
+    Circle arc2neg = Circle::createArcFrom(pose2,r2,M_PI,path_geom::ARC_RIGHT);
+    assert((PathPose(0,0,0).isIdentical(arc2.center())));
+    assert((PathPose(2.0,2.0,0).isIdentical(arc2neg.center())));
+
+    assert(fabs(arc2.startAngle()-M_PI/4.0)<path_geom::ANGLE_EPS);
+    assert(fabs(arc2.endAngle()-5*M_PI/4.0)<path_geom::ANGLE_EPS);
+    assert(fabs(arc2neg.startAngle()-5*M_PI/4.0)<path_geom::ANGLE_EPS);
+    assert(fabs(arc2neg.endAngle()-1*M_PI/4.0)<path_geom::ANGLE_EPS);
+
+
+    std::cout << "arc2.center() "<<arc2.center() << std::endl;
+    std::cout << "arc2neg.center() "<<arc2neg.center() << std::endl;
+
+
 
 }
 
+
+void testPathPose()
+{
+    path_geom::PathPose pose;
+    Eigen::Vector2d p;
+    p << 2.0 , 3.0;
+    pose.theta_ = 99;
+    pose.pos_ = p;
+    std::cout << "psoe is" << pose.pos_ <<std::endl;
+    std::cout << "pose yaw is "<<pose.theta_ << std::endl;
+    pose.theta_ = 101;
+    std::cout << "pose yaw is "<<pose.theta_ << std::endl;
+}
+
+
+
 int main(int argc, char **argv)
 {
-
+    testPathPose();
     testCircle();
 
     Eigen::Vector2d c1(2.0, 0.0);
@@ -68,7 +118,7 @@ int main(int argc, char **argv)
     Eigen::Vector2d c4(2.0, -0.5);
     Eigen::Vector2d p1(0.0, 0.0);
     Eigen::Vector2d p2(4.0, 0.0);
-    path_geom::Circle circ1(c1,1.0,Shape::FORWARD);
+    path_geom::Circle circ1(c1,1.0,path_geom::ARC_LEFT);
     path_geom::Line line1(p1,p2);
 
     // check point online / left /right
@@ -108,14 +158,14 @@ int main(int argc, char **argv)
     std::cout << "sx "<< line3.start().x() << " sy "<< line3.start().y()
         << "ex "<< line3.end().x() << " ey "<< line3.end().y() << std::endl;
 
-    path_geom::Circle circ2(c2,1.0,Shape::FORWARD);
+    path_geom::Circle circ2(c2,1.0,path_geom::ARC_LEFT);
     Intersector::intersect(circ1,circ2,results);
     if (results.size()==2) {
         std::cout << "success circle"<< std::endl;
     } else {
         std::cout << "failure circle"<< std::endl;
     }
-    path_geom::Circle circ3(c3,1.0,Shape::FORWARD);
+    path_geom::Circle circ3(c3,1.0,path_geom::ARC_LEFT);
     Intersector::intersect(circ1,circ3,results);
     if (results.size()==1) {
         std::cout << "success circle"<< std::endl;
@@ -128,7 +178,7 @@ int main(int argc, char **argv)
     Line path1(A,B);
     Line path2(B,B_2);
     Line path3(A,B_2);
-    Circle obstacle(E,2.0,Shape::FORWARD);
+    Circle obstacle(E,2.0,path_geom::ARC_LEFT);
     std::vector<Circle> tangent_circles;
     Tangentor::tangentCircles(path1,obstacle,2.0,tangent_circles);
     for (size_t i=0;i<tangent_circles.size();++i) {
@@ -158,10 +208,10 @@ int main(int argc, char **argv)
         std::cout << "tangenting circle end "<<circ.endPoint()<< std::endl;
         std::cout << " tangenting circle center "<<circ.center() << std::endl;
     }
-    Circle path4(C,3.0,Shape::BACKWARD);
+    Circle path4(C,3.0,path_geom::ARC_RIGHT);
     path4.setStartAngle(M_PI);
     path4.setEndAngle(0.0);
-    Circle path5(C,3.0,Shape::BACKWARD);
+    Circle path5(C,3.0,path_geom::ARC_RIGHT);
     path5.setStartAngle(M_PI);
     path5.setEndAngle(M_PI/2.0);
     std::vector<Circle> tangent_arcs, tangent_arcs2;

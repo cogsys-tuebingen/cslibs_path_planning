@@ -20,6 +20,21 @@ Line::Line(const Eigen::Vector2d& start, const Eigen::Vector2d& end)
 }
 
 
+Line::Line(const PathPose &start, double length, int direction)
+
+{
+    direction=direction/abs(direction);
+    if (direction==path_geom::FORWARD) {
+        start_=start.pos_;
+        end_ = start.pos_+fabs(length)*Eigen::Vector2d(cos(start.theta_),sin(start.theta_));
+    } else {
+        end_ =start.pos_;
+        start_ = end_-fabs(length)*Eigen::Vector2d(cos(start.theta_),sin(start.theta_));
+    }
+
+}
+
+
 path_geom::Line Line::parallel(const Line &line, double dist)
 {
     Vector2d ds= (line.end_-line.start_).normalized();
@@ -27,6 +42,51 @@ path_geom::Line Line::parallel(const Line &line, double dist)
     return Line(line.start_+ortho, line.end_+ortho);
 
 
+}
+
+
+void Line::toPoses(double resolution, std::vector<PathPose> &poses, int move_direction, bool with_start_pose)
+{
+    if (fabs(resolution)<1e-10) {
+        poses.clear();
+        return;
+    }
+    Vector2d ds= (end_-start_);
+    double l = ds.norm();
+    int n = l/resolution;
+    Vector2d step=ds.normalized()*resolution;
+
+    double theta;
+    int start_idx;
+    Vector2d p;
+    if (move_direction==path_geom::BACKWARD) {
+        p = end_;
+        step = step*-1.0;
+    } else {
+        p = start_;
+
+
+    }
+    theta = atan2(ds.y(),ds.x());
+    if (with_start_pose) {
+        poses.resize(n+1);
+    } else {
+        poses.resize(n);
+        p=p+step;
+    }
+    for (int i=0;i<n;++i) {
+        poses[i].pos_=p;
+        poses[i].theta_ = theta;
+        p+=step;
+    }
+/*    if (with_end_pose) {
+    // add end point as well
+        if (move_direction==path_geom::BACKWARD) {
+            poses[n].assign(start_,theta);
+        } else {
+            poses[n].assign(end_,theta);
+        }
+    }*/
 }
 
 

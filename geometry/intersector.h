@@ -21,9 +21,9 @@ class Intersector
 public:
 
     static void intersect (const Circle& c1, const Circle& c2,
-                           std::vector<Eigen::Vector2d>& res_points, double tol = Shape::DEFAULT_TOLERANCE);
+                           std::vector<Eigen::Vector2d>& res_points, double tol = path_geom::DIST_EPS);
     static void intersect(const Line& line, const Circle& circle,std::vector<Eigen::Vector2d> &res_points,
-                          double tol = Shape::DEFAULT_TOLERANCE);
+                          double tol = path_geom::DIST_EPS);
     /**
      * @brief intersect circles, takes into account the start and end angles of the circles
      * @param c1
@@ -32,7 +32,7 @@ public:
      * @param tol
      */
     static void intersectArcs (const Circle& c1, const Circle& c2,
-                           std::vector<Eigen::Vector2d>& res_points, double tol = Shape::DEFAULT_TOLERANCE);
+                           std::vector<Eigen::Vector2d>& res_points, double tol = path_geom::DIST_EPS);
 
 
 

@@ -183,9 +183,9 @@ double NonHolonomicNeighborhoodBase<d,s,moves,reversed,I>::distance_step_pixel =
 
 
 
-template <int distance = 100, int steerangle = 10, int moves = NonHolonomicNeighborhoodMoves::FORWARD_BACKWARD, bool reversed=false>
+template <int distance = 100, int steerangle = 10, int moves = NonHolonomicNeighborhoodMoves::FORWARD_BACKWARD, bool _reversed=false>
 struct NonHolonomicNeighborhood
-        : public NonHolonomicNeighborhoodBase<distance, steerangle, moves, reversed,
+        : public NonHolonomicNeighborhoodBase<distance, steerangle, moves, _reversed,
         NonHolonomicNeighborhood<distance, steerangle> >
 {
 };

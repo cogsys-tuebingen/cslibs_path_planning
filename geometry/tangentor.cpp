@@ -43,6 +43,60 @@ void Tangentor::tangentCircles(const path_geom::Line &line, const path_geom::Cir
 }
 
 
+void Tangentor::tangentPath(const Line &line, const Circle &circle, double radius,
+                            std::vector<std::shared_ptr<Shape> > &path, double tol)
+{
+    path.clear();
+    std::vector<path_geom::Circle> tangent_arcs;
+    tangentArc(line,circle,radius,tangent_arcs);
+    if (tangent_arcs.size()==0) {
+        return;
+    }
+    vector<Vector2d> ipoints;
+
+
+    auto min_it = min_element(begin(tangent_arcs), end(tangent_arcs), Circle::compareArcAngle);
+
+    std::shared_ptr<Circle> tangent_arc = make_shared<Circle>(*min_it);
+
+
+    // line from start point of original line to beginning of arc
+    auto start_line = make_shared<Line>(line.startPoint(),tangent_arc->startPoint());
+    path.push_back(start_line);
+
+    path.push_back(tangent_arc);
+    auto end_circle = make_shared<Circle>(circle);
+    end_circle->setStartAngle(tangent_arc->endPoint());
+    end_circle->setArcAngle(2*M_PI);
+    path.push_back(end_circle);
+}
+
+
+void Tangentor::tangentPath(const Circle &circle, const Line &line, double radius, std::vector<std::shared_ptr<Shape> > &path, double tol)
+{
+    path.clear();
+    std::vector<path_geom::Circle> tangent_arcs;
+    tangentArc(circle,line,radius,tangent_arcs);
+    if (tangent_arcs.size()==0) {
+        return;
+    }
+
+    auto min_it = min_element(begin(tangent_arcs), end(tangent_arcs), Circle::compareArcAngle);
+
+    std::shared_ptr<Circle> tangent_arc = make_shared<Circle>(*min_it);
+
+
+    auto start_circle = make_shared<Circle>(circle);
+
+    auto end_line = make_shared<Line>(tangent_arc->endPoint(),line.endPoint());
+    start_circle->selectEndPoint(tangent_arc->startPoint());
+
+    path.push_back(start_circle);
+    path.push_back(tangent_arc);
+    path.push_back(end_line);
+}
+
+
 void Tangentor::tangentArc(const path_geom::Line &line, const path_geom::Circle &circle, double radius,
                            std::vector<path_geom::Circle> &res, double tol)
 {

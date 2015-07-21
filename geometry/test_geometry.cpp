@@ -9,12 +9,14 @@
 */
 
 #include <iostream>
+#include <memory>
+#include <algorithm>
 #include "../geometry/intersector.h"
 #include "../geometry/tangentor.h"
 
 using namespace path_geom;
 using namespace Eigen;
-
+using namespace std;
 
 void testCircle()
 {
@@ -88,6 +90,26 @@ void testCircle()
     std::cout << "arc2neg.center() "<<arc2neg.center() << std::endl;
 
 
+    std::vector<shared_ptr<Circle>> arcs;
+
+    int index_min_element=3;
+    for (int i=0;i<2*index_min_element;++i) {
+        Circle a(p1,radius);
+        a.setArcAngle(1.0);
+        if (i==index_min_element) {
+            a.setArcAngle(0.5);
+        }
+        arcs.push_back(make_shared<Circle>(a));
+    }
+    auto min_it = std::min_element(std::begin(arcs), std::end(arcs), Circle::compareArcAnglePtr);
+    std::cout << "min element at: " << std::distance(std::begin(arcs), min_it)<<std::endl;
+    assert(std::distance(std::begin(arcs), min_it)==index_min_element);
+
+
+
+
+    std::cout << "Success Circle" <<std::endl;
+
 
 }
 
@@ -103,12 +125,38 @@ void testPathPose()
     std::cout << "pose yaw is "<<pose.theta_ << std::endl;
     pose.theta_ = 101;
     std::cout << "pose yaw is "<<pose.theta_ << std::endl;
+    std::cout << "Success pathpose" <<std::endl;
+
 }
 
+
+void testRtti()
+{
+    Eigen::Vector2d p1(2.0, 0.0);
+    Eigen::Vector2d p2(2.0, 0.0);
+    auto c1 = make_shared<Circle>(p1,1.0);
+    auto l1 = make_shared<Line>(p1,p2);
+    vector<shared_ptr<Shape>> segments;
+    segments.push_back(c1);
+    segments.push_back(l1);
+
+    auto first = segments[0];
+
+    auto first_line =  dynamic_pointer_cast<Line>(first);
+    auto first_circle = dynamic_pointer_cast<Circle>(first);
+
+    bool is_a_line = (bool)first_line;
+    bool is_a_circle = (bool)first_circle;
+
+    assert(is_a_line==false);
+    assert(is_a_circle==true);
+    std::cout << "Success RTTI" <<std::endl;
+}
 
 
 int main(int argc, char **argv)
 {
+    testRtti();
     testPathPose();
     testCircle();
 
@@ -155,8 +203,8 @@ int main(int argc, char **argv)
 
     path_geom::Line line3=path_geom::Line::parallel(line2,2.0);
 
-    std::cout << "sx "<< line3.start().x() << " sy "<< line3.start().y()
-        << "ex "<< line3.end().x() << " ey "<< line3.end().y() << std::endl;
+    std::cout << "sx "<< line3.startPoint().x() << " sy "<< line3.startPoint().y()
+        << "ex "<< line3.endPoint().x() << " ey "<< line3.endPoint().y() << std::endl;
 
     path_geom::Circle circ2(c2,1.0,path_geom::ARC_LEFT);
     Intersector::intersect(circ1,circ2,results);

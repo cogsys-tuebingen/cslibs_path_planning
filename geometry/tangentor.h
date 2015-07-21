@@ -12,6 +12,7 @@
 
 #ifndef TANGENTOR_H
 #define TANGENTOR_H
+#include <memory>
 #include "circle.h"
 #include "line.h"
 namespace path_geom {
@@ -21,6 +22,24 @@ class Tangentor
 public:
     static void tangentCircles(const path_geom::Line& line, const path_geom::Circle& circle, double radius,
                         std::vector<path_geom::Circle>& res, double tol=path_geom::DIST_EPS);
+
+
+    /**
+     * @brief returns a smooth path starting from given line to given circle on an arc with given radius
+     * results are returned in vector path containing a line from original start point to beginning of arc,
+     * the tangent arc, and teh circle with start angle set to touch point arc-circle
+     * @param line
+     * @param circle
+     * @param radius
+     * @param[out] path
+     * @param tol
+     */
+    static void tangentPath(const path_geom::Line& line, const path_geom::Circle& circle, double radius,
+                            std::vector<std::shared_ptr<Shape>>& path, double tol=path_geom::DIST_EPS);
+
+    static void tangentPath(const Circle &circle, const Line &line, double radius,
+                            std::vector<std::shared_ptr<Shape> > &path, double tol=path_geom::DIST_EPS);
+
 
     /**
      * @brief returns the tangenting arcs starting from line and going to circle

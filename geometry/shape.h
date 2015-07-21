@@ -70,7 +70,10 @@ public:
 class Shape
 {
 public:
-
+    virtual bool selectStartPoint(const Eigen::Vector2d& start,  double tol=path_geom::DIST_EPS) = 0;
+    virtual bool selectEndPoint(const Eigen::Vector2d& end,  double tol=path_geom::DIST_EPS) = 0;
+    virtual Eigen::Vector2d startPoint() const = 0 ;
+    virtual Eigen::Vector2d endPoint() const = 0 ;
     virtual void toPoints(double resolution, std::vector<Eigen::Vector2d>& points) = 0;
     virtual void toPoses(double resolution, std::vector<PathPose>& res_poses, int move_direction,
                          bool with_end_pose) = 0;

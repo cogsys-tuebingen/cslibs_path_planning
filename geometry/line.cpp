@@ -140,3 +140,31 @@ Vector2d Line::footPoint(const Vector2d &p) const
     Vector2d ortho(-dist*ds.y(), dist*ds.x());
     return (p-ortho);
 }
+
+
+bool Line::selectStartPoint(const Vector2d &start,  double tol)
+{
+    int rel_pos = pointRelativePosition(start);
+    if (!rel_pos) {
+        // point is on line
+        start_ = start;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+bool Line::selectEndPoint(const Vector2d &end,  double tol)
+{
+    int rel_pos = pointRelativePosition(end);
+    if (!rel_pos) {
+        // point is on line
+        end_ = end;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+

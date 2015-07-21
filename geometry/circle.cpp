@@ -22,11 +22,10 @@ Circle::Circle(const Vector2d& center, double radius, int direction)
 {
     if (arc_direction_==path_geom::ARC_RIGHT) {
         start_angle_=2*M_PI;
-        end_angle_=0.0;
     } else {
         start_angle_=0.0;
-        end_angle_=2*M_PI;
     }
+    arc_angle_ = 2*M_PI;
 }
 
 
@@ -36,16 +35,14 @@ path_geom::Circle Circle::createArcFrom(const PathPose &start, double radius, do
     double start_angle, end_angle;
     if (arc_direction==path_geom::ARC_LEFT) {
         start_angle=start.theta_- M_PI/2.0;
-        end_angle = start_angle+arc_angle;
     } else {
         start_angle=start.theta_+ M_PI/2.0;
-        end_angle = start_angle-arc_angle;
     }
     Vector2d cs(radius*cos(start_angle),radius*sin(start_angle));
 
     Vector2d center=start.pos_-cs;
     Circle circle(center,radius,arc_direction);
-    circle.setArc(start_angle,end_angle,arc_direction);
+    circle.setArc(start_angle,arc_angle,arc_direction);
     return circle;
 }
 
@@ -65,10 +62,9 @@ path_geom::Circle Circle::createArcTo(const PathPose &end, double radius, double
 
     Vector2d center=end.pos_-cs;
     Circle circle(center,radius,arc_direction);
-    circle.setArc(start_angle,end_angle,arc_direction);
+    circle.setArc(start_angle,arc_angle,arc_direction);
     return circle;
 }
-
 
 
 void Circle::setStartAngle(double angle)
@@ -82,26 +78,27 @@ void Circle::setStartAngle(double angle)
 }
 
 
-void Circle::setEndAngle(double angle)
-{
-
-    while (angle > 2*M_PI)
-      angle -= 2.0 * M_PI;
-    while (angle < 0.0)
-      angle += 2.0 * M_PI;
-    end_angle_ = angle;
-}
 
 
-void Circle::setArc(double start_angle, double end_angle, int arc_direction)
+void Circle::setArc(double start_angle, double arc_angle, int arc_direction)
 {
     setStartAngle(start_angle);
-    setEndAngle(end_angle);
+    arc_angle_=arc_angle;
     if (arc_direction>=0) {
         arc_direction_=path_geom::ARC_LEFT;
     } else {
         arc_direction_=path_geom::ARC_RIGHT;
     }
+}
+
+void Circle::setArcAngle(double angle)
+{
+    while (angle > 2*M_PI)
+      angle -= 2.0 * M_PI;
+    while (angle < 0.0)
+      angle += 2.0 * M_PI;
+    arc_angle_ = angle;
+
 }
 
 
@@ -111,8 +108,39 @@ double Circle::getArcLength() const
 }
 
 
+void Circle::setEndAngle(double angle)
+{
+
+    if (arc_direction_==path_geom::ARC_LEFT) {
+        arc_angle_ = angle - start_angle_;
+    } else {
+        arc_angle_ = start_angle_ - angle;
+    }
+
+
+    while (arc_angle_ > 2*M_PI)
+      arc_angle_ -= 2.0 * M_PI;
+    while (arc_angle_ < 0.0)
+      arc_angle_ += 2.0 * M_PI;
+
+}
+
+
+double Circle::endAngle() const
+{
+    double end_angle;
+    if (arc_direction_==path_geom::ARC_LEFT) {
+        end_angle = start_angle_+ arc_angle_;
+    } else {
+        end_angle = start_angle_ -arc_angle_;
+    }
+    return end_angle;
+}
+
+
 double Circle::getArcAngle() const
 {
+    /*
     double arc_angle;
     if (arc_direction_==path_geom::ARC_LEFT) {
         arc_angle = end_angle_-start_angle_;
@@ -122,8 +150,8 @@ double Circle::getArcAngle() const
     while (arc_angle > 2*M_PI)
       arc_angle -= 2.0 * M_PI;
     while (arc_angle < 0.0)
-      arc_angle += 2.0 * M_PI;
-    return arc_angle;
+      arc_angle += 2.0 * M_PI;*/
+    return arc_angle_;
 }
 
 
@@ -144,6 +172,20 @@ void Circle::toPoints(double resolution, std::vector<Vector2d> &points)
 }
 
 
+
+Eigen::Vector2d Circle::startPoint() const
+{
+    return center_+radius_*Eigen::Vector2d(cos(start_angle_),sin(start_angle_));
+}
+
+
+Eigen::Vector2d Circle::endPoint() const
+{
+    double end_angle = endAngle();
+    return center_+radius_*Eigen::Vector2d(cos(end_angle),sin(end_angle));
+}
+
+
 void Circle::toPoses(double resolution, std::vector<PathPose> &poses, int move_direction,
                      bool with_start_pose)
 {
@@ -160,7 +202,7 @@ void Circle::toPoses(double resolution, std::vector<PathPose> &poses, int move_d
     if (move_direction==path_geom::FORWARD) {
         phi = start_angle_;
     } else {
-        phi = end_angle_;
+        phi = endAngle();
         dphi = -1.0*dphi;
     }
     // the delta phi depends on the arc direction - whether it is a left or right arc
@@ -208,19 +250,6 @@ void Circle::setEndAngle(const Vector2d &p)
 }
 
 
-Vector2d Circle::startPoint()
-{
-
-    return Vector2d(center_.x()+radius_*cos(start_angle_),
-                      center_.y()+radius_*sin(start_angle_));
-}
-
-
-Vector2d Circle::endPoint()
-{
-    return Vector2d(center_.x()+radius_*cos(end_angle_),
-                      center_.y()+radius_*sin(end_angle_));
-}
 
 
 bool Circle::isPointOnArc(const Vector2d &p, double tol) const
@@ -231,26 +260,44 @@ bool Circle::isPointOnArc(const Vector2d &p, double tol) const
         return false;
     }
     double p_angle = getAngleOfPoint(p);
+    double end_angle = endAngle();
     if (arc_direction_==path_geom::ARC_LEFT) {
-        if (end_angle_>=start_angle_) {
-            if (p_angle>=start_angle_ && p_angle<=end_angle_) {
+        if (end_angle>=start_angle_) {
+            if (p_angle>=start_angle_ && p_angle<=end_angle) {
                 return true;
             }
         } else {
-            if (p_angle>=start_angle_ || p_angle<=end_angle_) {
+            if (p_angle>=start_angle_ || p_angle<=end_angle) {
                 return true;
             }
         }
     } else {
-        if (start_angle_>=end_angle_) {
-            if (p_angle>=end_angle_ && p_angle<=start_angle_) {
+        if (start_angle_>=end_angle) {
+            if (p_angle>=end_angle && p_angle<=start_angle_) {
                 return true;
             }
         } else {
-            if (p_angle>=end_angle_ || p_angle<=start_angle_) {
+            if (p_angle>=end_angle || p_angle<=start_angle_) {
                 return true;
             }
         }
     }
     return false;
+}
+
+
+bool Circle::compareArcAngle(const Circle &c1, const Circle &c2)
+{
+    double c1a = fabs(c1.getArcAngle());
+    double c2a = fabs(c2.getArcAngle());
+    return (c1a<c2a);
+}
+
+
+bool Circle::compareArcAnglePtr(const shared_ptr<Circle> &a, const shared_ptr<Circle> &b)
+{
+    double c1a = fabs(a->getArcAngle());
+    double c2a = fabs(b->getArcAngle());
+    return (c1a<c2a);
+
 }

@@ -48,6 +48,7 @@ set(SOURCES ReedsShepp/CurveGenerator.cpp
     common/Path.cpp
     common/GridMap2d.cpp
     common/SimpleGridMap2d.cpp
+    common/RotatedGridMap2d.cpp
     common/CollisionGridMap2d.cpp
     common/Bresenham2d.cpp
     a_star/AStar.cpp

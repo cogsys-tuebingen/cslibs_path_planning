@@ -187,13 +187,81 @@ void Tangentor::tangentInnerCircles(const Circle &circle1, const Circle &circle2
     }
     // large circle extended by radius around first circle
     Circle large_circ(circle1.center(),circle1.radius()+radius,circle1.direction());
+
     // small circle made smaller by radius around second circle
     Circle small_circ(circle2.center(),circle2.radius()-radius,circle2.direction());
-    std::vector<Eigen::Vector2d> ipoints;
 
+    // calculate intersection points between large_circ and small_circ
+    std::vector<Eigen::Vector2d> ipoints;
     Intersector::intersect(large_circ,small_circ, ipoints,tol);
-    for (size_t i=0;i<ipoints.size();++i) {
-        res.push_back(Circle(ipoints[i],radius,circle2.direction()));
+
+    // create the tangenting circles with intersection points for centers
+    for (auto& ipoint : ipoints) {
+        res.push_back(Circle(ipoint,radius,circle2.direction()));
+    }
+}
+
+
+void Tangentor::tangentPath(const Circle &small, const Circle &large, double radius, bool from_small, std::vector<std::shared_ptr<Shape> > &path, double tol)
+{
+    path.clear();
+    std::vector<Circle> tangent_circles;
+    tangentInnerCircles(small,large, radius,tangent_circles,tol);
+
+
+
+    std::vector<path_geom::Circle> tangent_arcs;
+    std::vector<Eigen::Vector2d> ipoints_small,ipoints_large;
+
+    for (auto &tcircle : tangent_circles) {
+        std::cout << "tangent circle "<<tcircle.center().x() << " "<<tcircle.center().y() << std::endl;
+        Intersector::intersectArcs(small, tcircle, ipoints_small,tol);
+        Intersector::intersectArcs(tcircle, large, ipoints_large,tol);
+        if (ipoints_small.size()==1 && ipoints_large.size()==1) {
+            std::cout << "touches both small and large" << std::endl;
+            if (from_small) {
+                bool ponline1 = tcircle.selectStartPoint(ipoints_small.front());
+                bool ponline2 = tcircle.selectEndPoint(ipoints_large.front());
+
+            } else {
+                tcircle.selectStartPoint(ipoints_large.front());
+                tcircle.selectEndPoint(ipoints_small.front());
+            }
+            tangent_arcs.push_back(tcircle);
+        } else {
+            std::cout << "touch small " << ipoints_small.size() << " large " << ipoints_large.size()<< std::endl;
+        }
+    }
+    std::cout.flush();
+    if (tangent_arcs.empty()) {
+        // no solution
+        return;
+    }
+
+
+
+    // select tangent arc with shortest arc length in case there are more than one solutions
+    auto min_it = min_element(begin(tangent_arcs), end(tangent_arcs), Circle::compareArcAngle);
+
+    std::shared_ptr<Circle> tangent_arc = make_shared<Circle>(*min_it);
+    std::shared_ptr<Circle> small_arc = make_shared<Circle>(small);
+    std::shared_ptr<Circle> large_arc = make_shared<Circle>(large);
+    bool status;
+    if (from_small) {
+        small_arc->selectEndPoint(tangent_arc->startPoint());
+        large_arc->selectStartPoint(tangent_arc->endPoint());
+        path.push_back(small_arc);
+        path.push_back(tangent_arc);
+        path.push_back(large_arc);
+    } else {
+        large_arc->selectEndPoint(tangent_arc->startPoint());
+        small_arc->selectStartPoint(tangent_arc->endPoint());
+       // tangent_arc->setStartAngle(ipoints_large.front());
+       // tangent_arc->setEndAngle(ipoints_small.front());
+        path.push_back(large_arc);
+        path.push_back(tangent_arc);
+        path.push_back(small_arc);
+
     }
 
 }

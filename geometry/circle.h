@@ -14,6 +14,7 @@
 #define CIRCLE2D_H
 #include <cmath>
 #include <memory>
+#include "../geometry/line.h"
 #include "../geometry/shape.h"
 
 
@@ -31,7 +32,7 @@ public:
     Circle(const Eigen::Vector2d& center, double radius, int arc_direction=path_geom::ARC_LEFT);
 
     /**
-     * @brief creates an arc starting at given start pose
+     * @brief creates an arc starting at given start pose with pose orientation tangenting the arc
      * @param start
      * @param radius
      * @param arc_angle
@@ -80,8 +81,8 @@ public:
      */
     void setArcAngle(double arc_angle);
 
-
-
+    void intersect (const Line& line, std::vector<Eigen::Vector2d>& ipoints, double tol=path_geom::DIST_EPS);
+    void intersect (const Circle& circle, std::vector<Eigen::Vector2d>& ipoints, double tol=path_geom::DIST_EPS);
 
 
     Eigen::Vector2d center() const {return center_;}

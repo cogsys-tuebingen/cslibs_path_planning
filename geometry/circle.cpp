@@ -12,6 +12,7 @@
 #include <cmath>
 #include <iostream>
 #include <utils_general/MathHelper.h>
+#include "../geometry/intersector.h"
 #include "../geometry/line.h"
 #include "../geometry/circle.h"
 using namespace path_geom;
@@ -74,11 +75,43 @@ void Circle::setStartAngle(double angle)
       angle -= 2.0 * M_PI;
     while (angle < 0.0)
       angle += 2.0 * M_PI;
+    double end_angle;
+    if (arc_direction_==path_geom::ARC_LEFT) {
+        end_angle = start_angle_+arc_angle_;
+    } else {
+        end_angle = start_angle_-arc_angle_;
+    }
     start_angle_ = angle;
+    if (arc_direction_==path_geom::ARC_LEFT) {
+        arc_angle_ = end_angle - start_angle_;
+    } else {
+        arc_angle_ = start_angle_-end_angle;
+    }
+
+    while (arc_angle_ > 2*M_PI)
+      arc_angle_ -= 2.0 * M_PI;
+    while (arc_angle_ < 0.0)
+      arc_angle_ += 2.0 * M_PI;
+
+
 }
 
 
 
+void Circle::setEndAngle(double angle)
+{
+    if (arc_direction_==path_geom::ARC_LEFT) {
+        arc_angle_ = angle - start_angle_;
+    } else {
+        arc_angle_ = start_angle_ - angle;
+    }
+
+    while (arc_angle_ > 2*M_PI)
+      arc_angle_ -= 2.0 * M_PI;
+    while (arc_angle_ < 0.0)
+      arc_angle_ += 2.0 * M_PI;
+
+}
 
 void Circle::setArc(double start_angle, double arc_angle, int arc_direction)
 {
@@ -108,22 +141,6 @@ double Circle::getArcLength() const
 }
 
 
-void Circle::setEndAngle(double angle)
-{
-
-    if (arc_direction_==path_geom::ARC_LEFT) {
-        arc_angle_ = angle - start_angle_;
-    } else {
-        arc_angle_ = start_angle_ - angle;
-    }
-
-
-    while (arc_angle_ > 2*M_PI)
-      arc_angle_ -= 2.0 * M_PI;
-    while (arc_angle_ < 0.0)
-      arc_angle_ += 2.0 * M_PI;
-
-}
 
 
 double Circle::endAngle() const
@@ -134,6 +151,10 @@ double Circle::endAngle() const
     } else {
         end_angle = start_angle_ -arc_angle_;
     }
+    while (end_angle > 2*M_PI)
+      end_angle -= 2.0 * M_PI;
+    while (end_angle < 0.0)
+      end_angle += 2.0 * M_PI;
     return end_angle;
 }
 
@@ -257,27 +278,30 @@ bool Circle::isPointOnArc(const Vector2d &p, double tol) const
     double d = (center_-p).norm();
     if (fabs(d-radius_)>tol) {
         // point not on circle
+        std::cout << "point not on circle"<<std::endl;
         return false;
     }
     double p_angle = getAngleOfPoint(p);
-    double end_angle = endAngle();
+
     if (arc_direction_==path_geom::ARC_LEFT) {
-        if (end_angle>=start_angle_) {
+        double end_angle = start_angle_+arc_angle_;
+        if (end_angle<=2*M_PI) {
             if (p_angle>=start_angle_ && p_angle<=end_angle) {
                 return true;
             }
         } else {
-            if (p_angle>=start_angle_ || p_angle<=end_angle) {
+            if (p_angle>=start_angle_ || p_angle<=(end_angle-2*M_PI)) {
                 return true;
             }
         }
     } else {
-        if (start_angle_>=end_angle) {
+        double end_angle = start_angle_ - arc_angle_;
+        if (end_angle>=0) {
             if (p_angle>=end_angle && p_angle<=start_angle_) {
                 return true;
             }
         } else {
-            if (p_angle>=end_angle || p_angle<=start_angle_) {
+            if (p_angle>=(end_angle+2*M_PI) || p_angle<=start_angle_) {
                 return true;
             }
         }
@@ -301,3 +325,16 @@ bool Circle::compareArcAnglePtr(const shared_ptr<Circle> &a, const shared_ptr<Ci
     return (c1a<c2a);
 
 }
+
+
+void Circle::intersect(const Circle &circle, std::vector<Vector2d> &ipoints, double tol)
+{
+    Intersector::intersectArcs(*this,circle,ipoints,tol);
+}
+
+
+void Circle::intersect(const Line& line, std::vector<Vector2d> &ipoints, double tol)
+{
+    Intersector::intersect(line,*this,ipoints,tol);
+}
+

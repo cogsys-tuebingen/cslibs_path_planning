@@ -83,6 +83,11 @@ public:
     static void tangentInnerArcs(const path_geom::Circle& circle1, const path_geom::Circle& circle2, double radius,
                                  std::vector<path_geom::Circle>& res, double tol=path_geom::DIST_EPS);
 
+    static void tangentPath(const path_geom::Circle& small, const path_geom::Circle& large, double radius,bool from_small,
+                                 std::vector<std::shared_ptr<Shape> > &path, double tol=path_geom::DIST_EPS);
+
+
+
 };
 }
 #endif // TANGENTOR_H

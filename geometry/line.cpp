@@ -144,7 +144,7 @@ Vector2d Line::footPoint(const Vector2d &p) const
 
 bool Line::selectStartPoint(const Vector2d &start,  double tol)
 {
-    int rel_pos = pointRelativePosition(start);
+    int rel_pos = pointRelativePosition(start,tol);
     if (!rel_pos) {
         // point is on line
         start_ = start;
@@ -157,7 +157,7 @@ bool Line::selectStartPoint(const Vector2d &start,  double tol)
 
 bool Line::selectEndPoint(const Vector2d &end,  double tol)
 {
-    int rel_pos = pointRelativePosition(end);
+    int rel_pos = pointRelativePosition(end,tol);
     if (!rel_pos) {
         // point is on line
         end_ = end;
@@ -168,3 +168,51 @@ bool Line::selectEndPoint(const Vector2d &end,  double tol)
 }
 
 
+ostream& path_geom::operator<<(ostream& os, const Line& line)
+{
+    const Vector2d& start = line.startPoint();
+    const Vector2d& end = line.endPoint();
+    os << "Line S(" << start.x()<<","<<start.y()<<") E("<<end.x()<<","
+       <<end.y()<<") ";
+    return os;
+}
+
+
+bool Line::isPointOnSegment(const Vector2d &p, double tol) const
+{
+    double d1 = (p-start_).norm();
+    double d2 = (p-end_).norm();
+    double dl = (end_-start_).norm();
+    if (fabs(d1+d2-dl)<tol) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+double Line::distanceTo(const Vector2d &p) const
+{
+
+    Vector2d f = footPoint(p);
+    if (isPointOnSegment(f)) {
+        return (f-p).norm();
+    } else {
+        return std::min((p-start_).norm(),(p-end_).norm());
+    }
+}
+
+Vector2d Line::nearestPointTo(const Vector2d &p) const
+{
+    Vector2d f = footPoint(p);
+    if (isPointOnSegment(f)) {
+        return f;
+    } else {
+        double d1 = (p-start_).norm();
+        double d2 = (p-end_).norm();
+        if (d1<d2) {
+            return start_;
+        } else {
+            return end_;
+        }
+    }
+}

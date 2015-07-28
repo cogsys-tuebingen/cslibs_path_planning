@@ -20,6 +20,27 @@
 using namespace path_geom;
 using namespace Eigen;
 
+
+void Tangentor::tangentPath(const shared_ptr<Shape> &shape, const Circle &circle, double radius,
+                            bool first_to_second, std::vector<std::shared_ptr<Shape> > &path, double tol)
+{
+    auto first_line = std::dynamic_pointer_cast<Line>(shape);
+    auto first_circle = std::dynamic_pointer_cast<Circle>(shape);
+    if (first_line) {
+        if (first_to_second) {
+            Tangentor::tangentPath(*first_line,circle,radius,path);
+        } else {
+            Tangentor::tangentPath(circle,*first_line, radius,path);
+        }
+    } else if (first_circle) {
+        Tangentor::tangentPath(circle,*first_circle,radius,!first_to_second, path);
+    } else {
+        path.clear();
+    }
+
+}
+
+
 void Tangentor::tangentCircles(const path_geom::Line &line, const path_geom::Circle &circle, double radius,
                         std::vector<path_geom::Circle>& res,  double tol)
 {
@@ -243,6 +264,10 @@ void Tangentor::tangentPath(const Circle &small, const Circle &large, double rad
     // select tangent arc with shortest arc length in case there are more than one solutions
     auto min_it = min_element(begin(tangent_arcs), end(tangent_arcs), Circle::compareArcAngle);
 
+    // arc lengths greater than pi are not desired
+    if (min_it->getArcAngle()>M_PI) {
+        return;
+    }
     std::shared_ptr<Circle> tangent_arc = make_shared<Circle>(*min_it);
     std::shared_ptr<Circle> small_arc = make_shared<Circle>(small);
     std::shared_ptr<Circle> large_arc = make_shared<Circle>(large);

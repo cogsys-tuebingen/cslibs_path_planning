@@ -18,6 +18,25 @@ using namespace path_geom;
 using namespace Eigen;
 using namespace std;
 
+void testDistance()
+{
+    Vector2d p1(1.0,1.0);
+    Vector2d p2(2.0,2.0);
+    Vector2d p3(3.0,1.0);
+    Vector2d p(0.8,1.2);
+    Line line(p1,p2);
+    assert(line.isPointOnSegment(p)==false);
+    std::cout << "dist to p is "<<line.distanceTo(p) << std::endl;
+    Circle c(p2,(p2-p1).norm());
+    c.selectStartPoint(p1);
+    c.setEndAngle(M_PI/2.0);
+    assert(c.isPointOnArc(p)==false);
+    assert(c.isPointOnArc(p3)==true);
+    std::cout << "arc dist to p is "<<c.distanceTo(p) << std::endl;
+    std::cout << "success tets distances"<< std::endl;
+}
+
+
 void testCircle()
 {
     double radius=1.0;
@@ -156,6 +175,7 @@ void testRtti()
 
 int main(int argc, char **argv)
 {
+    testDistance();
     testRtti();
     testPathPose();
     testCircle();

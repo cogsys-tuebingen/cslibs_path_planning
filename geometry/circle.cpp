@@ -278,7 +278,6 @@ bool Circle::isPointOnArc(const Vector2d &p, double tol) const
     double d = (center_-p).norm();
     if (fabs(d-radius_)>tol) {
         // point not on circle
-        std::cout << "point not on circle"<<std::endl;
         return false;
     }
     double p_angle = getAngleOfPoint(p);
@@ -338,3 +337,47 @@ void Circle::intersect(const Line& line, std::vector<Vector2d> &ipoints, double 
     Intersector::intersect(line,*this,ipoints,tol);
 }
 
+double Circle::distanceTo(const Vector2d &p) const
+{
+    Vector2d cp = p-center_;
+
+    bool point_on_arc = false;
+    if (cp.norm()>path_geom::DIST_EPS) {
+        Vector2d a=center_+cp.normalized()*radius_;
+        point_on_arc = isPointOnArc(a);
+    }
+    if (point_on_arc) {
+        return fabs(cp.norm()-radius_);
+    } else {
+        Vector2d s = startPoint();
+        Vector2d e = endPoint();
+        double d1 = (p-s).norm();
+        double d2 = (p-e).norm();
+        return std::min(d1,d2);
+    }
+
+}
+
+Vector2d Circle::nearestPointTo(const Vector2d &p) const
+{
+    bool point_on_arc = false;
+    Vector2d cp = p-center_;
+    Vector2d a;
+    if (cp.norm()>path_geom::DIST_EPS) {
+        a=center_+cp.normalized()*radius_;
+        point_on_arc = isPointOnArc(a);
+    }
+    if (point_on_arc) {
+        return a;
+    } else {
+        Vector2d s = startPoint();
+        Vector2d e = endPoint();
+        double d1 = (p-s).norm();
+        double d2 = (p-e).norm();
+        if (d1<d2) {
+            return s;
+        } else {
+            return e;
+        }
+    }
+}

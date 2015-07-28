@@ -63,6 +63,9 @@ public:
         }
     }
 
+    virtual double distanceTo(const Vector2d &point) const;
+    virtual Eigen::Vector2d nearestPointTo(const Eigen::Vector2d& p) const;
+
     /**
      * @brief sets the start angle of the arc, end angle is fix, thus arc_angle is changed
      * @param angle

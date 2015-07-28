@@ -13,6 +13,8 @@
 #ifndef LINE_H
 #define LINE_H
 #include "../geometry/shape.h"
+#include <iostream>
+
 namespace path_geom{
 
 
@@ -39,6 +41,13 @@ public:
     double pointSignedDistance(const Eigen::Vector2d &p) const;
 
     Eigen::Vector2d footPoint(const Eigen::Vector2d &p) const;
+
+    bool isPointOnSegment(const Eigen::Vector2d &p, double tol=path_geom::DIST_EPS) const;
+
+    virtual double distanceTo(const Eigen::Vector2d& point) const;
+    virtual Eigen::Vector2d nearestPointTo(const Vector2d &p) const;
+
+    friend ostream& operator<<(ostream& os, const Line& line);
 
 protected:
     Eigen::Vector2d start_, end_;

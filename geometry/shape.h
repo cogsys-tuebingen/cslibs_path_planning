@@ -14,6 +14,7 @@
 #include "utils_general/MathHelper.h"
 #include <Eigen/Core>
 #include<Eigen/StdVector>
+#include <iostream>
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector2d)
 
 
@@ -60,6 +61,10 @@ public:
         return ((pos_-other).norm()<dist_tol);
     }
 
+    friend ostream& operator<<(ostream& os, const PathPose& pp);
+
+
+
     Eigen::Vector2d pos_;
     double theta_ = 0.0;
     double weight_ = 0.0;
@@ -77,6 +82,9 @@ public:
     virtual void toPoints(double resolution, std::vector<Eigen::Vector2d>& points) = 0;
     virtual void toPoses(double resolution, std::vector<PathPose>& res_poses, int move_direction,
                          bool with_end_pose) = 0;
+
+    virtual double distanceTo(const Eigen::Vector2d& point) const = 0;
+    virtual Eigen::Vector2d nearestPointTo(const Eigen::Vector2d& p) const  = 0;
 
 };
 

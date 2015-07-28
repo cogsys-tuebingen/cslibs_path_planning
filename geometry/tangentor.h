@@ -24,10 +24,14 @@ public:
                         std::vector<path_geom::Circle>& res, double tol=path_geom::DIST_EPS);
 
 
+
+    static void tangentPath(const shared_ptr<path_geom::Shape>& shape, const path_geom::Circle& circle, double radius,
+                            bool first_to_second, std::vector<std::shared_ptr<Shape>>& path, double tol=path_geom::DIST_EPS);
+
     /**
      * @brief returns a smooth path starting from given line to given circle on an arc with given radius
      * results are returned in vector path containing a line from original start point to beginning of arc,
-     * the tangent arc, and teh circle with start angle set to touch point arc-circle
+     * the tangent arc, and the circle with start angle set to touch point arc-circle
      * @param line
      * @param circle
      * @param radius
@@ -39,6 +43,10 @@ public:
 
     static void tangentPath(const Circle &circle, const Line &line, double radius,
                             std::vector<std::shared_ptr<Shape> > &path, double tol=path_geom::DIST_EPS);
+
+
+    static void tangentPath(const path_geom::Circle& small, const path_geom::Circle& large, double radius,bool from_small,
+                                 std::vector<std::shared_ptr<Shape> > &path, double tol=path_geom::DIST_EPS);
 
 
     /**
@@ -83,8 +91,6 @@ public:
     static void tangentInnerArcs(const path_geom::Circle& circle1, const path_geom::Circle& circle2, double radius,
                                  std::vector<path_geom::Circle>& res, double tol=path_geom::DIST_EPS);
 
-    static void tangentPath(const path_geom::Circle& small, const path_geom::Circle& large, double radius,bool from_small,
-                                 std::vector<std::shared_ptr<Shape> > &path, double tol=path_geom::DIST_EPS);
 
 
 

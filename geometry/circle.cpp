@@ -207,7 +207,7 @@ Eigen::Vector2d Circle::endPoint() const
 }
 
 
-void Circle::toPoses(double resolution, std::vector<PathPose> &poses, int move_direction,
+void Circle::toPoses(double resolution, PathPoseVec &poses, int move_direction,
                      bool with_start_pose)
 {
     if (fabs(resolution)<1e-10) {

@@ -45,7 +45,7 @@ path_geom::Line Line::parallel(const Line &line, double dist)
 }
 
 
-void Line::toPoses(double resolution, std::vector<PathPose> &poses, int move_direction, bool with_start_pose)
+void Line::toPoses(double resolution, PathPoseVec &poses, int move_direction, bool with_start_pose)
 {
     if (fabs(resolution)<1e-10) {
         poses.clear();

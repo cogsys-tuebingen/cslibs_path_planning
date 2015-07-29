@@ -153,8 +153,10 @@ void testRtti()
 {
     Eigen::Vector2d p1(2.0, 0.0);
     Eigen::Vector2d p2(2.0, 0.0);
-    auto c1 = make_shared<Circle>(p1,1.0);
-    auto l1 = make_shared<Line>(p1,p2);
+    //auto c1 = allocate_shared<Circle>(Eigen::aligned_allocator<Circle>(),p1,1.0);
+    //auto l1 =  allocate_shared<Line>(Eigen::aligned_allocator<Line>(),p1,p2);
+    auto c1 = path_geom::make_aligned<Circle>(p1,1.0);
+    auto l1 = path_geom::make_aligned<Line>(p1,p2);
     vector<shared_ptr<Shape>> segments;
     segments.push_back(c1);
     segments.push_back(l1);
@@ -247,7 +249,7 @@ int main(int argc, char **argv)
     Line path2(B,B_2);
     Line path3(A,B_2);
     Circle obstacle(E,2.0,path_geom::ARC_LEFT);
-    std::vector<Circle> tangent_circles;
+    path_geom::aligned<path_geom::Circle>::vector tangent_circles;
     Tangentor::tangentCircles(path1,obstacle,2.0,tangent_circles);
     for (size_t i=0;i<tangent_circles.size();++i) {
         std::cout << "tangenting circle center x "<<tangent_circles[i].center().x()
@@ -282,7 +284,7 @@ int main(int argc, char **argv)
     Circle path5(C,3.0,path_geom::ARC_RIGHT);
     path5.setStartAngle(M_PI);
     path5.setEndAngle(M_PI/2.0);
-    std::vector<Circle> tangent_arcs, tangent_arcs2;
+    path_geom::aligned<path_geom::Circle>::vector tangent_arcs, tangent_arcs2;
     double radius = 2.0;
     std::cout << "find tanent arcs from obstacle circle to path4 (positoive result expected"<< std::endl;
     Tangentor::tangentInnerArcs(obstacle,path4,radius,tangent_arcs);

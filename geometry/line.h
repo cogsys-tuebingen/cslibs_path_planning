@@ -25,10 +25,15 @@ public:
 
     Line(const Eigen::Vector2d& startPoint, const Eigen::Vector2d& endPoint);
     Line(const PathPose& startPoint, double length, int direction);
+    Line(const Line& src) {
+        start_=src.start_;
+        end_=src.end_;
+    }
+
     static Line parallel(const path_geom::Line& line, double dist);
 
     virtual void toPoints(double resolution, std::vector<Eigen::Vector2d>& points);
-    virtual void toPoses(double resolution, std::vector<path_geom::PathPose>& res_poses, int move_direction,  bool with_start_pose=true);
+    virtual void toPoses(double resolution, PathPoseVec& res_poses, int move_direction,  bool with_start_pose=true);
 
 
     virtual bool selectStartPoint(const Eigen::Vector2d& start, double tol=path_geom::DIST_EPS);
@@ -53,6 +58,7 @@ protected:
     Eigen::Vector2d start_, end_;
 };
 
+typedef std::vector<Line,Eigen::aligned_allocator<Line>> LineVec;
 
 }
 #endif // LINE_H

@@ -14,6 +14,8 @@
 #define CIRCLE2D_H
 #include <cmath>
 #include <memory>
+#include <Eigen/StdVector>
+
 #include "../geometry/line.h"
 #include "../geometry/shape.h"
 
@@ -42,7 +44,7 @@ public:
     static Circle createArcTo (const path_geom::PathPose& end, double radius, double arc_angle, int arc_direction=path_geom::ARC_LEFT   );
 
     virtual void toPoints(double resolution, std::vector<Eigen::Vector2d>& points);
-    virtual void toPoses(double resolution, std::vector<path_geom::PathPose>& poses,
+    virtual void toPoses(double resolution, PathPoseVec& poses,
                          int move_direction, bool with_end_pose=true);
 
     virtual bool selectStartPoint(const Eigen::Vector2d& start, double tol=path_geom::DIST_EPS) {

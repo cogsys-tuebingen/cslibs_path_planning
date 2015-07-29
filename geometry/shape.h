@@ -11,14 +11,21 @@
 
 #ifndef SHAPE_H
 #define SHAPE_H
+#include<Eigen/StdVector>
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector2d)
+#include <memory>
 #include "utils_general/MathHelper.h"
 #include <Eigen/Core>
-#include<Eigen/StdVector>
+#include <map>
+#include <list>
+#include <deque>
+
 #include <iostream>
-EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector2d)
 
 
 // ***todo templatisieren http://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
+// Fwrd. decl:
+   namespace Eigen { template<class T> class aligned_allocator; }
 namespace path_geom {
 
     const double DIST_EPS   = 1e-5;
@@ -28,9 +35,39 @@ namespace path_geom {
     const int    ARC_RIGHT   = -1; // arc/circle in mathematically negative direction
     const int    BACKWARD=-1;
     const int    FORWARD = 1;
+
+
+    /**
+    * eigen::aligned stl containers
+    */
+   template <class CLASS1,class CLASS2=CLASS1>
+   struct aligned
+   {
+
+        typedef std::pair<CLASS1,CLASS2> pair;
+        typedef std::list<CLASS1, Eigen::aligned_allocator<CLASS1> > list;
+
+        typedef std::vector<CLASS1, Eigen::aligned_allocator<CLASS1> > vector;
+        typedef std::deque<CLASS1, Eigen::aligned_allocator<CLASS1> > deque;
+        typedef std::map<CLASS1,CLASS2,std::less<CLASS1>,Eigen::aligned_allocator<std::pair<const CLASS1,CLASS2> > > map;
+        typedef std::multimap<CLASS1,CLASS2,std::less<CLASS1>,Eigen::aligned_allocator<std::pair<const CLASS1,CLASS2> > > multimap_t;
+
+   };
+   /**
+    * eigen::aligend make_shared replacement
+    */
+   template <class T, class... Args>
+   shared_ptr<T> make_aligned(Args&&... args)
+   {
+       return std::allocate_shared<T>(Eigen::aligned_allocator<T>(),std::forward<Args>(args)...);
+   }
+
+
+
 class PathPose
 {
 public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
     PathPose() :
         pos_(0.0,0.0){}
@@ -45,7 +82,7 @@ public:
         return (*this);
     }
 
-    PathPose & assign (const Eigen::Vector2d pos, double theta) {
+    PathPose & assign (const Eigen::Vector2d& pos, double theta) {
         pos_=pos;
         theta_ = theta;
         return (*this);
@@ -72,6 +109,9 @@ public:
 
 };
 
+typedef std::vector<PathPose,Eigen::aligned_allocator<PathPose>> PathPoseVec;
+
+
 class Shape
 {
 public:
@@ -80,13 +120,12 @@ public:
     virtual Eigen::Vector2d startPoint() const = 0 ;
     virtual Eigen::Vector2d endPoint() const = 0 ;
     virtual void toPoints(double resolution, std::vector<Eigen::Vector2d>& points) = 0;
-    virtual void toPoses(double resolution, std::vector<PathPose>& res_poses, int move_direction,
+    virtual void toPoses(double resolution, PathPoseVec& res_poses, int move_direction,
                          bool with_end_pose) = 0;
 
     virtual double distanceTo(const Eigen::Vector2d& point) const = 0;
     virtual Eigen::Vector2d nearestPointTo(const Eigen::Vector2d& p) const  = 0;
 
 };
-
 }
 #endif // SHAPE_H

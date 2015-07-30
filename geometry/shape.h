@@ -121,11 +121,12 @@ public:
     virtual Eigen::Vector2d endPoint() const = 0 ;
     virtual void toPoints(double resolution, std::vector<Eigen::Vector2d>& points) = 0;
     virtual void toPoses(double resolution, PathPoseVec& res_poses, int move_direction,
-                         bool with_end_pose) = 0;
+                         bool with_start_pose=false) = 0;
 
     virtual double distanceTo(const Eigen::Vector2d& point) const = 0;
     virtual Eigen::Vector2d nearestPointTo(const Eigen::Vector2d& p) const  = 0;
 
+    static shared_ptr<Shape> deepCopy(const shared_ptr<Shape>&src);
 };
 }
 #endif // SHAPE_H

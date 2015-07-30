@@ -30,9 +30,11 @@ void Tangentor::tangentPath(const shared_ptr<Shape> &shape, const Circle &circle
         if (first_to_second) {
             Tangentor::tangentPath(*first_line,circle,radius,path);
         } else {
+            std::cout << "search tangent from circle to line "<<*first_line << std::endl;
             Tangentor::tangentPath(circle,*first_line, radius,path);
         }
     } else if (first_circle) {
+
         Tangentor::tangentPath(circle,*first_circle,radius,!first_to_second, path);
     } else {
         path.clear();
@@ -227,8 +229,9 @@ void Tangentor::tangentPath(const Circle &small, const Circle &large, double rad
 {
     path.clear();
     path_geom::aligned<Circle>::vector tangent_circles;
-    tangentInnerCircles(small,large, radius,tangent_circles,tol);
 
+    tangentInnerCircles(small,large, radius,tangent_circles,tol);
+    std::cout << "tangent inner circles found "<<tangent_circles.size() << std::endl;
 
 
     path_geom::aligned<path_geom::Circle>::vector tangent_arcs;

@@ -25,7 +25,7 @@ catkin_package(
 find_package(OpenCV)
 set(YAML_LIBRARIES -L/usr/local/lib/ yaml-cpp)
 
-set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 
 find_package(Eigen QUIET)
 if(NOT ${Eigen_FOUND})
@@ -66,6 +66,7 @@ set(SOURCES ReedsShepp/CurveGenerator.cpp
     geometry/circle.cpp
     geometry/intersector.cpp
     geometry/line.cpp
+    geometry/shape.cpp
     geometry/tangentor.cpp
     evaluation/Renderer.hpp
     evaluation/Util.hpp

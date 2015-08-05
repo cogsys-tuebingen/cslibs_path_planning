@@ -12,7 +12,7 @@
 #include <vector>
 
 // Project
-#include "SimpleGridMap2d.h"
+#include "RotatedGridMap2d.h"
 
 
 namespace lib_path {
@@ -23,7 +23,7 @@ class RobotArea;
  * @class CollisionGridMap2d
  * @brief A simple implementation of a 2d grid map.
  */
-class CollisionGridMap2d : public SimpleGridMap2d {
+class CollisionGridMap2d : public RotatedGridMap2d {
 public:
     static const int ANGLE_DISCRETIZATION = 32;
 
@@ -36,7 +36,7 @@ public:
      * @param h Number of cells in y-direction.
      * @param r Size of one cell in meter.
      */
-    CollisionGridMap2d( const unsigned int w, const unsigned int h, const double r, double forward, double backward, double width);
+    CollisionGridMap2d( const unsigned int w, const unsigned int h, const double yaw, const double res, double forward, double backward, double width);
     ~CollisionGridMap2d();
 
     virtual bool isFree( const unsigned int x, const unsigned int y, const double theta ) const;

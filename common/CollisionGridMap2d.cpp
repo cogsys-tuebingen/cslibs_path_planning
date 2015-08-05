@@ -161,7 +161,7 @@ void RobotArea::setValue( const uint8_t value )
 
 
 CollisionGridMap2d::CollisionGridMap2d(const unsigned int w, const unsigned int h, const double yaw , double r, double forward, double backward, double width)
-    : RotatedGridMap2d(w,h, yaw, r)
+    : SimpleGridMap2d(w,h, r)
 {
     for(int t = 0; t< ANGLE_DISCRETIZATION; ++t) {
         double theta = (2 * M_PI) * (t / (ANGLE_DISCRETIZATION + 1.0));

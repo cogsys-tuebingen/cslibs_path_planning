@@ -56,7 +56,7 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
     }
 
     template <class NodeType>
-    static double advance(NodeType* reference, int i, double& x_, double& y_, double& theta_, bool& forward_, bool initial) {
+    static double advance(NodeType* reference, int i, double& x_, double& y_, double& theta_, bool& forward_, bool initial, double map_rotation) {
         double t;
 
         if(initial && (i != 0 && i != 3)) {
@@ -94,6 +94,9 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
             break;
         }
 
+        // apply map rotation
+        t += map_rotation;
+
         // normalize the angle
         t = MathHelper::AngleClamp(t);
 
@@ -127,7 +130,7 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
             cost *= 4.0;
         }
 
-        theta_ = t;
+        theta_ = MathHelper::AngleClamp(t - map_rotation);
 
         return cost * 1;
     }
@@ -136,10 +139,12 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
     static void iterateFreeNeighbors(T& algo, Map& map, NodeType* reference) {
         bool initial = algo.getStart() == reference || algo.getGoal() == reference;
 
+        double map_rotation = map.getMap()->getRotation();
+
         for(unsigned i = 0; i < SIZE; ++i) {
             double to_x,to_y, to_theta;
             bool forward;
-            double cost = advance(reference, i, to_x,to_y,to_theta,forward, initial);
+            double cost = advance(reference, i, to_x,to_y,to_theta,forward, initial, map_rotation);
 
             if(cost < 0) {
                 continue;

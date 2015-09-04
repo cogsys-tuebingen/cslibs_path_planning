@@ -122,7 +122,6 @@ public:
 
     bool isFree( const unsigned int x, const unsigned int y ) const {
         uint8_t val = getValue( x, y );
-
         if(no_information_ != -1 && val == no_information_) {
             return false;
         }
@@ -139,7 +138,6 @@ public:
 
     bool isNoInformation( const unsigned int x, const unsigned int y ) const {
         uint8_t value = getValue( x, y );
-
         if(no_information_ != -1 && value == no_information_) {
             return true;
         }

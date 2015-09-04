@@ -57,14 +57,19 @@ public:
 
 
     bool point2cell( const double px, const double py, unsigned int& x, unsigned int& y ) const {
-        int nx = (px - origin_.x)/res_;
-        int ny = (py - origin_.y)/res_;
+        double c = std::cos(-yaw_);
+        double s = std::sin(-yaw_);
+       
+        double nx = px;// - origin_.x;
+        double ny = py;// - origin_.y;
+ 
+        double rx = c * nx - s * ny;
+        double ry = s * nx + c * ny;
 
-        double c = std::cos(yaw_);
-        double s = std::sin(yaw_);
-        x = (unsigned int)(c * nx - s * ny);
-        y = (unsigned int)(s * nx + c * ny);
+        x = (rx + origin_.x)/res_;
+        y = (ry + origin_.y)/res_;
 
+        std::cerr << "origin is " << origin_.x << ", " << origin_.y << ", rotated point is " << rx << ", " << ry << std::endl;
         std::cerr << "angle is " << yaw_ << ", point is " << px << ", " << py << ", cell is " << x << ", " << y << std::endl;
 
         if ( !isInMap( (int)x, (int)y ))
@@ -93,16 +98,26 @@ public:
         py = s * nx + c * ny + origin_.y;
     }
 
+    bool isInMap( int x, int y) const {
+        return SimpleGridMap2d::isInMap(x, y);
+    }
+   
     bool isInMap( const double x, const double y ) const {
-        int nx = (x - origin_.x)/res_;
-        int ny = (y - origin_.y)/res_;
-
-        double c = std::cos(yaw_);
-        double s = std::sin(yaw_);
+        double c = std::cos(-yaw_);
+        double s = std::sin(-yaw_);
+       
+        double nx = x;// - origin_.x;
+        double ny = y;// - origin_.y;
+        
         int px = c * nx - s * ny;
         int py = s * nx + c * ny;
 
         return px >= 0 && py >= 0 && px < (int) width_ && py < (int) height_;
+    }
+
+    virtual double getRotation() const 
+    {
+        return yaw_;
     }
 
 protected:

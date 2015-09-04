@@ -199,7 +199,10 @@ bool CollisionGridMap2d::isFree(const unsigned int x, const unsigned int y, cons
 
 bool CollisionGridMap2d::isNoInformation(const unsigned int x, const unsigned int y, const double theta) const
 {
-    if(!isInMap((int) x,(int) y) || SimpleGridMap2d::isOccupied(x, y)) {
+    if(!isInMap((int) x,(int) y)) {
+        return false;
+    }
+    if(SimpleGridMap2d::isOccupied(x, y)) {
         return false;
     }
 

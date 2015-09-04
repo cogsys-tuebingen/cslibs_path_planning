@@ -245,6 +245,8 @@ public:
     virtual bool isAreaFreeOrUnknown( MapArea2d& area ) const;
 
     virtual bool isAreaOccupied( MapArea2d& area ) const;
+
+    virtual double getRotation() const;
 };
 
 /**

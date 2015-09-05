@@ -322,7 +322,7 @@ protected:
 public:
     double getCost(NodeT* node) {
         if(has_cost_) {
-            double c = map_.getValue(node->x, node->y);
+            double c = map_.getValue(node->x, node->y) / 254.0 * 2.0;
             if(c < 0) {
                 throw std::runtime_error("negative costs are not allowed");
             }

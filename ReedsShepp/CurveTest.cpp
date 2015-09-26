@@ -49,7 +49,7 @@ namespace {
 cv::Mat img;
 Pose2d start, goal;
 int trace = -1;
-bool ignore_obstacles = false;
+bool ignore_obstacles = true;
 double res = 0.02f;
 }
 
@@ -195,6 +195,8 @@ int main(int argc, char* argv[])
         generator.set_cost_backwards(2.0);
         generator.set_cost_curve(1.3);
 
+        generator.set_max_curve_arc(2 * M_PI);
+
         for(int y=0; y<orig_map.rows; y++) {
             for(int x=0; x<orig_map.cols; x++) {
                 map_info.setValue(x, y, orig_map.at<char>(y, x));
@@ -204,29 +206,30 @@ int main(int argc, char* argv[])
         generator.set_trace(trace);
         lib_path::Curve* curve = generator.find_path(start, goal, &map_info, ignore_obstacles);
 
-        // Test copy constructor
-        lib_path::Curve c(*curve);
+            // Test copy constructor
 
-        delete curve;
+        if(curve != nullptr) {
+            lib_path::Curve c(*curve);
+            delete curve;
 
+            if(trace == -1) {
+                if(!curve->is_valid()) {
+                    lib_path::Curve* curve_no_obstacles = generator.find_path(start, goal, &map_info, true);
+                    renderer.draw_map(&map_info);
+                    renderer.draw(curve_no_obstacles, cv::Scalar(30, 30, 200, 100));
+                    delete curve_no_obstacles;
 
-        if(trace == -1) {
-            if(!curve->is_valid()) {
-                lib_path::Curve* curve_no_obstacles = generator.find_path(start, goal, &map_info, true);
-                renderer.draw_map(&map_info);
-                renderer.draw(curve_no_obstacles, cv::Scalar(30, 30, 200, 100));
-                delete curve_no_obstacles;
-
+                } else {
+                    renderer.draw_map(&map_info);
+                    renderer.draw(&c);
+                }
             } else {
                 renderer.draw_map(&map_info);
-                renderer.draw(&c);
             }
-        } else {
-            renderer.draw_map(&map_info);
+
+            renderer.display_overlay(&c);
+
         }
-
-        renderer.display_overlay(&c);
-
 
         if(cvGetWindowHandle("Reeds Shepp Curve Test") != NULL) {
             cv::imshow("Reeds Shepp Curve Test", img);
@@ -252,9 +255,9 @@ int main(int argc, char* argv[])
             goal.theta += dt;
             break;
 
-        case 'p':
-            renderer.snapshot_in_new_window(&c);
-            break;
+//        case 'p':
+//            renderer.snapshot_in_new_window(&c);
+//            break;
 
         case 't':
             if(trace == -1) trace = 40;

@@ -47,6 +47,14 @@ struct QueueManager {
         return next;
     }
 
+    typename std::deque<Node*>::const_iterator begin() const {
+        return queue.begin();
+    }
+
+    typename std::deque<Node*>::const_iterator end() const {
+        return queue.end();
+    }
+
 private:
     std::deque<Node*> queue;
 };
@@ -80,6 +88,10 @@ struct GenericManager {
         Node* next = container.top();
         container.pop();
         return next;
+    }
+    //D-Lite
+    Node* top() {
+        return container.top();
     }
 
     typename Container::const_iterator begin() const {

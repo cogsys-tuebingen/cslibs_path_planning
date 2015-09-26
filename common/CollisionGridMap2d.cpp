@@ -160,8 +160,8 @@ void RobotArea::setValue( const uint8_t value )
 
 
 
-CollisionGridMap2d::CollisionGridMap2d(const unsigned int w, const unsigned int h, const double r , double forward, double backward, double width)
-    : SimpleGridMap2d(w,h, r)
+CollisionGridMap2d::CollisionGridMap2d(const unsigned int w, const unsigned int h, const double yaw , double r, double forward, double backward, double width)
+    : RotatedGridMap2d(w,h, yaw, r)
 {
     for(int t = 0; t< ANGLE_DISCRETIZATION; ++t) {
         double theta = (2 * M_PI) * (t / (ANGLE_DISCRETIZATION + 1.0));
@@ -199,7 +199,10 @@ bool CollisionGridMap2d::isFree(const unsigned int x, const unsigned int y, cons
 
 bool CollisionGridMap2d::isNoInformation(const unsigned int x, const unsigned int y, const double theta) const
 {
-    if(!isInMap((int) x,(int) y) || SimpleGridMap2d::isOccupied(x, y)) {
+    if(!isInMap((int) x,(int) y)) {
+        return false;
+    }
+    if(SimpleGridMap2d::isOccupied(x, y)) {
         return false;
     }
 

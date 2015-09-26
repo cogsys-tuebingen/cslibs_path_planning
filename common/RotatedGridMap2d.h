@@ -44,15 +44,27 @@ public:
         data_.assign( data.begin(), data.end());
     }
 
+
+    Point2d getOrigin() const
+        { return origin_; }
+
+    void setOrigin( const Point2d& p )
+    {
+        origin_ = p.rotate(-yaw_);
+    }
+
     void cell2point( const unsigned int x, const unsigned int y, float& px, float& py ) const {
-        double nx = res_*(double)(x+0.5);
-        double ny = res_*(double)(y+0.5);
+        float nx = res_*(double)(x+0.5);
+        float ny = res_*(double)(y+0.5);
 
-        double c = std::cos(yaw_);
-        double s = std::sin(yaw_);
+        float c = std::cos(yaw_);
+        float s = std::sin(yaw_);
 
-        px = c * nx - s * ny + origin_.x;
-        py = s * nx + c * ny + origin_.y;
+        float rx = nx + origin_.x;
+        float ry = ny + origin_.y;
+
+        px = c * rx - s * ry;
+        py = s * rx + c * ry;
     }
 
 
@@ -83,9 +95,12 @@ public:
 
         double c = std::cos(yaw_);
         double s = std::sin(yaw_);
+        
+        double rx = nx + origin_.x;
+        double ry = ny + origin_.y;
 
-        px = c * nx - s * ny + origin_.x;
-        py = s * nx + c * ny + origin_.y;
+        px = c * rx - s * ry;
+        py = s * rx + c * ry;
     }
 
     virtual void cell2pointSubPixel( const double x, const double y, double& px, double& py ) const {
@@ -94,8 +109,12 @@ public:
 
         double c = std::cos(yaw_);
         double s = std::sin(yaw_);
-        px = c * nx - s * ny + origin_.x;
-        py = s * nx + c * ny + origin_.y;
+        
+        double rx = nx + origin_.x;
+        double ry = ny + origin_.y;
+
+        px = c * rx - s * ry;
+        py = s * rx + c * ry;
     }
 
     bool isInMap( int x, int y) const {

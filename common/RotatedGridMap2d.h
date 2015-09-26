@@ -66,8 +66,8 @@ public:
         double rx = c * nx - s * ny;
         double ry = s * nx + c * ny;
 
-        x = (rx + origin_.x)/res_;
-        y = (ry + origin_.y)/res_;
+        x = (rx - origin_.x)/res_;
+        y = (ry - origin_.y)/res_;
 
         std::cerr << "origin is " << origin_.x << ", " << origin_.y << ", rotated point is " << rx << ", " << ry << std::endl;
         std::cerr << "angle is " << yaw_ << ", point is " << px << ", " << py << ", cell is " << x << ", " << y << std::endl;

@@ -23,7 +23,7 @@ class RobotArea;
  * @class CollisionGridMap2d
  * @brief A simple implementation of a 2d grid map.
  */
-class CollisionGridMap2d : public SimpleGridMap2d {
+class CollisionGridMap2d : public RotatedGridMap2d {
 public:
     static const int ANGLE_DISCRETIZATION = 32;
 

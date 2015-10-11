@@ -337,7 +337,7 @@ public:
         neighbor->mark(NodeT::MARK_WATCHED);
 
         double res = map_.getResolution();
-        double cost = delta * res + getCost(neighbor);
+        double cost = delta * res;// + getCost(neighbor);
         double distance = current->distance + cost;
         bool closer = distance < neighbor->distance;
 

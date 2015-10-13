@@ -23,6 +23,7 @@
 #include <boost/function.hpp>
 #include <boost/thread.hpp>
 #include <stdexcept>
+#include <queue>
 
 namespace lib_path
 {
@@ -173,42 +174,55 @@ public:
 
     /**
      * @brief findPath searches a path between to points
-     * @param from
-     * @param to
+     * @param from start pose
+     * @param to goal pose
+     * @param oversearch_distance (meters) specify for how long the search continues after a
+     *          first candidate solution has been found. The search stops at the first node
+     *          that has a distance to the start larger than the first candidate + oversearch_distance.
      * @return
      */
-    virtual PathT findPath(const PointT& from, const PointT& to) {
+    virtual PathT findPath(const PointT& from, const PointT& to,
+                           double oversearch_distance = 0.0) {
         if(NeighborhoodType::reversed) {
-            PathT path = findPathImp<generic::NoIntermission>(to, from, boost::function<void()>());
+            PathT path = findPathImp<generic::NoIntermission>(to, from, oversearch_distance, boost::function<void()>());
             std::reverse(path.begin(), path.end());
             return path;
 
         } else {
-            return findPathImp<generic::NoIntermission>(from, to, boost::function<void()>());
+            return findPathImp<generic::NoIntermission>(from, to, oversearch_distance, boost::function<void()>());
         }
     }
 
     /**
      * @brief findPath searches a path between to points
-     * @param from
-     * @param to
-     * @param intermission is a callback that is called every INTERMISSION_N_STEPS steps
+     * @param from start pose
+     * @param to goal pose
+     * @param intermission is a callback that is called every INTERMISSION_N_STEPS steps     * 
+     * @param oversearch_distance (meters) specify for how long the search continues after a
+     *          first candidate solution has been found. The search stops at the first node
+     *          that has a distance to the start larger than the first candidate + oversearch_distance.
      * @return
      */
-    virtual PathT findPath(const PointT& from, const PointT& to, boost::function<void()> intermission) {
+    virtual PathT findPath(const PointT& from, const PointT& to,
+                           boost::function<void()> intermission,
+                           double oversearch_distance = 0.0) {
         if(NeighborhoodType::reversed) {
-            PathT path = findPathImp<generic::CallbackIntermission<INTERMISSION_N_STEPS, INTERMISSION_START_STEPS> >(to, from, intermission);
+            PathT path = findPathImp<generic::CallbackIntermission<INTERMISSION_N_STEPS, INTERMISSION_START_STEPS>>
+                    (to, from, oversearch_distance, intermission);
             std::reverse(path.begin(), path.end());
             return path;
 
         } else {
-            return findPathImp<generic::CallbackIntermission<INTERMISSION_N_STEPS, INTERMISSION_START_STEPS> >(from, to, intermission);
+            return findPathImp<generic::CallbackIntermission<INTERMISSION_N_STEPS, INTERMISSION_START_STEPS>>
+                    (from, to, oversearch_distance, intermission);
         }
     }
 
 protected:
     template <class Intermission>
-    PathT findPathImp(const PointT& from, const PointT& to, boost::function<void()> intermission) {
+    PathT findPathImp(const PointT& from, const PointT& to,
+                      double oversearch_distance,
+                      boost::function<void()> intermission) {
         expansions = 0;
         multi_expansions = 0;
         updates = 0;
@@ -259,6 +273,18 @@ protected:
 
         Intermission::call(intermission);
 
+        typedef std::tuple<NodeT*, double> GoalCandidate;
+
+        struct PairDistance
+        {
+            bool operator() (const GoalCandidate& g1, const GoalCandidate& g2) {
+                return std::get<1>(g1) > std::get<1>(g2);
+            }
+        };
+
+        std::priority_queue<GoalCandidate, std::vector<GoalCandidate>, PairDistance> goal_candidates;
+        double first_candidate_distance = 0;
+
         // iterate until no more points can be looked at
         while(!open.empty()) {
             boost::this_thread::interruption_point();
@@ -289,21 +315,25 @@ protected:
                 return path;
             }
 
-            // if we are close enough to the goal (policy decides), we can return
-            if(NeighborhoodType::isNearEnough(goal, current)) {
-                if(goal != current) {
-                    // close, but not the real goal -> change prev pointer
-                    if(current->prev) {
-                        goal->prev = current->prev;
-                    } else {
-                        goal->prev = current;
-                    }
-                    std::cout << "near goal: theta=" << current->theta << ", goal=" << goal->theta << std::endl;
-                }
-                std::cout << "found goal: theta=" << current->theta << ", goal=" << goal->theta << std::endl;
+            // check if the current node is a goal candiate
 
-                // generate the path
-                return backtrack(start, current);
+            if(NeighborhoodType::isGoal(goal, current)) {
+                double dist_to_goal = std::hypot(goal->x - current->x, goal->y - current->y);
+
+                if(dist_to_goal < 1e-3) {
+                    std::cout << "done, found the goal - dist: " << dist_to_goal << std::endl;
+                    return backtrack(start, current);
+                }
+
+                if(goal_candidates.empty()) {
+                    first_candidate_distance = current->distance;
+                }
+                goal_candidates.push(std::make_tuple(current, dist_to_goal));
+            }
+
+            // check if we can return
+            if(!goal_candidates.empty() && current->distance > first_candidate_distance + oversearch_distance) {
+                break;
             }
 
             // look at every free neighbor
@@ -313,10 +343,17 @@ protected:
             Intermission::call(intermission);
         }
 
-        std::cout << "done, no path found" << std::endl;
+        if(!goal_candidates.empty()) {
+            // generate the path
+            auto best = goal_candidates.top();
+            std::cout << "done, selecting the best goal out of " << goal_candidates.size() << " candidates" << std::endl;
+            std::cout << "dist: " <<  std::get<1>(best);
+            return backtrack(start,  std::get<0>(best));
 
-        // default: empty path
-        return empty();
+        } else {
+            std::cerr << "done, no path found" << std::endl;
+            return empty();
+        }
     }
 
 public:

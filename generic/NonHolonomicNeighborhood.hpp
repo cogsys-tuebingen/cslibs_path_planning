@@ -151,7 +151,7 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
             }
 
             if(map.contains(to_x, to_y)) {
-                bool free = map.isFree(reference->x,reference->y, to_x,to_y);
+//                bool free = map.isFree(reference->x,reference->y, to_x,to_y);
                 bool free_or_unknown = map.isFreeOrUnknown(reference->x,reference->y, to_x,to_y);
                 bool can_be_used = free_or_unknown;// free || (free_or_unknown && forward);
                 if(can_be_used) {
@@ -173,7 +173,7 @@ struct NonHolonomicNeighborhoodBase : public NeighborhoodBase
     }
 
     template <class NodeType>
-    static bool isNearEnough(NodeType* goal, NodeType* reference) {
+    static bool isGoal(NodeType* goal, NodeType* reference) {
         return std::abs(goal->x - reference->x) <= distance_step_pixel / 2 &&
                 std::abs(goal->y - reference->y) <= distance_step_pixel / 2 &&
                 std::abs(MathHelper::AngleClamp(goal->theta - reference->theta)) < M_PI / 8;

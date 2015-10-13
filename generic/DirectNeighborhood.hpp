@@ -38,7 +38,7 @@ struct DirectNeighborhoodBase : public NeighborhoodBase
     };
 
     template <class NodeType>
-    static bool isNearEnough(NodeType* goal, NodeType* reference) {
+    static bool isGoal(NodeType* goal, NodeType* reference) {
         return std::abs(goal->x - reference->x) <= distance &&
                std::abs(goal->y - reference->y) <= distance;
     }

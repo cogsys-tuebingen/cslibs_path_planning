@@ -57,7 +57,7 @@ struct NonHolonomicNeighborhoodNoEndOrientation :
     using Parent::distance_step_pixel;
 
     template <class NodeType>
-    static bool isGoal(NodeType* goal, NodeType* reference) {
+    static bool isGoal(const NodeType* goal, const NodeType* reference) {
         return std::abs(goal->x - reference->x) <= distance_step_pixel / 2 &&
                 std::abs(goal->y - reference->y) <= distance_step_pixel / 2;
     }

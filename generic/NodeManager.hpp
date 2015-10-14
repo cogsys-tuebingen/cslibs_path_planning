@@ -47,6 +47,11 @@ struct QueueManager {
         return next;
     }
 
+    std::size_t size() const
+    {
+        return queue.size();
+    }
+
     typename std::deque<Node*>::const_iterator begin() const {
         return queue.begin();
     }
@@ -81,6 +86,11 @@ struct GenericManager {
         while(!empty()) {
             next();
         }
+    }
+
+    std::size_t size() const
+    {
+        return container.size();
     }
 
     Node* next() {

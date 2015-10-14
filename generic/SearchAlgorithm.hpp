@@ -86,6 +86,15 @@ public:
 
     typedef std::vector<NodeT> PathT;
 
+    typedef std::tuple<const NodeT*, double> GoalCandidate;
+
+    struct PairDistance
+    {
+        bool operator() (const GoalCandidate& g1, const GoalCandidate& g2) {
+            return std::get<1>(g1) > std::get<1>(g2);
+        }
+    };
+
 public:
     struct StartOutOfMapException : public std::logic_error
     {
@@ -111,25 +120,11 @@ public:
             : std::logic_error("goal cell is not free")
         { }
     };
-    struct StartAndGoalNotFreeException : public std::logic_error
-    {
-        StartAndGoalNotFreeException()
-            : std::logic_error("start and goal cell are not free")
-        { }
-    };
 
 public:
     GenericSearchAlgorithm()
         : start(NULL), goal(NULL), has_cost_(false), expansions(0), multi_expansions(0), updates(0)
     {}
-
-    /**
-     * @brief empty
-     * @return an empty path
-     */
-    static const PathT empty() {
-        return PathT();
-    }
 
     virtual void setMap(const MapT* map) {
         map_.setMap(map);
@@ -172,6 +167,15 @@ public:
         return map_;
     }
 
+    void addGoalCandidate(const NodeT* current, double cost)
+    {
+        if(goal_candidates.empty()) {
+            first_candidate_weight = current->distance;
+        }
+        goal_candidates.push(std::make_tuple(current, cost));
+    }
+
+
     /**
      * @brief findPath searches a path between to points
      * @param from start pose
@@ -184,12 +188,12 @@ public:
     virtual PathT findPath(const PointT& from, const PointT& to,
                            double oversearch_distance = 0.0) {
         if(NeighborhoodType::reversed) {
-            PathT path = findPathImp<generic::NoIntermission>(to, from, oversearch_distance, boost::function<void()>());
+            PathT path = findPathPose<generic::NoIntermission>(to, from, boost::function<void()>());
             std::reverse(path.begin(), path.end());
             return path;
 
         } else {
-            return findPathImp<generic::NoIntermission>(from, to, oversearch_distance, boost::function<void()>());
+            return findPathPose<generic::NoIntermission>(from, to, boost::function<void()>());
         }
     }
 
@@ -197,7 +201,7 @@ public:
      * @brief findPath searches a path between to points
      * @param from start pose
      * @param to goal pose
-     * @param intermission is a callback that is called every INTERMISSION_N_STEPS steps     * 
+     * @param intermission is a callback that is called every INTERMISSION_N_STEPS steps     *
      * @param oversearch_distance (meters) specify for how long the search continues after a
      *          first candidate solution has been found. The search stops at the first node
      *          that has a distance to the start larger than the first candidate + oversearch_distance.
@@ -205,86 +209,92 @@ public:
      */
     virtual PathT findPath(const PointT& from, const PointT& to,
                            boost::function<void()> intermission,
-                           double oversearch_distance = 0.0) {
+                           double oversearch_distance = 0.0)
+    {
+        oversearch_distance_ = oversearch_distance;
         if(NeighborhoodType::reversed) {
-            PathT path = findPathImp<generic::CallbackIntermission<INTERMISSION_N_STEPS, INTERMISSION_START_STEPS>>
-                    (to, from, oversearch_distance, intermission);
+            PathT path = findPathPose<
+                    generic::CallbackIntermission<INTERMISSION_N_STEPS, INTERMISSION_START_STEPS>
+                    >
+                    (to, from, intermission);
             std::reverse(path.begin(), path.end());
             return path;
 
         } else {
-            return findPathImp<generic::CallbackIntermission<INTERMISSION_N_STEPS, INTERMISSION_START_STEPS>>
-                    (from, to, oversearch_distance, intermission);
+            return findPathPose<
+                    generic::CallbackIntermission<INTERMISSION_N_STEPS, INTERMISSION_START_STEPS>
+                    >
+                    (from, to, intermission);
         }
     }
 
+    template <class GoalTest>
+    PathT findPath(const PointT& from, const GoalTest& goal_test,
+                   double oversearch_distance = 0.0)
+    {
+        oversearch_distance_ = oversearch_distance;
+        return findPathMap<GoalTest, generic::NoIntermission>
+                (from, goal_test, boost::function<void()>());
+    }
+
+    template <class GoalTest>
+    PathT findPath(const PointT& from, const GoalTest& goal_test,
+                   boost::function<void()> intermission,
+                   double oversearch_distance = 0.0)
+    {
+        oversearch_distance_ = oversearch_distance;
+        return findPathMap<GoalTest, generic::CallbackIntermission<INTERMISSION_N_STEPS, INTERMISSION_START_STEPS>
+                >
+                (from, goal_test, intermission);
+    }
+
 protected:
-    template <class Intermission>
-    PathT findPathImp(const PointT& from, const PointT& to,
-                      double oversearch_distance,
-                      boost::function<void()> intermission) {
-        expansions = 0;
-        multi_expansions = 0;
-        updates = 0;
-
-        open.clear();
-
-        // initialize start and goal nodes
-        try {
-            start = map_.lookup(from);
-        } catch(const typename MapManager::OutsideMapException& e) {
-            throw StartOutOfMapException();
-        }
-
-        try {
-            goal = map_.lookup(to);
-        } catch(const typename MapManager::OutsideMapException& e) {
-            throw GoalOutOfMapException();
-        }
-
-
-        Heuristic::setMap(map_.getMap(), *goal);
-
-        // search can be aborted, if either one is occupied
-        bool start_blocked = map_.isOccupied(start);
-        bool goal_blocked = map_.isOccupied(goal);
-
-        if(start_blocked && !goal_blocked) {
-            throw StartNotFreeException();
-        } else if(goal_blocked && !start_blocked) {
-            throw GoalNotFreeException();
-        } else if(start_blocked && goal_blocked) {
-            throw StartAndGoalNotFreeException();
-        }
-
-        // else init the border cases
-        NodeT::init(*start, from);
-        NodeT::init(*goal, to);
-
-        // put start node in open data structure
-        start->distance = 0;
-        start->mark(NodeT::MARK_OPEN);
-
-
-        start->theta = from.theta;
-        goal->theta = to.theta;
-
-        open.add(start);
-
-        Intermission::call(intermission);
-
-        typedef std::tuple<NodeT*, double> GoalCandidate;
-
-        struct PairDistance
+    template <class SearchAlgo, class NodeType>
+    struct PoseGoalTest
+    {
+        PoseGoalTest(SearchAlgo* self)
+            : self_(self)
         {
-            bool operator() (const GoalCandidate& g1, const GoalCandidate& g2) {
-                return std::get<1>(g1) > std::get<1>(g2);
-            }
-        };
 
-        std::priority_queue<GoalCandidate, std::vector<GoalCandidate>, PairDistance> goal_candidates;
-        double first_candidate_distance = 0;
+        }
 
+        bool terminate(const NodeType* node) const
+        {
+            return self_->hasPoseBeenReached(node);
+        }
+
+        SearchAlgo* self_;
+    };
+
+    template <class Intermission>
+    PathT findPathPose(const PointT& from, const PointT& to,
+                       boost::function<void()> intermission)
+    {
+        init();
+        initStartPose(from);
+        initGoalPose(to);
+
+        typedef PoseGoalTest<GenericSearchAlgorithm<Param>, NodeT> GoalTest;
+
+        return findPathImp<GoalTest, Intermission>
+                (GoalTest(this), intermission);
+    }
+
+    template <class GoalTest, class Intermission>
+    PathT findPathMap(const PointT& from, const GoalTest& goal_test,
+                      boost::function<void()> intermission)
+    {
+        init();
+        initStartPose(from);
+
+        return findPathImp<GoalTest, Intermission>
+                (goal_test, intermission);
+    }
+
+    template <class GoalTest, class Intermission>
+    PathT findPathImp(const GoalTest& goal_test,
+                      boost::function<void()> intermission)
+    {
         // iterate until no more points can be looked at
         while(!open.empty()) {
             boost::this_thread::interruption_point();
@@ -294,47 +304,30 @@ protected:
             current->unMark(NodeT::MARK_OPEN);
             current->mark(NodeT::MARK_CLOSED);
 
-            Heuristic::compute(current, goal, map_.getMap()->getResolution());
-
             expansions ++;
             if(current->isMarked(NodeT::MARK_EXPANDED)) {
                 ++multi_expansions;
             }
             current->mark(NodeT::MARK_EXPANDED);
 
-            if(AnalyticExpansionType::canExpand(current, goal, map_.getMap())) {
-                std::cout << "found an expansion: theta=" << current->theta << ", goal=" << goal->theta << std::endl;
-
-                PathT expansion;
-                AnalyticExpansionType::getPath(&expansion);
-
-                current->theta = expansion.begin()->theta;
-
-                PathT path = backtrack(start, current);
-                path += expansion;
-                return path;
+            if(goal) {
+                Heuristic::compute(current, goal, map_.getMap()->getResolution());
             }
 
-            // check if the current node is a goal candiate
-
-            if(NeighborhoodType::isGoal(goal, current)) {
-                double dist_to_goal = std::hypot(goal->x - current->x, goal->y - current->y);
-
-                if(dist_to_goal < 1e-3) {
-                    std::cout << "done, found the goal - dist: " << dist_to_goal << std::endl;
-                    return backtrack(start, current);
+            bool term = goal_test.terminate(current);
+            if(term) {
+                if(!result.empty()) {
+                    return result;
+                } else {
+                    break;
                 }
-
-                if(goal_candidates.empty()) {
-                    first_candidate_distance = current->distance;
-                }
-                goal_candidates.push(std::make_tuple(current, dist_to_goal));
             }
 
             // check if we can return
-            if(!goal_candidates.empty() && current->distance > first_candidate_distance + oversearch_distance) {
+            if(!goal_candidates.empty() && current->distance > first_candidate_weight + oversearch_distance_) {
                 break;
             }
+
 
             // look at every free neighbor
             NeighborhoodType::iterateFreeNeighbors(*this, map_, current);
@@ -345,15 +338,102 @@ protected:
 
         if(!goal_candidates.empty()) {
             // generate the path
-            auto best = goal_candidates.top();
-            std::cout << "done, selecting the best goal out of " << goal_candidates.size() << " candidates" << std::endl;
-            std::cout << "dist: " <<  std::get<1>(best);
+            GoalCandidate best = goal_candidates.top();
+            std::cout << "done, selecting the best goal out of " << goal_candidates.size() << " candidates\n";
+            std::cout << "dist: " <<  std::get<1>(best) << std::endl;
             return backtrack(start,  std::get<0>(best));
+        }
+
+        std::cerr << "done, no path found" << std::endl;
+        return {};
+    }
+
+    void init()
+    {
+        expansions = 0;
+        multi_expansions = 0;
+        updates = 0;
+
+        result = {};
+        goal_candidates = {};
+        open.clear();
+
+        start = nullptr;
+        goal = nullptr;
+    }
+
+    void initStartPose(const PointT& pose)
+    {
+        try {
+            start = map_.lookup(pose);
+        } catch(const typename MapManager::OutsideMapException& e) {
+            throw StartOutOfMapException();
+        }
+        if(map_.isOccupied(start)) {
+            throw StartNotFreeException();
 
         } else {
-            std::cerr << "done, no path found" << std::endl;
-            return empty();
+            NodeT::init(*start, pose);
+            start->distance = 0;
+            start->mark(NodeT::MARK_OPEN);
+            start->theta = pose.theta;
+
+            // put start node in open data structure
+            open.add(start);
         }
+    }
+
+    void initGoalPose(const PointT& pose)
+    {
+        try {
+            goal = map_.lookup(pose);
+        } catch(const typename MapManager::OutsideMapException& e) {
+            throw GoalOutOfMapException();
+        }
+        Heuristic::setMap(map_.getMap(), *goal);
+
+        if(map_.isOccupied(goal)) {
+            throw GoalNotFreeException();
+
+        } else {
+            NodeT::init(*goal, pose);
+            goal->theta = pose.theta;
+        }
+
+        std::cerr << "goal pose: " << goal->x <<  " / " << goal->y << std::endl;
+    }
+
+    bool hasPoseBeenReached(const NodeT* current)
+    {
+        if(AnalyticExpansionType::canExpand(current, goal, map_.getMap())) {
+            std::cout << "found an expansion: theta=" << current->theta << ", goal=" << goal->theta << std::endl;
+
+            PathT expansion;
+            AnalyticExpansionType::getPath(&expansion);
+
+            NodeT tmp = *current;
+            tmp.theta = expansion.begin()->theta;
+
+            PathT path = backtrack(start, &tmp);
+            path += expansion;
+            result = path;
+            return true;
+        }
+
+        // check if the current node is a goal candiate
+        if(NeighborhoodType::isGoal(goal, current)) {
+            double dist_to_goal = std::hypot(goal->x - current->x, goal->y - current->y);
+
+            if(dist_to_goal < 1e-3) {
+                std::cout << "done, found the goal - dist: " << dist_to_goal << std::endl;
+                result = backtrack(start, current);
+                return true;
+            }
+
+            addGoalCandidate(current, dist_to_goal);
+        }
+
+        return false;
     }
 
 public:
@@ -398,8 +478,9 @@ public:
 
             neighbor->distance = distance;
 
-            Heuristic::compute(neighbor, goal, res);
-
+            if(goal) {
+                Heuristic::compute(neighbor, goal, res);
+            }
             neighbor->mark(NodeT::MARK_OPEN);
 
             open.add(neighbor);
@@ -410,10 +491,10 @@ public:
         return NeighborhoodBase::PR_IGNORED;
     }
 
-    PathT backtrack(NodeT* start, NodeT* goal) {
+    PathT backtrack(const NodeT* start, const NodeT* goal) {
         PathT path;
 
-        NodeT* current = goal;
+        const NodeT* current = goal;
         path.push_back(*goal);
 
         while(current != start){
@@ -433,6 +514,11 @@ protected:
     MapManager map_;
     NodeT* start;
     NodeT* goal;
+
+    std::priority_queue<GoalCandidate, std::vector<GoalCandidate>, PairDistance> goal_candidates;
+    double first_candidate_weight;
+    double oversearch_distance_;
+    PathT result;
 
     bool has_cost_;
 
@@ -511,7 +597,6 @@ public:
     using GenAlg::goal;
     using GenAlg::map_;
     using GenAlg::open;
-    using GenAlg::empty;
 
     GenericDynSearchAlgorithm():GenAlg(){}
 
@@ -538,7 +623,7 @@ public:
 
     void UpdateVertex(NodeT* neighbor, double dist){
         if(neighbor!=goal){
-           neighbor->rhs = dist;//only one antecesor
+            neighbor->rhs = dist;//only one antecesor
         }
         if (neighbor->isMarked(NodeT::MARK_OPEN)){
             open.remove(neighbor);

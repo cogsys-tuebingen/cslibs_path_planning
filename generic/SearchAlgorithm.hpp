@@ -123,7 +123,7 @@ public:
 
 public:
     GenericSearchAlgorithm()
-        : start(NULL), goal(NULL), has_cost_(false), expansions(0), multi_expansions(0), updates(0)
+        : start(NULL), goal(NULL), heuristic_goal(NULL), has_cost_(false), expansions(0), multi_expansions(0), updates(0)
     {}
 
     virtual void setMap(const MapT* map) {
@@ -287,6 +287,8 @@ protected:
         init();
         initStartPose(from);
 
+        heuristic_goal = goal_test.getHeuristicGoal();
+
         return findPathImp<GoalTest, Intermission>
                 (goal_test, intermission);
     }
@@ -312,6 +314,9 @@ protected:
 
             if(goal) {
                 Heuristic::compute(current, goal, map_.getMap()->getResolution());
+
+            } else if(heuristic_goal) {
+                Heuristic::compute(current, heuristic_goal, map_.getMap()->getResolution());
             }
 
             bool term = goal_test.terminate(current);
@@ -514,6 +519,8 @@ protected:
     MapManager map_;
     NodeT* start;
     NodeT* goal;
+
+    const PointT* heuristic_goal;
 
     std::priority_queue<GoalCandidate, std::vector<GoalCandidate>, PairDistance> goal_candidates;
     double first_candidate_weight;

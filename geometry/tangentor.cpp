@@ -20,13 +20,36 @@
 using namespace path_geom;
 using namespace Eigen;
 
+
+void Tangentor::tangentPath(const shared_ptr<Shape> &shape, const Circle &circle, double radius,
+                            bool first_to_second, std::vector<std::shared_ptr<Shape> > &path, double tol)
+{
+    auto first_line = std::dynamic_pointer_cast<Line>(shape);
+    auto first_circle = std::dynamic_pointer_cast<Circle>(shape);
+    if (first_line) {
+        if (first_to_second) {
+            Tangentor::tangentPath(*first_line,circle,radius,path);
+        } else {
+            std::cout << "search tangent from circle to line "<<*first_line << std::endl;
+            Tangentor::tangentPath(circle,*first_line, radius,path);
+        }
+    } else if (first_circle) {
+
+        Tangentor::tangentPath(circle,*first_circle,radius,!first_to_second, path);
+    } else {
+        path.clear();
+    }
+
+}
+
+
 void Tangentor::tangentCircles(const path_geom::Line &line, const path_geom::Circle &circle, double radius,
-                        std::vector<path_geom::Circle>& res,  double tol)
+                        path_geom::aligned<path_geom::Circle>::vector& res,  double tol)
 {
     res.clear();
     // large circle around original circle with summed up radius
     Circle c2(circle.center(),circle.radius()+radius,circle.direction());
-    std::vector<Line> parallels;
+    LineVec parallels;
     std::vector<std::vector<Eigen::Vector2d>> ipoints;
     parallels.push_back(Line::parallel(line, radius));
     parallels.push_back(Line::parallel(line, -radius));
@@ -43,11 +66,65 @@ void Tangentor::tangentCircles(const path_geom::Line &line, const path_geom::Cir
 }
 
 
+void Tangentor::tangentPath(const Line &line, const Circle &circle, double radius,
+                            std::vector<std::shared_ptr<Shape> > &path, double tol)
+{
+    path.clear();
+    path_geom::aligned<path_geom::Circle>::vector tangent_arcs;
+    tangentArc(line,circle,radius,tangent_arcs);
+    if (tangent_arcs.size()==0) {
+        return;
+    }
+    vector<Vector2d> ipoints;
+
+
+    auto min_it = min_element(begin(tangent_arcs), end(tangent_arcs), Circle::compareArcAngle);
+
+    std::shared_ptr<Circle> tangent_arc = make_aligned<Circle>(*min_it);
+
+
+    // line from start point of original line to beginning of arc
+    auto start_line = make_aligned<Line>(line.startPoint(),tangent_arc->startPoint());
+    path.push_back(start_line);
+
+    path.push_back(tangent_arc);
+    auto end_circle = make_aligned<Circle>(circle);
+    end_circle->setStartAngle(tangent_arc->endPoint());
+    end_circle->setArcAngle(2*M_PI);
+    path.push_back(end_circle);
+}
+
+
+void Tangentor::tangentPath(const Circle &circle, const Line &line, double radius, std::vector<std::shared_ptr<Shape> > &path, double tol)
+{
+    path.clear();
+    aligned<Circle>::vector  tangent_arcs;
+    tangentArc(circle,line,radius,tangent_arcs);
+    if (tangent_arcs.size()==0) {
+        return;
+    }
+
+    auto min_it = min_element(begin(tangent_arcs), end(tangent_arcs), Circle::compareArcAngle);
+
+    std::shared_ptr<Circle> tangent_arc = make_aligned<Circle>(*min_it);
+
+
+    auto start_circle = make_aligned<Circle>(circle);
+
+    auto end_line = make_aligned<Line>(tangent_arc->endPoint(),line.endPoint());
+    start_circle->selectEndPoint(tangent_arc->startPoint());
+
+    path.push_back(start_circle);
+    path.push_back(tangent_arc);
+    path.push_back(end_line);
+}
+
+
 void Tangentor::tangentArc(const path_geom::Line &line, const path_geom::Circle &circle, double radius,
-                           std::vector<path_geom::Circle> &res, double tol)
+                           path_geom::aligned<path_geom::Circle>::vector &res, double tol)
 {
     res.clear();
-    std::vector<path_geom::Circle> tangent_circles;
+    aligned<Circle>::vector tangent_circles;
 
     tangentCircles(line,circle,radius, tangent_circles, tol);
     if (tangent_circles.size()<1) {
@@ -84,10 +161,10 @@ void Tangentor::tangentArc(const path_geom::Line &line, const path_geom::Circle 
 
 
 void Tangentor::tangentArc(const path_geom::Circle &circle,const path_geom::Line &line,  double radius,
-                           std::vector<path_geom::Circle> &res, double tol)
+                           path_geom::aligned<path_geom::Circle>::vector &res, double tol)
 {
     res.clear();
-    std::vector<path_geom::Circle> tangent_circles;
+    path_geom::aligned<path_geom::Circle>::vector tangent_circles;
 
     tangentCircles(line,circle,radius, tangent_circles, tol);
     if (tangent_circles.size()<1) {
@@ -124,7 +201,7 @@ void Tangentor::tangentArc(const path_geom::Circle &circle,const path_geom::Line
 }
 
 
-void Tangentor::tangentInnerCircles(const Circle &circle1, const Circle &circle2, double radius, std::vector<Circle> &res, double tol)
+void Tangentor::tangentInnerCircles(const Circle &circle1, const Circle &circle2, double radius, path_geom::aligned<Circle>::vector &res, double tol)
 {
     res.clear();
     if (radius>=circle2.radius()) {
@@ -133,27 +210,100 @@ void Tangentor::tangentInnerCircles(const Circle &circle1, const Circle &circle2
     }
     // large circle extended by radius around first circle
     Circle large_circ(circle1.center(),circle1.radius()+radius,circle1.direction());
+
     // small circle made smaller by radius around second circle
     Circle small_circ(circle2.center(),circle2.radius()-radius,circle2.direction());
-    std::vector<Eigen::Vector2d> ipoints;
 
+    // calculate intersection points between large_circ and small_circ
+    std::vector<Eigen::Vector2d> ipoints;
     Intersector::intersect(large_circ,small_circ, ipoints,tol);
-    for (size_t i=0;i<ipoints.size();++i) {
-        res.push_back(Circle(ipoints[i],radius,circle2.direction()));
+
+    // create the tangenting circles with intersection points for centers
+    for (auto& ipoint : ipoints) {
+        res.push_back(Circle(ipoint,radius,circle2.direction()));
+    }
+}
+
+
+void Tangentor::tangentPath(const Circle &small, const Circle &large, double radius, bool from_small, std::vector<std::shared_ptr<Shape> > &path, double tol)
+{
+    path.clear();
+    path_geom::aligned<Circle>::vector tangent_circles;
+
+    tangentInnerCircles(small,large, radius,tangent_circles,tol);
+    std::cout << "tangent inner circles found "<<tangent_circles.size() << std::endl;
+
+
+    path_geom::aligned<path_geom::Circle>::vector tangent_arcs;
+    std::vector<Eigen::Vector2d> ipoints_small,ipoints_large;
+
+    for (auto &tcircle : tangent_circles) {
+        std::cout << "tangent circle "<<tcircle.center().x() << " "<<tcircle.center().y() << std::endl;
+        Intersector::intersectArcs(small, tcircle, ipoints_small,tol);
+        Intersector::intersectArcs(tcircle, large, ipoints_large,tol);
+        if (ipoints_small.size()==1 && ipoints_large.size()==1) {
+            std::cout << "touches both small and large" << std::endl;
+            if (from_small) {
+                bool ponline1 = tcircle.selectStartPoint(ipoints_small.front());
+                bool ponline2 = tcircle.selectEndPoint(ipoints_large.front());
+
+            } else {
+                tcircle.selectStartPoint(ipoints_large.front());
+                tcircle.selectEndPoint(ipoints_small.front());
+            }
+            tangent_arcs.push_back(tcircle);
+        } else {
+            std::cout << "touch small " << ipoints_small.size() << " large " << ipoints_large.size()<< std::endl;
+        }
+    }
+    std::cout.flush();
+    if (tangent_arcs.empty()) {
+        // no solution
+        return;
+    }
+
+
+
+    // select tangent arc with shortest arc length in case there are more than one solutions
+    auto min_it = min_element(begin(tangent_arcs), end(tangent_arcs), Circle::compareArcAngle);
+
+    // arc lengths greater than pi are not desired
+    if (min_it->getArcAngle()>M_PI) {
+        return;
+    }
+    std::shared_ptr<Circle> tangent_arc = make_aligned<Circle>(*min_it);
+    std::shared_ptr<Circle> small_arc = make_aligned<Circle>(small);
+    std::shared_ptr<Circle> large_arc = make_aligned<Circle>(large);
+    bool status;
+    if (from_small) {
+        small_arc->selectEndPoint(tangent_arc->startPoint());
+        large_arc->selectStartPoint(tangent_arc->endPoint());
+        path.push_back(small_arc);
+        path.push_back(tangent_arc);
+        path.push_back(large_arc);
+    } else {
+        large_arc->selectEndPoint(tangent_arc->startPoint());
+        small_arc->selectStartPoint(tangent_arc->endPoint());
+       // tangent_arc->setStartAngle(ipoints_large.front());
+       // tangent_arc->setEndAngle(ipoints_small.front());
+        path.push_back(large_arc);
+        path.push_back(tangent_arc);
+        path.push_back(small_arc);
+
     }
 
 }
 
 
-void Tangentor::tangentInnerArcs(const Circle &circle1, const Circle &circle2, double radius, std::vector<Circle> &res, double tol)
+void Tangentor::tangentInnerArcs(const Circle &circle1, const Circle &circle2, double radius, path_geom::aligned<Circle>::vector &res, double tol)
 {
     res.clear();
     if (circle1.direction()==circle2.direction()) {
         // directions of circles are incompatible
         return;
     }
-    std::vector<Circle> arcs;
-    std::vector<path_geom::Circle> tangent_circles;
+    path_geom::aligned<Circle>::vector arcs;
+    path_geom::aligned<path_geom::Circle>::vector tangent_circles;
     tangentInnerCircles(circle1,circle2, radius,tangent_circles,tol);
     std::cout << "tangentinnerarcs: found "<< tangent_circles.size()<<" circles"<<std::endl;
     for (auto& tangent_circle : tangent_circles) {

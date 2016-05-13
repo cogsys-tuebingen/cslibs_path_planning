@@ -93,8 +93,8 @@ void Intersector::intersectArcs(const Circle &c1, const Circle &c2, std::vector<
 void Intersector::intersect(const Line& line, const Circle& circle,std::vector<Eigen::Vector2d> &res_points, double tol)
 {
     tol = fabs(tol);
-    Vector2d p1=line.start();
-    Vector2d p2=line.end();
+    Vector2d p1=line.startPoint();
+    Vector2d p2=line.endPoint();
     Vector2d c1=circle.center();
     Vector2d p1p2=p2-p1;
     Vector2d c1p1=p1-c1;

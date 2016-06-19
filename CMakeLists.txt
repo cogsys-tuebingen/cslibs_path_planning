@@ -135,6 +135,7 @@ else(NOT OpenCV_FOUND)
     add_executable (Evaluator
                              evaluation/evaluator.cpp)
     target_link_libraries (Evaluator
+        pthread
         utils_path
         ${catkin_LIBRARIES}
         ${Boost_LIBRARIES}

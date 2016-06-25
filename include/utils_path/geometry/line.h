@@ -52,6 +52,8 @@ public:
     virtual double distanceTo(const Eigen::Vector2d& point) const;
     virtual Eigen::Vector2d nearestPointTo(const Vector2d &p) const;
 
+    Eigen::Vector2d projectPoint(const Vector2d &p) const;
+
     friend ostream& operator<<(ostream& os, const Line& line);
 
 protected:

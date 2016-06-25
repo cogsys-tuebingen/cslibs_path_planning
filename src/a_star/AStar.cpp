@@ -11,7 +11,7 @@
 #include <cmath>
 
 // Project
-#include "AStar.h"
+#include <utils_path/a_star/AStar.h>
 
 using namespace std;
 using namespace lib_path;

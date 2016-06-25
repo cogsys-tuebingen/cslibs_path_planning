@@ -6,7 +6,7 @@
 
 
 // Project
-#include "GridMap2d.h"
+#include <utils_path/common/GridMap2d.h>
 #include <iostream>
 
 using namespace lib_path;

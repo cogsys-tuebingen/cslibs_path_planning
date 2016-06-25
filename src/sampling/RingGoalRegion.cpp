@@ -8,7 +8,7 @@
 */ 
 #include <math.h>
 #include <time.h>
-#include "RingGoalRegion.h"
+#include <utils_path/sampling/RingGoalRegion.h>
 
 using namespace lib_path;
 

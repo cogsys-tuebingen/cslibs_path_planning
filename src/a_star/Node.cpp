@@ -5,7 +5,7 @@
  *      Author: dube
  */
 
-#include "Node.h"
+#include <utils_path/a_star/Node.h>
 #include <iostream>
 #include <sstream>
 

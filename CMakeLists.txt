@@ -17,7 +17,7 @@ find_package(catkin REQUIRED COMPONENTS utils_general utils_generic cmake_module
 
 find_package(Boost COMPONENTS program_options system filesystem thread REQUIRED)
 catkin_package(
-    INCLUDE_DIRS ${CMAKE_CURRENT_LIST_DIR}/..
+    INCLUDE_DIRS include
     LIBRARIES utils_path
     CATKIN_DEPENDS utils_generic utils_general
 )
@@ -25,66 +25,60 @@ catkin_package(
 find_package(OpenCV)
 set(YAML_LIBRARIES -L/usr/local/lib/ yaml-cpp)
 
-set(CMAKE_BUILD_TYPE Debug)
-
 find_package(Eigen QUIET)
 if(NOT ${Eigen_FOUND})
   find_package(Eigen3 REQUIRED)
 endif()
+
 include_directories(
+  include
   ${EIGEN_INCLUDE_DIR}
   ${catkin_INCLUDE_DIRS}
 )
 
-set(SOURCES ReedsShepp/CurveGenerator.cpp
-    ReedsShepp/Curve.cpp
-    ReedsShepp/CurveSegment.cpp
-    ReedsShepp/CircleSegment.cpp
-    ReedsShepp/LineSegment.cpp
-    ReedsShepp/GeometryHelper.cpp
-    common/MapMath.cpp
-    common/Point2d.cpp
-    common/Pose2d.cpp
-    common/Path.cpp
-    common/GridMap2d.cpp
-    common/SimpleGridMap2d.cpp
-    common/RotatedGridMap2d.cpp
-    common/CollisionGridMap2d.cpp
-    common/Bresenham2d.cpp
-    a_star/AStar.cpp
-    a_star/Node.cpp
-    a_star/OpenList.cpp
-    generic/Common.hpp
-    generic/SearchAlgorithm.hpp
-    generic/Algorithms.hpp
-    generic/DistanceTransformation.hpp
-    generic/Heuristics.hpp
-    generic/DirectNeighborhood.hpp
-    generic/NonHolonomicNeighborhood.hpp
-    generic/MapManager.hpp
-    generic/NodeManager.hpp
-    generic/ReedsSheppExpansion.hpp
-    geometry/circle.cpp
-    geometry/intersector.cpp
-    geometry/line.cpp
-    geometry/shape.cpp
-    geometry/tangentor.cpp
-    evaluation/Renderer.hpp
-    evaluation/Util.hpp
-    evaluation/MapGenerators.hpp
-    sampling/GoalRegion.cpp
-    sampling/RingGoalRegion.cpp
-    #sampling/PoseListGoalRegion.cpp
-    sampling/CentroidRadiusGoalRegion.cpp
-    sampling/SamplingPlanner.cpp
+set(SOURCES
+    src/ReedsShepp/CurveGenerator.cpp
+    src/ReedsShepp/Curve.cpp
+    src/ReedsShepp/CurveSegment.cpp
+    src/ReedsShepp/CircleSegment.cpp
+    src/ReedsShepp/LineSegment.cpp
+    src/ReedsShepp/GeometryHelper.cpp
+    src/common/MapMath.cpp
+    src/common/Point2d.cpp
+    src/common/Pose2d.cpp
+    src/common/Path.cpp
+    src/common/GridMap2d.cpp
+    src/common/SimpleGridMap2d.cpp
+    src/common/RotatedGridMap2d.cpp
+    src/common/CollisionGridMap2d.cpp
+    src/common/Bresenham2d.cpp
+    src/a_star/AStar.cpp
+    src/a_star/Node.cpp
+    src/a_star/OpenList.cpp
+    src/geometry/circle.cpp
+    src/geometry/intersector.cpp
+    src/geometry/line.cpp
+    src/geometry/shape.cpp
+    src/geometry/tangentor.cpp
+    src/sampling/GoalRegion.cpp
+    src/sampling/RingGoalRegion.cpp
+    #src/sampling/PoseListGoalRegion.cpp
+    src/sampling/CentroidRadiusGoalRegion.cpp
+    src/sampling/SamplingPlanner.cpp
 )
 if(OpenCV_FOUND)
     set(SOURCES ${SOURCES}
-        common/CollisionGridMap2d.cpp
+        src/common/CollisionGridMap2d.cpp
     )
 endif(OpenCV_FOUND)
 
-add_library(utils_path  ${SOURCES})
+#
+# LIST EVERYTHING IN QT
+#
+file(GLOB_RECURSE ALL_HEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS include/*.hpp include/*.h)
+
+
+add_library(utils_path  ${SOURCES} ${ALL_HEADERS})
 
 if(OpenCV_FOUND)
     target_link_libraries(utils_path ${OpenCV_LIBRARIES})
@@ -105,8 +99,8 @@ else(NOT OpenCV_FOUND)
 
 
     add_executable (CostPrecomputation
-                             ReedsShepp/CostPrecomputation.cpp
-                             ReedsShepp/CurveRenderer.cpp)
+                             src/ReedsShepp/CostPrecomputation.cpp
+                             src/ReedsShepp/CurveRenderer.cpp)
     target_link_libraries (CostPrecomputation
         utils_path
         ${catkin_LIBRARIES}
@@ -116,16 +110,16 @@ else(NOT OpenCV_FOUND)
 
 
     add_executable (ReedsSheppCurveTest
-                             ReedsShepp/CurveTest.cpp
-                             ReedsShepp/CurveRenderer.cpp)
+                             src/ReedsShepp/CurveTest.cpp
+                             src/ReedsShepp/CurveRenderer.cpp)
     target_link_libraries (ReedsSheppCurveTest
         utils_path
         ${catkin_LIBRARIES}
         ${OpenCV_LIBS}
     )
     add_executable (Path4wsSimulator
-                             common/path4ws_simulator.cpp
-                             common/path4ws_sim.cpp
+                             src/common/path4ws_simulator.cpp
+                             src/common/path4ws_sim.cpp
     )
     target_link_libraries (Path4wsSimulator
         utils_path
@@ -133,7 +127,7 @@ else(NOT OpenCV_FOUND)
         ${OpenCV_LIBS}
     )
     add_executable (Evaluator
-                             evaluation/evaluator.cpp)
+                             src/evaluation/evaluator.cpp)
     target_link_libraries (Evaluator
         pthread
         utils_path
@@ -143,7 +137,7 @@ else(NOT OpenCV_FOUND)
         ${YAML_LIBRARIES})
 
     add_executable (Geomtest
-                             geometry/test_geometry.cpp)
+                             src/geometry/test_geometry.cpp)
     target_link_libraries (Geomtest
         utils_path
         ${catkin_LIBRARIES}

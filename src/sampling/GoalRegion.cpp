@@ -7,7 +7,7 @@
 
 */ 
 
-#include "GoalRegion.h"
+#include <utils_path/sampling/GoalRegion.h>
 
 using namespace lib_path;
 

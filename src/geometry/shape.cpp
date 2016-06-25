@@ -8,9 +8,9 @@
 
 */
 
-#include "shape.h"
-#include "../geometry/line.h"
-#include "../geometry/circle.h"
+#include <utils_path/geometry/shape.h>
+#include <utils_path/geometry/line.h>
+#include <utils_path/geometry/circle.h>
 using namespace Eigen;
 using namespace path_geom;
 

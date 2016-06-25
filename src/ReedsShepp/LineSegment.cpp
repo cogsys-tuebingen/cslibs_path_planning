@@ -6,10 +6,10 @@
  */
 
 /// HEADER
-#include "LineSegment.h"
+#include <utils_path/ReedsShepp/LineSegment.h>
 
 /// PROJECT
-#include "../common/MapMath.h"
+#include <utils_path/common/MapMath.h>
 
 /// SYSTEM
 #include <stdlib.h>

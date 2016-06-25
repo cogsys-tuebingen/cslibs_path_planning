@@ -12,10 +12,32 @@
 #include <Eigen/Core>
 #include <cmath>
 #include <iostream>
-#include "intersector.h"
+#include <utils_path/geometry/intersector.h>
+#include <utils_general/MathHelper.h>
 
 using namespace path_geom;
 using namespace Eigen;
+
+
+bool Intersector::intersect(const Line& l1, const Line& l2, Eigen::Vector2d& intersection,
+                            double tol)
+{
+    double s, t;
+    point2D a {l1.startPoint()(0), l1.startPoint()(1)};
+    point2D b {l1.endPoint()(0), l1.endPoint()(1)};
+    point2D c {l2.startPoint()(0), l2.startPoint()(1)};
+    point2D d {l2.endPoint()(0), l2.endPoint()(1)};
+
+    point2D pt;
+
+    if(segmentIntersection(a,b,c,d, pt, s, t, tol)) {
+        intersection = Eigen::Vector2d (pt.first, pt.second);
+        return true;
+    }
+
+    return false;
+}
+
 void Intersector::intersect(const Circle &c1, const Circle &c2, std::vector<Eigen::Vector2d> &res_points,
                             double tol)
 {

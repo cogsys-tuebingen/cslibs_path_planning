@@ -6,9 +6,9 @@
  */
 
 /// PROJECT
-#include "../common/SimpleGridMap2d.h"
-#include "CurveGenerator.h"
-#include "CurveRenderer.h"
+#include <utils_path/common/SimpleGridMap2d.h>
+#include <utils_path/ReedsShepp/CurveGenerator.h>
+#include <utils_path/ReedsShepp/CurveRenderer.h>
 
 /// SYSTEM
 #include <boost/exception/all.hpp>

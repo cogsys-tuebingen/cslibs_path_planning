@@ -6,7 +6,7 @@
  */
 
 /// HEADER
-#include "GeometryHelper.h"
+#include <utils_path/ReedsShepp/GeometryHelper.h>
 
 using namespace lib_path;
 

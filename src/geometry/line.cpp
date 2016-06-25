@@ -10,7 +10,8 @@
 
 */
 
-#include "../geometry/line.h"
+#include <utils_path/geometry/line.h>
+
 using namespace path_geom;
 using namespace Eigen;
 Line::Line(const Eigen::Vector2d& start, const Eigen::Vector2d& end)
@@ -215,4 +216,11 @@ Vector2d Line::nearestPointTo(const Vector2d &p) const
             return end_;
         }
     }
+}
+
+Vector2d Line::projectPoint(const Vector2d &p) const
+{
+    Vector2d v = p - start_;
+    Vector2d s = end_ - start_;
+    return start_ + v.dot(s) / (s.dot(s)) * s;
 }

@@ -11,8 +11,8 @@
 #include <iostream>
 #include <memory>
 #include <algorithm>
-#include "../geometry/intersector.h"
-#include "../geometry/tangentor.h"
+#include <utils_path/geometry//intersector.h>
+#include <utils_path/geometry//tangentor.h>
 
 using namespace path_geom;
 using namespace Eigen;

@@ -6,7 +6,7 @@
  */
 
 /// HEADER
-#include "CurveSegment.h"
+#include <utils_path/ReedsShepp/CurveSegment.h>
 
 /// SYSTEM
 #include <assert.h>

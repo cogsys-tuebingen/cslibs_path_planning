@@ -5,7 +5,7 @@
  */
 
 /// Project
-#include "CollisionGridMap2d.h"
+#include <utils_path/common/CollisionGridMap2d.h>
 
 /// SYSTEM
 #include <Eigen/Geometry>

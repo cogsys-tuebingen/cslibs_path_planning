@@ -6,7 +6,7 @@
  */
 
 /// HEADER
-#include "CircleSegment.h"
+#include <utils_path/ReedsShepp/CircleSegment.h>
 
 using namespace lib_path;
 

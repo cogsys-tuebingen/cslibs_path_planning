@@ -11,10 +11,10 @@
 */
 #include <iostream>
 #include <limits>
-#include "tangentor.h"
+#include <utils_path/geometry/tangentor.h>
 
 
-#include "intersector.h"
+#include <utils_path/geometry/intersector.h>
 
 
 using namespace path_geom;

@@ -371,9 +371,7 @@ private:
     static unsigned h;
 #undef cost__
 };
-double* HeuristicHolonomicObstacles::cost = NULL;
-unsigned HeuristicHolonomicObstacles::w = 0;
-unsigned HeuristicHolonomicObstacles::h = 0;
+
 
 /**
  * @brief The HeuristicNonHolonomicNoObstacles struct represents a norm that respects non-holonomic constraits

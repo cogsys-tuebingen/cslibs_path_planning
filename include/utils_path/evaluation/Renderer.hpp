@@ -68,8 +68,6 @@ struct MapRenderer : public SearchAlgorithm {
 
         map_w = map_.w;
         map_h = map_.h;
-
-        map_data = map_.data;
     }
 
     void visualizeSearchSpace() {
@@ -95,9 +93,10 @@ struct MapRenderer : public SearchAlgorithm {
 #define FOREACH_NODE(name) { \
     unsigned int i = 0; \
     for(unsigned t = 0; t < map_.theta_slots; ++t) {\
-    for(unsigned y = 0; y < map_h; ++y) {\
-    for(unsigned x = 0; x < map_w; ++x) {\
-    name = map_data[i++]; \
+    for(int y = 0; y < map_h; ++y) {\
+    for(int x = 0; x < map_w; ++x) {\
+    if(!map_.hasNode(x,y,t,true)) continue; \
+    name = *map_.lookup(x,y,t, true); \
     if(node.distance == INFINITY) {continue;}\
     if(node.distance == std::numeric_limits<double>::max()) {continue;}
 #define END_FOREACH_NODE }}}}
@@ -473,7 +472,6 @@ protected:
     unsigned img_w;
     unsigned img_h;
 
-    NodeType * map_data;
     unsigned map_w;
     unsigned map_h;
 

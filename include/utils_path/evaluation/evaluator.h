@@ -67,7 +67,7 @@ namespace search_algorithms {
 
 static const int N = 10;
 static const int M = 100 * N;
-static const int INIT_STEPS = 150;
+static const int INIT_STEPS = 00;
 
 typedef BFSNeighborhood<8,1> BFSNeighbor;
 typedef DirectNeighborhood<8,1> DNeighbor;

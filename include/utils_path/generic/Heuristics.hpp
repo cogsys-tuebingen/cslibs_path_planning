@@ -373,6 +373,7 @@ private:
 };
 
 
+
 /**
  * @brief The HeuristicNonHolonomicNoObstacles struct represents a norm that respects non-holonomic constraits
  * @note WORK IN PROGRESS, NOT YET FUNCTIONAL

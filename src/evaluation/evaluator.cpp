@@ -304,7 +304,7 @@ bool Evaluator<Search>::loadMap()
     w = orig_map.cols;
     h = orig_map.rows;
 
-    YAML::Node doc = YAML::Load(file_ + ".yaml");
+    YAML::Node doc = YAML::LoadFile(file_ + ".yaml");
     if(!doc.IsDefined()) {
         return false;
     }
@@ -681,8 +681,8 @@ int main(int argc, char* argv[])
 //    typedef search_algorithms::AStarTaxi Search;
 //    typedef search_algorithms::Dijkstra4d Search;
 //    typedef search_algorithms::AStarMax Search;
-    typedef search_algorithms::DTA Search;
-//    typedef search_algorithms::AStarNHHH Search;
+//    typedef search_algorithms::DTA Search;
+    typedef search_algorithms::AStarNHHH Search;
 //    typedef search_algorithms::AStarNH Search;
 //    typedef search_algorithms::AStarNHOverEstimate Search;
 //    typedef search_algorithms::AStarNHNoEndOrientation Search;

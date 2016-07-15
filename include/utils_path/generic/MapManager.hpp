@@ -37,13 +37,10 @@ public:
     };
 
     Manager()
-        : w(0), h(0), theta_slots(1), map_(NULL), data(NULL)
+        : w(0), h(0), theta_slots(1), map_(NULL)
     {}
 
     virtual ~Manager() {
-        if(data != NULL) {
-            delete [] data;
-        }
     }
 
     const MapT* getMap() {
@@ -141,6 +138,10 @@ public:
         return map_->isInMap((int) std::floor(x), (int) std::floor(y));
     }
 
+    virtual bool hasNode(const int x, const int y, unsigned t, bool forward) {
+        return contains(x,y);
+    }
+
 public:
     unsigned w;
     unsigned h;
@@ -149,8 +150,6 @@ public:
 protected:
     const MapT* map_;
     Bresenham2d bresenham;
-
-    NodeType* data;
 
 };
 
@@ -168,9 +167,16 @@ struct GridMapManager :
         typedef PointT NodeType;
     };
 
-    using ManagerT::data;
     using ManagerT::w;
     using ManagerT::h;
+
+    GridMapManager()
+        : data(NULL)
+    {}
+
+    virtual ~GridMapManager() {
+        delete [] data;
+    }
 
     void initMap(bool replace) {
         bool alloc = data == NULL || replace;
@@ -218,6 +224,8 @@ struct GridMapManager :
         }
         return lookup((int) std::floor(x), (int) std::floor(y));
     }
+public:
+    NodeType* data;
 };
 
 
@@ -235,10 +243,17 @@ public:
         typedef PointT NodeType;
     };
 
-    using ManagerT::data;
     using ManagerT::w;
     using ManagerT::h;
     using ManagerT::theta_slots;
+
+    StateSpaceManager()
+        : data(NULL)
+    {}
+
+    virtual ~StateSpaceManager() {
+        delete [] data;
+    }
 
     void initMap(bool replace) {
         theta_slots = 36;
@@ -298,6 +313,9 @@ public:
         }
         return lookup((int) std::floor(x), (int) std::floor(y), theta);
     }
+
+public:
+    NodeType* data;
 };
 
 
@@ -310,10 +328,17 @@ public:
     typedef Manager<NodeT, GridMap2d> ManagerT;
     typedef typename ManagerT::NodeType NodeType;
 
-    using ManagerT::data;
     using ManagerT::w;
     using ManagerT::h;
     using ManagerT::theta_slots;
+
+    DirectionalStateSpaceManager()
+        : data(NULL)
+    {}
+
+    virtual ~DirectionalStateSpaceManager() {
+        delete [] data;
+    }
 
     template <class PointT>
     struct NodeHolder {
@@ -396,8 +421,183 @@ public:
 
 private:
     unsigned dimension;
+
+public:
+    NodeType* data;
 };
 
+
+
+
+/**
+ * This state space manager lazily allocates memory in chunks instead of a monolithic block.
+ */
+template <class NodeT>
+class DynamicDirectionalStateSpaceManager :
+    public Manager<NodeT, GridMap2d>
+{
+public:
+    typedef Manager<NodeT, GridMap2d> ManagerT;
+    typedef typename ManagerT::NodeType NodeType;
+
+    using ManagerT::w;
+    using ManagerT::h;
+    using ManagerT::theta_slots;
+
+    class Chunk
+    {
+    public:
+        Chunk(int cx, int cy, unsigned size, unsigned theta_slots)
+            : ox(cx), oy(cy), chunk_size(size), chunk_dimension(chunk_size * chunk_size * theta_slots), chunk_data(new NodeType[2*chunk_dimension])
+        {
+            double stheta = 0 - M_PI;
+            double dtheta = 2 * M_PI / theta_slots;
+
+            for(unsigned y = 0; y < chunk_size; ++y) {
+                for(unsigned x = 0; x < chunk_size; ++x) {
+                    for(unsigned t = 0; t < theta_slots; ++t) {
+                        for(unsigned f = 0; f <= 1; ++f) {
+                            int nx = ox+x;
+                            int ny = oy+y;
+                            std::size_t ci = chunk_index(nx, ny, t, f);
+                            NodeType::init(chunk_data[ci], nx, ny, stheta + dtheta * t);
+                        }
+                    }
+                }
+            }
+        }
+
+        ~Chunk()
+        {
+            delete [] chunk_data;
+        }
+
+        inline unsigned chunk_index(int mx, int my, int t=0, bool forward=true) {
+            int cx = mx - ox;
+            int cy = my - oy;
+            if((cx < 0) || (cy < 0) || (cx >= (int) chunk_size) || (cy >= (int) chunk_size)) {
+                throw typename ManagerT::OutsideMapException();
+            }
+
+            return cy * chunk_size + cx + t*chunk_size*chunk_size + (forward ? 0 : chunk_dimension);
+        }
+
+        inline NodeType* lookup(int mx, int my, int t=0, bool forward=true) {
+            std::size_t index = chunk_index(mx,my,t,forward);
+            return &chunk_data[index];
+        }
+
+    private:
+        int ox;
+        int oy;
+
+        unsigned chunk_size;
+
+        unsigned chunk_dimension;
+        NodeType* chunk_data;
+    };
+
+
+    DynamicDirectionalStateSpaceManager()
+        : chunks_w(0), chunks_h(0)
+    {}
+
+    virtual ~DynamicDirectionalStateSpaceManager() {
+        clearChunks();
+    }
+
+    void clearChunks() noexcept
+    {
+        for(Chunk* c : chunks) {
+            try {
+                delete c;
+            } catch(...) {
+                // ignore...
+            }
+        }
+        chunks.clear();
+    }
+
+    template <class PointT>
+    struct NodeHolder {
+        typedef DirectionalNode<PointT> NodeType;
+    };
+
+    void initMap(bool replace) {
+        chunk_size = 32;
+        theta_slots = 32;
+
+        chunks_w = w / chunk_size + 1;
+        chunks_h = h / chunk_size + 1;
+
+        dimension = w * h * theta_slots;
+
+
+        clearChunks();
+
+        chunks.resize(chunks_w * chunks_h);
+        memset(chunks.data(), 0, chunks.size() * sizeof(Chunk*));
+    }
+
+
+    inline unsigned angle2index(double theta) {
+        return (MathHelper::AngleClamp(theta) + M_PI) / (2 * M_PI) * (theta_slots - 1);
+    }
+
+    template <class PointT>
+    NodeType* lookup(const PointT& reference) {
+        return lookup(reference.x,reference.y,reference.theta, reference.forward);
+    }
+    NodeType* lookup(const Pose2d& reference) {
+        return lookup(reference.x,reference.y,reference.theta, true);
+    }
+
+    NodeType* lookup(const int x, const int y, double theta, bool forward) {
+        return lookup(x,y,angle2index(theta), forward);
+    }
+    NodeType* lookup(const double x, const double y, double theta, bool forward) {
+        return lookup((int) std::floor(x), (int) std::floor(y), theta, forward);
+    }
+    NodeType* lookup(const int x, const int y, unsigned t, bool forward) {
+        if((x < 0) || (y < 0) || (x >= (int) w) || (y >= (int) h) || (t < 0) || (t >= (int) theta_slots)) {
+            throw typename ManagerT::OutsideMapException();
+        }
+        int cx = (x / chunk_size);
+        int cy = (y / chunk_size);
+
+        Chunk* chunk = chunks.at(cy * chunks_w + cx);
+
+        if(!chunk) {
+            std::cerr << "allocating new chunk " << cx << ", " << cy << " of size " << chunk_size << " x " << chunk_size << std::endl;
+            chunk = new Chunk(cx * chunk_size, cy * chunk_size, chunk_size, theta_slots);
+            chunks.at(cy * chunks_w + cx) = chunk;
+        }
+
+        return chunk->lookup(x,y,t, forward);
+    }
+
+
+    bool hasNode(const int x, const int y, unsigned t, bool forward) {
+        if((x < 0) || (y < 0) || (x >= (int) w) || (y >= (int) h) || (t < 0) || (t >= (int) theta_slots)) {
+            throw typename ManagerT::OutsideMapException();
+        }
+        int cx = (x / chunk_size);
+        int cy = (y / chunk_size);
+
+        Chunk* chunk = chunks.at(cy * chunks_w + cx);
+        return chunk != nullptr;
+    }
+
+private:
+    unsigned dimension;
+    unsigned chunk_size;
+
+    std::size_t chunks_w;
+    std::size_t chunks_h;
+
+public:
+    std::vector<Chunk*> chunks;
+};
 }
 
 #endif // MAPMANAGER_H

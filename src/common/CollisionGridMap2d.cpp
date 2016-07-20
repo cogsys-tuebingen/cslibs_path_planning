@@ -56,7 +56,7 @@ void RobotArea::begin() {
     int steps = 32;
     double inc = 1.0 / steps;
     double i = 0.0;
-    for(int j = 0; j < steps; ++j) {
+    for(int j = 1; j < steps; ++j) {
 	    pts_.push_back(fr + i * (fl-fr));
         pts_.push_back(br + i * (bl-br));
         pts_.push_back(bl + i * (fl-bl));

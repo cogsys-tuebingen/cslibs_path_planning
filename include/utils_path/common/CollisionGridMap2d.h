@@ -25,7 +25,7 @@ class RobotArea;
  */
 class CollisionGridMap2d : public RotatedGridMap2d {
 public:
-    static const int ANGLE_DISCRETIZATION = 32;
+    static const int ANGLE_DISCRETIZATION = 128;
 
     /**
      * @brief Create a map with the given size and resolution.

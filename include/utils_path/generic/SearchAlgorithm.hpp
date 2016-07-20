@@ -187,6 +187,7 @@ public:
      */
     virtual PathT findPath(const PointT& from, const PointT& to,
                            double oversearch_distance = 0.0) {
+        oversearch_distance_ = oversearch_distance;
         if(NeighborhoodType::reversed) {
             PathT path = findPathPose<generic::NoIntermission>(to, from, boost::function<void()>());
             std::reverse(path.begin(), path.end());
@@ -329,8 +330,10 @@ protected:
             }
 
             // check if we can return
-            if(!goal_candidates.empty() && current->distance > first_candidate_weight + oversearch_distance_) {
-                break;
+            if(!goal_candidates.empty()) {
+                if(current->distance > first_candidate_weight + oversearch_distance_) {
+                    break;
+                }
             }
 
 
@@ -508,7 +511,7 @@ public:
             assert(current != current->prev);
             path.push_back(*current);
         };
-
+ 
         std::reverse(path.begin(), path.end());
 
         return path;

@@ -15,6 +15,7 @@
 /// PROJECT
 #include <utils_generic/Intermission.hpp>
 #include "../common/Path.h"
+#include <utils_path/common/Path.h>
 
 /// SYSTEM
 #include <algorithm>
@@ -24,6 +25,7 @@
 #include <boost/thread.hpp>
 #include <stdexcept>
 #include <queue>
+#include <functional>
 
 namespace lib_path
 {
@@ -170,9 +172,17 @@ public:
     void addGoalCandidate(const NodeT* current, double cost)
     {
         if(goal_candidates.empty()) {
-            first_candidate_weight = current->distance;
+            first_candidate_weight = current->getTotalCost();
+            std::cerr << "find first candidate with distance " << current->getTotalCost() << ", oversearch is " << oversearch_distance_ << std::endl;
         }
         goal_candidates.push(std::make_tuple(current, cost));
+
+        if(goal_candidate_function) {
+            PathT p = backtrack(start, current);
+            if(goal_candidate_function(p)) {
+                // TODO: return this path
+            }
+        }
     }
 
 
@@ -304,6 +314,7 @@ protected:
 
             // mark the next node closed
             NodeT* current = open.next();
+
             current->unMark(NodeT::MARK_OPEN);
             current->mark(NodeT::MARK_CLOSED);
 
@@ -331,7 +342,7 @@ protected:
 
             // check if we can return
             if(!goal_candidates.empty()) {
-                if(current->distance > first_candidate_weight + oversearch_distance_) {
+                if(current->getTotalCost() > first_candidate_weight + oversearch_distance_) {
                     break;
                 }
             }
@@ -349,7 +360,9 @@ protected:
             GoalCandidate best = goal_candidates.top();
             std::cout << "done, selecting the best goal out of " << goal_candidates.size() << " candidates\n";
             std::cout << "dist: " <<  std::get<1>(best) << std::endl;
-            return backtrack(start,  std::get<0>(best));
+            auto res = backtrack(start,  std::get<0>(best));
+            std::cout << "length: " <<  res.size() << std::endl;
+            return res;
         }
 
         std::cerr << "done, no path found" << std::endl;
@@ -372,9 +385,11 @@ protected:
 
     void initStartPose(const PointT& pose)
     {
+        std::cerr << "start: " << pose.x <<  " / " << pose.y << std::endl;
+
         try {
             start = map_.lookup(pose);
-        } catch(const typename MapManager::OutsideMapException& e) {
+        } catch(const OutsideMapException& e) {
             throw StartOutOfMapException();
         }
         if(map_.isOccupied(start)) {
@@ -389,16 +404,20 @@ protected:
             // put start node in open data structure
             open.add(start);
         }
+
+        std::cerr << "start pose: " << start->x <<  " / " << start->y << std::endl;
     }
 
     void initGoalPose(const PointT& pose)
     {
+        std::cerr << "goal: " << pose.x <<  " / " << pose.y << std::endl;
+
         try {
             goal = map_.lookup(pose);
-        } catch(const typename MapManager::OutsideMapException& e) {
+        } catch(const OutsideMapException& e) {
             throw GoalOutOfMapException();
         }
-        Heuristic::setMap(map_.getMap(), *goal);
+        Heuristic::setMap(&map_, *goal);
 
         if(map_.isOccupied(goal)) {
             throw GoalNotFreeException();
@@ -423,7 +442,7 @@ protected:
             tmp.theta = expansion.begin()->theta;
 
             PathT path = backtrack(start, &tmp);
-            path += expansion;
+            path.insert(path.end(), expansion.begin(), expansion.end());
             result = path;
             return true;
         }
@@ -505,7 +524,16 @@ public:
         const NodeT* current = goal;
         path.push_back(*goal);
 
+        std::set<const NodeT*> contained;
+
         while(current != start){
+            if(contained.find(current) != contained.end()) {
+                std::cerr << "found path contains a loop! abort!" << std::endl;
+                return {};
+            }
+
+            contained.insert(current);
+
             current = dynamic_cast<NodeT*>(current->prev);
             assert(current != NULL);
             assert(current != current->prev);
@@ -515,6 +543,26 @@ public:
         std::reverse(path.begin(), path.end());
 
         return path;
+    }
+
+    std::vector<PathT> getPathCandidates() {
+        std::vector<PathT> paths;
+
+        std::priority_queue<GoalCandidate, std::vector<GoalCandidate>, PairDistance> tmp = goal_candidates;
+
+        while(!tmp.empty()) {
+            const GoalCandidate gc = tmp.top();
+            tmp.pop();
+
+            paths.emplace_back(backtrack(start,  std::get<0>(gc)));
+        }
+
+        return paths;
+    }
+
+    template <typename CB>
+    void setPathCandidateCallback(CB cb) {
+        goal_candidate_function = cb;
     }
 
 protected:
@@ -535,6 +583,8 @@ protected:
     int expansions;
     int multi_expansions;
     int updates;
+
+    std::function<bool(const PathT&)> goal_candidate_function;
 };
 
 template <class Param>

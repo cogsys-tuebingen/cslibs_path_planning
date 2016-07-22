@@ -4,6 +4,7 @@
 
 using namespace lib_path;
 
-double* HeuristicHolonomicObstacles::cost;
+double* HeuristicHolonomicObstacles::costs;
 unsigned HeuristicHolonomicObstacles::w;
 unsigned HeuristicHolonomicObstacles::h;
+int HeuristicHolonomicObstacles::padding;

@@ -43,6 +43,11 @@ void RobotArea::setPosition(int x, int y)
     init_ = true;
 }
 
+void RobotArea::setParent(const CollisionGridMap2d *parent)
+{
+    parent_ = parent;
+}
+
 /**
      * @brief Start a new iteration.
      */
@@ -168,6 +173,16 @@ CollisionGridMap2d::CollisionGridMap2d(const unsigned int w, const unsigned int 
         double res = getResolution();
 
         areas_[t] = new RobotArea(this, forward / res, backward / res, width / res, theta);
+    }
+}
+
+
+CollisionGridMap2d::CollisionGridMap2d(const CollisionGridMap2d& copy)
+    : RotatedGridMap2d(copy)
+{
+    for(int t = 0; t< ANGLE_DISCRETIZATION; ++t) {
+        areas_[t] = new RobotArea(*copy.areas_[t]);
+        areas_[t]->setParent(this);
     }
 }
 

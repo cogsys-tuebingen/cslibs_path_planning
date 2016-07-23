@@ -341,7 +341,7 @@ protected:
             }
 
             // check if we can return
-            if(!goal_candidates.empty()) {
+            if(!goal_candidates.empty() && oversearch_distance_ != 0.0) {
                 if(current->getTotalCost() > first_candidate_weight + oversearch_distance_) {
                     break;
                 }

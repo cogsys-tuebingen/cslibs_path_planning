@@ -37,6 +37,7 @@ public:
      * @param r Size of one cell in meter.
      */
     CollisionGridMap2d( const unsigned int w, const unsigned int h, const double yaw, const double res, double forward, double backward, double width);
+    CollisionGridMap2d( const CollisionGridMap2d& copy);
     ~CollisionGridMap2d();
 
     virtual bool isFree( const unsigned int x, const unsigned int y, const double theta ) const;
@@ -52,6 +53,8 @@ public:
     RobotArea(CollisionGridMap2d const*  parent, double forward, double backward, double width, double theta);
 
     void setPosition(int x, int y);
+    void setParent(CollisionGridMap2d const*  parent);
+
     virtual void begin();
     void paint(bool free);
     virtual bool next();

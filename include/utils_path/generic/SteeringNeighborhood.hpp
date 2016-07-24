@@ -11,18 +11,19 @@ struct SteeringMoves
 {
     enum AllowedMoves {
         FORWARD = 3,
-        FORWARD_HALFSTEPS = 5,
-        FORWARD_BACKWARD_HALFSTEPS = 10
+        FORWARD_BACKWARD = 6
     };
 };
 
 //use finer grid (no grid?) for planning!
 
-template <int distance, int steer_steps, int steer_step_deg, int moves = SteeringMoves::FORWARD_BACKWARD_HALFSTEPS, bool reversed = false,
+template <int distance, int steer_steps, int steer_step_deg, int max_steer, int la, int moves = SteeringMoves::FORWARD_BACKWARD, bool reversed = false,
           int straight_dir_switch = static_cast<int>(std::round(2.0 / (distance / 100.)))>
 struct SteeringNeighborhood :
-        public NonHolonomicNeighborhood<distance, steer_steps*steer_step_deg, moves, reversed, straight_dir_switch> {
-    typedef NonHolonomicNeighborhood<distance, steer_steps*steer_step_deg, moves, reversed, straight_dir_switch> Parent;
+        public NonHolonomicNeighborhood<distance, max_steer, moves, reversed, straight_dir_switch> {
+    typedef NonHolonomicNeighborhood<distance, max_steer, moves, reversed, straight_dir_switch> Parent;
+
+    static_assert(steer_step_deg * steer_steps <= max_steer, "max steer is too small");
 
     using Parent::distance_step_pixel;
 
@@ -30,8 +31,9 @@ struct SteeringNeighborhood :
     using Parent::PR_ADDED_TO_OPEN_LIST;
 
     using Parent::STEER_ANGLE;
-    static constexpr double MAX_STEER_ANGLE = STEER_ANGLE / 10.0 * M_PI / 180.0;
-    static constexpr double STEER_DELTA = steer_step_deg / 180. * M_PI;
+    static constexpr int MAX_STEER_ANGLE = STEER_ANGLE;
+    static constexpr double STEER_DELTA = steer_step_deg;
+    static constexpr double LA = la / 100.0;
 
     using Parent::resolution;
     using Parent::distance_step;
@@ -97,7 +99,7 @@ struct SteeringNeighborhood :
     }
 
     template <class NodeType>
-    static double advance(NodeType* reference, int i, double& x_, double& y_, double& theta_, bool& forward_, float& steering_angle_, char& custom, double map_rotation) {
+    static double advance(NodeType* reference, int i, int step, double& x_, double& y_, double& theta_, bool& forward_, int& steering_angle_, char& custom, double map_rotation) {
         bool initial = reference->depth < 1;
         if(initial && (i != 0 && i != 5)) {
             return -1;
@@ -105,37 +107,37 @@ struct SteeringNeighborhood :
 
         double cost = distance_step_pixel;
 
+        int delta = STEER_DELTA * step;
 
-        float steering_angle;
+        int steering_angle;
         switch(i) {
         default:
-        case 0: case 5: // keep angle
+        case 0: case 3: // keep angle
             steering_angle = reference->steering_angle;
-            break;
-        case 1: case 6: // right
-            if(reference->steering_angle == -MAX_STEER_ANGLE) {
+            if(step > 0) {
+                // only forward is done for step 0
                 return -1;
             }
-            steering_angle = reference->steering_angle - STEER_DELTA * 2;
             break;
-        case 2: case 7: // left
-            if(reference->steering_angle == MAX_STEER_ANGLE) {
+        case 1: case 4: // right
+            if(step == 0) {
+                // only forward is done for step 0
                 return -1;
             }
-            steering_angle = reference->steering_angle + STEER_DELTA * 2;
-            break;
-
-        case 3: case 8: // right
-            if(reference->steering_angle == -MAX_STEER_ANGLE) {
+            if(reference->steering_angle <= -MAX_STEER_ANGLE) {
                 return -1;
             }
-            steering_angle = reference->steering_angle - STEER_DELTA;
+            steering_angle = reference->steering_angle - delta;
             break;
-        case 4: case 9: // left
-            if(reference->steering_angle == MAX_STEER_ANGLE) {
+        case 2: case 5: // left
+            if(step == 0) {
+                // only forward is done for step 0
                 return -1;
             }
-            steering_angle = reference->steering_angle + STEER_DELTA;
+            if(reference->steering_angle >= MAX_STEER_ANGLE) {
+                return -1;
+            }
+            steering_angle = reference->steering_angle + delta;
             break;
         }
 
@@ -145,14 +147,12 @@ struct SteeringNeighborhood :
             steering_angle = -MAX_STEER_ANGLE;
         }
 
-//        cost *= std::abs(steering_angle) / MAX_STEER_ANGLE * 1.1;
+        //        cost *= std::abs(steering_angle) / MAX_STEER_ANGLE * 1.1;
 
         steering_angle_ = steering_angle;
 
-        float la = 1.0;
-        float la_pixel = la * resolution;
-        double r = la_pixel / std::tan(steering_angle);
-        double dtheta = distance_step / r;
+        double r_world = LA / std::tan(steering_angle / 180. * M_PI);
+        double dtheta = distance_step / r_world;
 
         double t = reference->theta + dtheta/2;
 
@@ -243,37 +243,39 @@ struct SteeringNeighborhood :
         double map_rotation = map.getMap()->getRotation();
 
         for(unsigned i = 0; i < SIZE; ++i) {
-            double to_x,to_y, to_theta;
-            bool forward;
-            char custom;
-            float steering_angle;
-            double cost = advance(reference, i, to_x,to_y,to_theta,forward,steering_angle,custom, map_rotation);
+            for(unsigned step = 0; step < steer_steps; ++step) {
+                double to_x,to_y, to_theta;
+                bool forward;
+                char custom;
+                int steering_angle;
+                double cost = advance(reference, i, step, to_x,to_y,to_theta,forward,steering_angle,custom, map_rotation);
 
-            if(cost < 0) {
-                continue;
-            }
+                if(cost < 0) {
+                    continue;
+                }
 
-            if(map.contains(to_x, to_y)) {
-                //                bool free = map.isFree(reference->x,reference->y, to_x,to_y);
-                bool free_or_unknown = map.isFreeOrUnknown(reference->x,reference->y, to_x,to_y);
-                bool can_be_used = free_or_unknown;// free || (free_or_unknown && forward);
-                if(can_be_used) {
-                    NodeType* n = map.lookup(to_x, to_y, to_theta, forward);
+                if(map.contains(to_x, to_y)) {
+                    //                bool free = map.isFree(reference->x,reference->y, to_x,to_y);
+                    bool free_or_unknown = map.isFreeOrUnknown(reference->x,reference->y, to_x,to_y);
+                    bool can_be_used = free_or_unknown;// free || (free_or_unknown && forward);
+                    if(can_be_used) {
+                        NodeType* n = map.lookup(to_x, to_y, to_theta, forward);
 
-                    if(n == NULL/* || map.isOccupied(n)*/) {
-                        continue;
-                    }
+                        if(n == NULL/* || map.isOccupied(n)*/) {
+                            continue;
+                        }
 
-                    if(algo.processNeighbor(reference, n, cost) == PR_ADDED_TO_OPEN_LIST)  {
-                        n->custom  = custom;
-                        n->depth = reference->depth + 1;
+                        if(algo.processNeighbor(reference, n, cost) == PR_ADDED_TO_OPEN_LIST)  {
+                            n->custom  = custom;
+                            n->depth = reference->depth + 1;
 
-                        n->steering_angle = steering_angle;
+                            n->steering_angle = steering_angle;
 
-                        n->x = to_x;
-                        n->y = to_y;
-                        n->theta = to_theta;
-                        n->forward = forward;
+                            n->x = to_x;
+                            n->y = to_y;
+                            n->theta = to_theta;
+                            n->forward = forward;
+                        }
                     }
                 }
             }

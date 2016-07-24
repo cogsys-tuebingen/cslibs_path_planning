@@ -25,6 +25,7 @@
 #include <boost/thread.hpp>
 #include <stdexcept>
 #include <queue>
+#include <chrono>
 #include <functional>
 
 namespace lib_path
@@ -125,7 +126,7 @@ public:
 
 public:
     GenericSearchAlgorithm()
-        : start(NULL), goal(NULL), heuristic_goal(NULL), has_cost_(false), expansions(0), multi_expansions(0), updates(0)
+        : start(NULL), goal(NULL), heuristic_goal(NULL), has_cost_(false), expansions(0), multi_expansions(0), updates(0), time_limit_(-1.0)
     {}
 
     virtual void setMap(const MapT* map) {
@@ -135,6 +136,10 @@ public:
 
     virtual void setCostFunction(bool is_cost_function) {
         has_cost_ = is_cost_function;
+    }
+
+    void setTimeLimit(double seconds) {
+        time_limit_ = seconds;
     }
 
     virtual void setStart(const PointT& from) {
@@ -244,7 +249,7 @@ public:
                    double oversearch_distance = 0.0)
     {
         oversearch_distance_ = oversearch_distance;
-        return findPathMap<GoalTest, generic::NoIntermission>
+        return findPathMapPose<GoalTest, generic::NoIntermission>
                 (from, goal_test, boost::function<void()>());
     }
 
@@ -254,10 +259,20 @@ public:
                    double oversearch_distance = 0.0)
     {
         oversearch_distance_ = oversearch_distance;
-        return findPathMap<GoalTest, generic::CallbackIntermission<INTERMISSION_N_STEPS, INTERMISSION_START_STEPS>
+        return findPathMapPose<GoalTest, generic::CallbackIntermission<INTERMISSION_N_STEPS, INTERMISSION_START_STEPS>
                 >
                 (from, goal_test, intermission);
     }
+
+    template <class GoalTest>
+    PathT findPathWithStartConfiguration(const NodeT& from, const GoalTest& goal_test,
+                                         double oversearch_distance = 0.0)
+    {
+        oversearch_distance_ = oversearch_distance;
+        return findPathMapNode<GoalTest, generic::NoIntermission>
+                (from, goal_test, boost::function<void()>());
+    }
+
 
 protected:
     template <class SearchAlgo, class NodeType>
@@ -292,7 +307,7 @@ protected:
     }
 
     template <class GoalTest, class Intermission>
-    PathT findPathMap(const PointT& from, const GoalTest& goal_test,
+    PathT findPathMapPose(const PointT& from, const GoalTest& goal_test,
                       boost::function<void()> intermission)
     {
         init();
@@ -304,13 +319,42 @@ protected:
                 (goal_test, intermission);
     }
 
+
+    template <class GoalTest, class Intermission>
+    PathT findPathMapNode(const NodeT& from, const GoalTest& goal_test,
+                      boost::function<void()> intermission)
+    {
+        init();
+        initStartNode(from);
+
+        heuristic_goal = goal_test.getHeuristicGoal();
+
+        return findPathImp<GoalTest, Intermission>
+                (goal_test, intermission);
+    }
+
     template <class GoalTest, class Intermission>
     PathT findPathImp(const GoalTest& goal_test,
                       boost::function<void()> intermission)
     {
+        if(time_limit_ > 0.0) {
+            auto now = std::chrono::high_resolution_clock::now();
+            std::chrono::milliseconds duration_milli{(int64_t) (time_limit_ * 1e3)};
+            stamp_abort_ = now + duration_milli;
+        }
+
         // iterate until no more points can be looked at
         while(!open.empty()) {
             boost::this_thread::interruption_point();
+
+            if(time_limit_ > 0.0) {
+                auto now = std::chrono::high_resolution_clock::now();
+                if(now >= stamp_abort_) {
+                    std::cerr << "abort, search took longer than " << time_limit_ << " seconds" << std::endl;
+                    break;
+                }
+            }
+
 
             // mark the next node closed
             NodeT* current = open.next();
@@ -359,9 +403,17 @@ protected:
             // generate the path
             GoalCandidate best = goal_candidates.top();
             std::cout << "done, selecting the best goal out of " << goal_candidates.size() << " candidates\n";
-            std::cout << "dist: " <<  std::get<1>(best) << std::endl;
+            std::cout << "best dist: " <<  std::get<1>(best) << std::endl;
             auto res = backtrack(start,  std::get<0>(best));
             std::cout << "length: " <<  res.size() << std::endl;
+
+            std::priority_queue<GoalCandidate, std::vector<GoalCandidate>, PairDistance> tmp = goal_candidates;
+            tmp.pop();
+            while(!tmp.empty()) {
+                const GoalCandidate gc = tmp.top();
+                tmp.pop();
+                std::cout << "next dist: " <<  std::get<1>(gc) << std::endl;
+            }
             return res;
         }
 
@@ -406,6 +458,32 @@ protected:
         }
 
         std::cerr << "start pose: " << start->x <<  " / " << start->y << std::endl;
+    }
+
+
+    void initStartNode(const NodeT& node)
+    {
+        std::cerr << "start node: " << node.x <<  " / " << node.y << " / " << node.theta << std::endl;
+
+        try {
+            start = map_.lookup(node);
+        } catch(const OutsideMapException& e) {
+            throw StartOutOfMapException();
+        }
+        if(map_.isOccupied(start)) {
+            throw StartNotFreeException();
+
+        } else {
+            *start = node;
+            start->distance = 0;
+            start->depth = 0;
+            start->mark(NodeT::MARK_OPEN);
+
+            // put start node in open data structure
+            open.add(start);
+        }
+
+        std::cerr << "start node: " << start->x <<  " / " << start->y << " / " << start->theta << std::endl;
     }
 
     void initGoalPose(const PointT& pose)
@@ -583,6 +661,10 @@ protected:
     int expansions;
     int multi_expansions;
     int updates;
+
+    double time_limit_;
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> stamp_abort_;
 
     std::function<bool(const PathT&)> goal_candidate_function;
 };

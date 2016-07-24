@@ -1,6 +1,8 @@
 #ifndef STEERINGNODE_HPP
 #define STEERINGNODE_HPP
 
+#include <utils_path/generic/Common.hpp>
+
 namespace lib_path
 {
 
@@ -10,7 +12,7 @@ struct SteeringNode : public Node {
     typedef SteeringNode<Node> NodeType;
 
     float theta;
-    float steering_angle;
+    int steering_angle;
     bool forward;
     int depth;
 
@@ -24,7 +26,7 @@ struct SteeringNode : public Node {
     }
 
     template <typename V>
-    static void init(SteeringNode<Node> &memory, V x, V y, double theta = 0.0, float steering_angle = 0.0f, bool forward = true) {
+    static void init(SteeringNode<Node> &memory, V x, V y, double theta = 0.0, int steering_angle = 0, bool forward = true) {
         Node::init(memory, x, y);
         memory.theta = theta;
         memory.steering_angle = steering_angle;

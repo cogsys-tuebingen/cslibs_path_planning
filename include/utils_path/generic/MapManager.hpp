@@ -466,7 +466,7 @@ public:
             delete [] chunk_data;
         }
 
-        inline unsigned chunk_index(int mx, int my, int t=0, bool forward=true) const {
+        inline unsigned chunk_index(int mx, int my, int t=0,int s=0,  bool forward=true) const {
             int cx = mx - ox;
             int cy = my - oy;
             if((cx < 0) || (cy < 0) || (cx >= (int) chunk_size) || (cy >= (int) chunk_size)) {
@@ -476,7 +476,7 @@ public:
             return cy * chunk_size + cx + t*chunk_size*chunk_size + (forward ? 0 : chunk_dimension);
         }
 
-        inline NodeType* lookup(int mx, int my, int t=0, bool forward=true) const {
+        inline NodeType* lookup(int mx, int my, int t=0, int s=0, bool forward=true) const {
             std::size_t index = chunk_index(mx,my,t,forward);
             return &chunk_data[index];
         }
@@ -497,6 +497,7 @@ public:
     {
         chunk_size = 32;
         theta_slots = 32;
+//        steer_slots = asx;
 
         padding_chunks = 1;
         padding = padding_chunks * chunk_size;
@@ -699,6 +700,7 @@ public:
     unsigned w;
     unsigned h;
     unsigned theta_slots;
+    unsigned steer_slots;
 
     int padding_chunks;
     int padding;

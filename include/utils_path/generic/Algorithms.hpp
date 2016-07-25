@@ -45,7 +45,7 @@ DEFINE_ALGORITHM(Dijkstra,
 
 DEFINE_ALGORITHM(DijkstraState,
                  NoHeuristic,
-                 DynamicDirectionalStateSpaceManager,
+                 DirectionalStateSpaceManager,
                  PriorityQueueManager)
 
 DEFINE_ALGORITHM(AStar2d,
@@ -66,6 +66,11 @@ DEFINE_ALGORITHM(AStar2dInf,
 
 DEFINE_ALGORITHM(AStar,
                  HeuristicL2,
+                 DirectionalStateSpaceManager,
+                 PriorityQueueManager)
+
+DEFINE_ALGORITHM(AStarDynamic,
+                 HeuristicL2,
                  DynamicDirectionalStateSpaceManager,
                  PriorityQueueManager)
 
@@ -81,12 +86,17 @@ typedef MaxHeuristic<HeuristicL2, HeuristicHolonomicObstacles> MH1;
 
 DEFINE_ALGORITHM(AStarOverEstimate,
                  HeuristicL2OverEstimate,
-                 DynamicDirectionalStateSpaceManager,
+                 DirectionalStateSpaceManager,
                  PriorityQueueManager)
 
 
 
 DEFINE_ALGORITHM(AStarHybridHeuristics,
+                 MH1,
+                 DirectionalStateSpaceManager,
+                 PriorityQueueManager)
+
+DEFINE_ALGORITHM(AStarDynamicHybridHeuristics,
                  MH1,
                  DynamicDirectionalStateSpaceManager,
                  PriorityQueueManager)

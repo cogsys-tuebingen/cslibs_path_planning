@@ -380,40 +380,40 @@ public:
 
     inline unsigned index(int x, int y, int t=0, bool forward=true) {
         if((x < 0) || (y < 0) || (x >= (int) w) || (y >= (int) h) || (t < 0) || (t >= (int) theta_slots)) {
-            throw typename ManagerT::OutsideMapException();
+            throw OutsideMapException();
         }
 
         return y * w + x + t*w*h + (forward ? 0 : dimension);
 
     }
-    inline unsigned angle2index(double theta) {
+    inline unsigned angle2index(double theta) const {
         return (MathHelper::AngleClamp(theta) + M_PI) / (2 * M_PI) * (theta_slots - 1);
     }
 
     template <class PointT>
-    NodeType* lookup(const PointT& reference) const {
+    NodeType* lookup(const PointT& reference) {
         unsigned y = reference.y;
         unsigned x = reference.x;
         unsigned t = angle2index(reference.theta);
         return &data[index(x,y,t, reference.forward)];
     }
-    NodeType* lookup(const Pose2d& reference) const {
+    NodeType* lookup(const Pose2d& reference) {
         unsigned y = reference.y;
         unsigned x = reference.x;
         unsigned t = angle2index(reference.theta);
         return &data[index(x,y,t, true)];
     }
 
-    NodeType* lookup(const int x, const int y, double theta, bool forward) const {
+    NodeType* lookup(const int x, const int y, double theta, bool forward) {
         int t = angle2index(theta);
         if((x < 0) || (y < 0) || (x >= (int) w) || (y >= (int) h) || (t < 0) || (t >= (int) theta_slots)) {
-            throw typename ManagerT::OutsideMapException();
+            throw OutsideMapException();
         }
         return &data[index(x,y,t, forward)];
     }
-    NodeType* lookup(const double x, const double y, double theta, bool forward) const {
+    NodeType* lookup(const double x, const double y, double theta, bool forward) {
         if((x < 0) || (y < 0) || (x >= w) || (y >= h)) {
-            throw typename ManagerT::OutsideMapException();
+            throw OutsideMapException();
         }
         return lookup((int) std::floor(x), (int) std::floor(y), theta, forward);
     }
@@ -438,11 +438,17 @@ public:
     typedef GridMap2d MapT;
     typedef NodeT NodeType;
 
+    struct Cell {
+        //std::map<int, NodeT> node;
+//        NodeT node[121];
+        NodeT node[1];
+    };
+
     class Chunk
     {
     public:
         Chunk(int cx, int cy, unsigned size, unsigned theta_slots)
-            : ox(cx), oy(cy), chunk_size(size), chunk_dimension(chunk_size * chunk_size * theta_slots), chunk_data(new NodeType[2*chunk_dimension])
+            : ox(cx), oy(cy), chunk_size(size), chunk_dimension(chunk_size * chunk_size * theta_slots), chunk_data(new Cell[2*chunk_dimension])
         {
             double stheta = 0 - M_PI;
             double dtheta = 2 * M_PI / theta_slots;
@@ -454,7 +460,10 @@ public:
                             int nx = ox+x;
                             int ny = oy+y;
                             std::size_t ci = chunk_index(nx, ny, t, f);
-                            NodeType::init(chunk_data[ci], nx, ny, stheta + dtheta * t);
+//                            for(unsigned s = 0; s < 160; ++s) {
+//                                NodeType::init(chunk_data[ci].node[s], nx, ny, stheta + dtheta * t);
+//                            }
+                            NodeType::init(chunk_data[ci].node[0], nx, ny, stheta + dtheta * t);
                         }
                     }
                 }
@@ -466,19 +475,34 @@ public:
             delete [] chunk_data;
         }
 
-        inline unsigned chunk_index(int mx, int my, int t=0,int s=0,  bool forward=true) const {
+        inline unsigned chunk_index(int mx, int my, int t=0, bool forward=true) const {
             int cx = mx - ox;
             int cy = my - oy;
             if((cx < 0) || (cy < 0) || (cx >= (int) chunk_size) || (cy >= (int) chunk_size)) {
                 throw OutsideMapException();
             }
 
-            return cy * chunk_size + cx + t*chunk_size*chunk_size + (forward ? 0 : chunk_dimension);
+            return cx + cy * chunk_size + t*chunk_size*chunk_size + (forward ? 0 : chunk_dimension);
         }
 
         inline NodeType* lookup(int mx, int my, int t=0, int s=0, bool forward=true) const {
+//            std::size_t index = chunk_index(mx,my,t,forward);
+//            Cell& cell = chunk_data[index];
+//            auto it = cell.node.find(s);
+//            if(it == cell.node.end()) {
+//                NodeType* res = &cell.node[s];
+//                NodeType::init(*res, mx, my, t);
+//                return res;
+//            } else {
+//                return &it->second;
+//            }
             std::size_t index = chunk_index(mx,my,t,forward);
-            return &chunk_data[index];
+            Cell& cell = chunk_data[index];
+            if(s < -60 || s > 60) {
+//                throw std::runtime_error("angle is too high");
+            }
+//            return &cell.node[s + 60];
+            return &cell.node[0];
         }
 
     private:
@@ -488,7 +512,7 @@ public:
         unsigned chunk_size;
 
         unsigned chunk_dimension;
-        NodeType* chunk_data;
+        Cell* chunk_data;
     };
 
 
@@ -497,7 +521,6 @@ public:
     {
         chunk_size = 32;
         theta_slots = 32;
-//        steer_slots = asx;
 
         padding_chunks = 1;
         padding = padding_chunks * chunk_size;
@@ -571,19 +594,19 @@ public:
 
     template <class PointT>
     NodeType* lookup(const PointT& reference) const {
-        return lookup(reference.x,reference.y,reference.theta, reference.forward);
+        return lookup(reference.x,reference.y,reference.theta, reference.steering_angle, reference.forward);
     }
     NodeType* lookup(const Pose2d& reference) const {
-        return lookup(reference.x,reference.y,reference.theta, true);
+        return lookup(reference.x,reference.y,reference.theta, 0, true);
     }
 
-    NodeType* lookup(const int x, const int y, double theta, bool forward) const {
-        return lookup(x,y,angle2index(theta), forward);
+    NodeType* lookup(const int x, const int y, double theta, int steering_angle, bool forward) const {
+        return lookup(x,y,angle2index(theta), steering_angle, forward);
     }
-    NodeType* lookup(const double x, const double y, double theta, bool forward) const {
-        return lookup((int) std::floor(x), (int) std::floor(y), theta, forward);
+    NodeType* lookup(const double x, const double y, double theta, int steering_angle, bool forward) const {
+        return lookup((int) std::floor(x), (int) std::floor(y), theta, steering_angle, forward);
     }
-    NodeType* lookup(const int x, const int y, unsigned t, bool forward) const {
+    NodeType* lookup(const int x, const int y, unsigned t, int steering_angle, bool forward) const {
         if((x < -padding) || (y < -padding) || (x >= (int) (w + padding)) || (y >= (int) (h + padding)) || (t < 0) || (t >= (int) theta_slots)) {
             throw OutsideMapException();
         }
@@ -603,7 +626,7 @@ public:
             chunks.at(cyp * chunks_w + cxp) = chunk;
         }
 
-        return chunk->lookup(x,y ,t, forward);
+        return chunk->lookup(x,y ,t, steering_angle, forward);
     }
 
 

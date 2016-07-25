@@ -272,9 +272,11 @@ struct HeuristicHolonomicObstacles {
     template <class A, class B>
     static void compute(A* current, const B* goal, double res) {
         if(costs) {
-            current->h = cost__(current->x, current->y);
-            if(current->h != std::numeric_limits<double>::max()) {
-                current->h *= res;
+            auto h = cost__(current->x, current->y);
+            if(h != std::numeric_limits<double>::max()) {
+                current->h = h * res;
+            } else {
+                current->h = 0;
             }
         } else {
             current->h = 0;
@@ -299,6 +301,7 @@ struct HeuristicHolonomicObstacles {
         h = map->h + 2 * padding;
 
         costs = new double[w * h];
+        memset(costs, 0, sizeof(double) * w * h);
 
         double HORIZ = 1.0;
         double DIAG = std::sqrt(2) * HORIZ;
@@ -308,7 +311,7 @@ struct HeuristicHolonomicObstacles {
                 if(!map->isOccupied(col, row, 0)) {
                     cost(col, row) = std::numeric_limits<double>::max();
                 } else {
-                    cost(col, row) = INFINITY;
+                    cost(col, row) = std::numeric_limits<double>::infinity();
                 }
             }
         }
@@ -325,7 +328,7 @@ struct HeuristicHolonomicObstacles {
             for(int row = 1; row < h-1; ++row) {
                 for(int col = 1; col < w-1; ++col) {
                     double& d = cost(col, row);
-                    bool free = d != INFINITY;
+                    bool free = d != std::numeric_limits<double>::infinity();
 
                     if(free) {
                         double d1 = cost(col-1, row  ) + HORIZ;
@@ -346,7 +349,7 @@ struct HeuristicHolonomicObstacles {
             for(int row = h-2; row >= 1; --row) {
                 for(int col = w-2; col >= 1; --col) {
                     double& d = cost(col, row);
-                    bool free = d != INFINITY;
+                    bool free = d != std::numeric_limits<double>::infinity();
 
                     if(free) {
                         double d1 = cost(col+1, row  ) + HORIZ;

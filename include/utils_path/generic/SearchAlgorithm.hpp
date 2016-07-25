@@ -406,14 +406,6 @@ protected:
             std::cout << "best dist: " <<  std::get<1>(best) << std::endl;
             auto res = backtrack(start,  std::get<0>(best));
             std::cout << "length: " <<  res.size() << std::endl;
-
-            std::priority_queue<GoalCandidate, std::vector<GoalCandidate>, PairDistance> tmp = goal_candidates;
-            tmp.pop();
-            while(!tmp.empty()) {
-                const GoalCandidate gc = tmp.top();
-                tmp.pop();
-                std::cout << "next dist: " <<  std::get<1>(gc) << std::endl;
-            }
             return res;
         }
 

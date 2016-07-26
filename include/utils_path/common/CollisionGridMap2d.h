@@ -40,8 +40,10 @@ public:
     CollisionGridMap2d( const CollisionGridMap2d& copy);
     ~CollisionGridMap2d();
 
+    virtual bool isOccupied( const unsigned int x, const unsigned int y, const double theta ) const;
     virtual bool isFree( const unsigned int x, const unsigned int y, const double theta ) const;
     virtual bool isNoInformation(const unsigned int x, const unsigned int y, const double theta) const;
+
 
 private:
     RobotArea* areas_[ANGLE_DISCRETIZATION];
@@ -56,7 +58,6 @@ public:
     void setParent(CollisionGridMap2d const*  parent);
 
     virtual void begin();
-    void paint(bool free);
     virtual bool next();
     virtual void getCell( int& x, int& y ) const;
     virtual uint8_t getValue() const;
@@ -73,10 +74,23 @@ private:
     bool init_;
 
     int idx;
-    std::vector<Eigen::Vector2d> pts_;
 
-    Eigen::Vector2d centre;
-    Eigen::Vector2d fr, fl, br, bl;
+    struct Cell {
+        int x;
+        int y;
+
+        Cell()
+            : x(0), y(0)
+        {}
+        Cell(int x, int y)
+            : x(x), y(y)
+        {}
+        Cell(const Eigen::Vector2d& v)
+            : x(v(0)), y(v(1))
+        {}
+    };
+
+    std::vector<Cell> cells_;
 };
 
 } // namespace "lib_path"

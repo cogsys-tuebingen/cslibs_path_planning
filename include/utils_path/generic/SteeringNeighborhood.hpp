@@ -217,55 +217,56 @@ struct SteeringNeighborhood :
         steering_angle_ = steering_angle;
 
         double r_world = LA / std::tan(steering_angle / 180. * M_PI);
-        if(reversed) {
-            //            r_world *= -1.0;
-        }
         double ds_world = distance_step * dir;
         double ds_map = distance_step_pixel * dir;
 
         double r_map = r_world / resolution;
 
-        bool direction_switch = reference->forward != forward_;
-        if(direction_switch) {
-            if(reference->custom > 0) {
-                return -1;
-            }
-
-            // only allow to drive straight, if direction changes!
-            if(std::abs(steering_angle) > max_steer_angle_for_turn) {
-                return -1;
-            }
-
-            const NodeType* test = reference;
-            for(int straight_parts = 0; straight_parts < straight_dir_switch - 1; ++straight_parts) {
-                if(!test->prev) {
+        if(moves == SteeringMoves::FORWARD_BACKWARD) {
+            bool direction_switch = reference->forward != forward_;
+            if(direction_switch) {
+                if(reference->custom > 0) {
                     return -1;
                 }
 
-                test = dynamic_cast<const NodeType*>(test->prev);
-                if(!test) {
-                    throw std::logic_error("cannot cast prev");
+                // only allow to drive straight, if direction changes!
+                if(std::abs(steering_angle) > max_steer_angle_for_turn) {
                     return -1;
                 }
 
-                if(std::abs(test->steering_angle) > max_steer_angle_for_turn) {
-                    return -1;
-                }
-            }
-            custom = straight_dir_switch - 1;
+                const NodeType* test = reference;
+                for(int straight_parts = 0; straight_parts < straight_dir_switch - 1; ++straight_parts) {
+                    if(!test->prev) {
+                        return -1;
+                    }
 
-        } else {
-            if(reference->custom > 0) {
-                custom = reference->custom - 1;
+                    test = dynamic_cast<const NodeType*>(test->prev);
+                    if(!test) {
+                        throw std::logic_error("cannot cast prev");
+                        return -1;
+                    }
+
+                    if(std::abs(test->steering_angle) > max_steer_angle_for_turn) {
+                        return -1;
+                    }
+                }
+                custom = straight_dir_switch - 1;
+
+                cost *= PENALTY_TURN;
+
             } else {
-                custom = 0;
+                if(reference->custom > 0) {
+                    custom = reference->custom - 1;
+                } else {
+                    custom = 0;
+                }
             }
         }
 
 
         double dx, dy;
         double dtheta;
-        if(std::abs(steering_angle) < 1e-10) {
+        if(steering_angle == 0) {
             dtheta = 0;
             dx = ds_map * std::cos(reference->theta);
             dy = ds_map * std::sin(reference->theta);
@@ -286,12 +287,6 @@ struct SteeringNeighborhood :
             cost *= PENALTY_BACKWARD;
         }
 
-        // penalize directional changes
-        if(direction_switch/* && !forward_*/) {
-            cost *= PENALTY_TURN;
-        }
-
-
         return cost * 1;
     }
 
@@ -300,7 +295,7 @@ struct SteeringNeighborhood :
         double map_rotation = map.getMap()->getRotation();
 
         for(unsigned i = 0; i < SIZE; ++i) {
-            for(unsigned step = 0; step < steer_steps; ++step) {
+            for(unsigned step = 0; step <= steer_steps; ++step) {
                 double to_x,to_y, to_theta;
                 bool forward;
                 char custom;
@@ -312,9 +307,9 @@ struct SteeringNeighborhood :
                 }
 
                 if(map.contains(to_x, to_y)) {
-                    //                bool free = map.isFree(reference->x,reference->y, to_x,to_y);
+//                    bool free = !map.isOccupied(reference->x,reference->y, to_x,to_y);
                     bool free_or_unknown = map.isFreeOrUnknown(reference->x,reference->y, to_x,to_y);
-                    bool can_be_used = free_or_unknown;// free || (free_or_unknown && forward);
+                    bool can_be_used = free_or_unknown;// free_or_unknown;// free || (free_or_unknown && forward);
                     if(can_be_used) {
                         NodeType* n = map.lookup(to_x, to_y, to_theta, steering_angle, forward);
 

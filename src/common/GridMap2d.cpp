@@ -78,13 +78,13 @@ bool GridMap2d::isAreaFree( MapArea2d &area ) const
     return true;
 }
 
-bool GridMap2d::isAreaFreeOrUnknown(MapArea2d &area ) const
+bool GridMap2d::isAreaNoInformation(MapArea2d &area ) const
 {
     area.begin();
     int x, y;
     while ( area.next()) {
         area.getCell( x, y );
-        if ( isInMap( x, y ) && isOccupied(x, y))
+        if ( isInMap( x, y ) && isNoInformation(x, y))
             return false;
     }
     return true;

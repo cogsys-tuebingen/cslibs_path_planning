@@ -18,7 +18,7 @@
 using namespace lib_path;
 
 RobotArea::RobotArea(CollisionGridMap2d const*  parent, double forward, double backward, double width, double theta)
-    : parent_(parent), x_(0), y_(0), fw_(forward), bw_(backward), hw_(width/2.0), theta_(theta), init_(false)
+    : parent_(parent), x_(0), y_(0), hw_(width/2.0), fw_(forward), bw_(backward),  theta_(theta), init_(false)
 {
     Eigen::Vector2d fr_(forward, -hw_);
     Eigen::Vector2d fl_(forward, hw_);
@@ -27,19 +27,65 @@ RobotArea::RobotArea(CollisionGridMap2d const*  parent, double forward, double b
 
     Eigen::Rotation2D<double> rot(theta);
 
-    centre = Eigen::Vector2d (x_,y_);
+    Eigen::Vector2d fr = rot * fr_;
+    Eigen::Vector2d fl = rot * fl_;
+    Eigen::Vector2d br = rot * br_;
+    Eigen::Vector2d bl = rot * bl_;
 
-    fr = rot * fr_;
-    fl = rot * fl_;
-    br = rot * br_;
-    bl = rot * bl_;
+//    double m_per_cell = parent->getResolution();
+    double m_per_step = width / 8;
+//    double m_per_step = m_per_cell * cell_per_step;
+
+    int steps_row = std::ceil(width / m_per_step);
+    int steps_col = std::ceil((forward - backward) / m_per_step);
+    double inc_row = 1.0 / steps_row;
+    double inc_col = 1.0 / steps_col;
+
+    double i_row = 0.0;
+    for(int row = 0; row <= steps_row; ++row) {
+        Eigen::Vector2d left = bl + i_row * (fl-bl);
+        Eigen::Vector2d right = fr + i_row * (br-fr);
+
+        double i_col = 0.0;
+        for(int col = 0; col <= steps_col; ++col) {
+            cells_.emplace_back(left + i_col * (right-left));
+
+            i_col += inc_col;
+        }
+
+        i_row += inc_row;
+    }
+
+
+    //    {
+    //        int steps_row = width / f;
+    //        double inc = 1.0 / steps_row;
+    //        double i = 0.0;
+    //        for(int row = 0; row <= steps_row; ++row) {
+    //            cells_.emplace_back(bl + i * (fl-bl));
+    //            cells_.emplace_back(fr + i * (br-fr));
+
+    //            i += inc;
+    //        }
+    //    }
+
+    //    {
+    //        int steps_col = (forward - backward) / f;
+    //        double inc = 1.0 / steps_col;
+    //        double i = 0.0;
+    //        for(int col = 0; col <= steps_col; ++col) {
+    //            cells_.emplace_back(fr + i * (fl-fr));
+    //            cells_.emplace_back(br + i * (bl-br));
+
+    //            i += inc;
+    //        }
+    //    }
 }
 
 void RobotArea::setPosition(int x, int y)
 {
     x_ = x;
     y_ = y;
-    centre = Eigen::Vector2d (x_,y_);
     init_ = true;
 }
 
@@ -55,74 +101,6 @@ void RobotArea::begin() {
     idx = -1;
 
     assert(init_);
-
-    pts_.clear();
-
-    int steps = 32;
-    double inc = 1.0 / steps;
-    double i = 0.0;
-    for(int j = 1; j < steps; ++j) {
-	    pts_.push_back(fr + i * (fl-fr));
-        pts_.push_back(br + i * (bl-br));
-        pts_.push_back(bl + i * (fl-bl));
-        pts_.push_back(fr + i * (br-fr));
-
-        i += inc;
-    }
-
-    
-}
-
-void RobotArea::paint(bool free) {
-    assert(init_);
-
-    static int max_step = 1000;
-    static int step = 0;
-
-    int rows = parent_->getHeight();
-    int cols = parent_->getWidth();
-    double scale = 4;
-
-    static cv::Mat dbg_img;
-
-    if(step == 0) {
-        dbg_img = cv::Mat(rows, cols, CV_8UC3, cv::Scalar::all(0));
-        for(int row = 0; row < rows; ++row) {
-            for(int col = 0; col < cols; ++col) {
-                dbg_img.at<cv::Vec3b>(row, col) = cv::Vec3b::all(parent_->SimpleGridMap2d::isFree(col, row) ? 255 : 0);
-            }
-        }
-
-        cv::resize(dbg_img, dbg_img, cv::Size(), scale, scale, CV_INTER_NN);
-    }
-
-    if(!free) {
-        for(int i = 0; i < pts_.size(); ++i) {
-            const Eigen::Vector2d& pt = centre + pts_[i];
-            cv::circle(dbg_img, cv::Point2f(scale*pt(0),scale*pt(1)), 1, cv::Scalar(0x00, 0x00, 0xFF), CV_FILLED, CV_AA);
-        }
-    }
-//    cv::circle(dbg_img, cv::Point2f(scale*x_,scale*y_), 1, cv::Scalar(0x00, 0xCC, 0xFF), CV_FILLED, CV_AA);
-    //cv::circle(dbg_img, cv::Point2f(scale*(x_ + 4* std::cos(theta_)),scale*(y_ + 4* std::sin(theta_))), 3, cv::Scalar(0x00, 0xCC, 0xFF), CV_FILLED, CV_AA);
-
-    if(!free) {
-        cv::Scalar col = free ? cv::Scalar(0x00, 0xFF, 0x00) : cv::Scalar(0x00, 0x00, 0xFF);
-
-        cv::line(dbg_img, cv::Point2f(scale*(centre+fl)(0), scale*(centre+fl)(1)), cv::Point2f(scale*(centre+fr)(0), scale*(centre+fr)(1)), col, 1, CV_AA);
-        cv::line(dbg_img, cv::Point2f(scale*(centre+br)(0), scale*(centre+br)(1)), cv::Point2f(scale*(centre+fr)(0), scale*(centre+fr)(1)), col, 1, CV_AA);
-        cv::line(dbg_img, cv::Point2f(scale*(centre+fl)(0), scale*(centre+fl)(1)), cv::Point2f(scale*(centre+bl)(0), scale*(centre+bl)(1)), col, 1, CV_AA);
-        cv::line(dbg_img, cv::Point2f(scale*(centre+br)(0), scale*(centre+br)(1)), cv::Point2f(scale*(centre+bl)(0), scale*(centre+bl)(1)), col, 1, CV_AA);
-    }
-
-    if(step == 0) {        
-        cv::imshow("dbg", dbg_img);
-        cv::waitKey(20);
-    }
-
-    if(++step > max_step) {
-        step = 0;
-    }
-
 }
 
 /**
@@ -130,7 +108,7 @@ void RobotArea::paint(bool free) {
      * @return False if there are no more cells.
      */
 bool RobotArea::next() {
-    return ++idx < pts_.size();
+    return ++idx < cells_.size();
 }
 
 /**
@@ -139,9 +117,10 @@ bool RobotArea::next() {
      * @param y y coordinate of the cell.
      */
 void RobotArea::getCell( int& x, int& y ) const {
-    const Eigen::Vector2d& pt = centre + pts_[idx];
-    x = pt(0);
-    y = pt(1);
+    //const Eigen::Vector2d& pt = centre + pts_[idx];
+    const Cell& cell = cells_[idx];
+    x = x_ + cell.x;
+    y = y_ + cell.y;
 }
 
 /**
@@ -193,6 +172,27 @@ CollisionGridMap2d::~CollisionGridMap2d()
     }
 }
 
+bool CollisionGridMap2d::isOccupied(const unsigned int x, const unsigned int y, const double theta) const
+{
+    if(!isInMap((int) x,(int) y)) {
+        return false;
+    }
+
+    if(SimpleGridMap2d::isOccupied(x, y)) {
+        return true;
+    }
+
+    double t = theta;
+    while(t < 0) t += 2*M_PI;
+    while(t >= 2*M_PI) t -= 2*M_PI;
+
+    // check boundary
+    RobotArea* a = areas_[(int) round(t)];
+    a->setPosition(x,y);
+    bool occ = isAreaOccupied(*a);
+    return occ;
+}
+
 bool CollisionGridMap2d::isFree(const unsigned int x, const unsigned int y, const double theta) const
 {
     if(!isInMap((int) x,(int) y) || !SimpleGridMap2d::isFree(x, y)) {
@@ -207,7 +207,6 @@ bool CollisionGridMap2d::isFree(const unsigned int x, const unsigned int y, cons
     RobotArea* a = areas_[(int) round(t)];
     a->setPosition(x,y);
     bool free = isAreaFree(*a);
-    //a->paint(free);
     return free;
 }
 
@@ -228,7 +227,6 @@ bool CollisionGridMap2d::isNoInformation(const unsigned int x, const unsigned in
     // check boundary
     RobotArea* a = areas_[(int) round(t)];
     a->setPosition(x,y);
-    bool free = isAreaFreeOrUnknown(*a);
-    //a->paint(free);
-    return free;
+    bool no_info = isAreaNoInformation(*a);
+    return no_info;
 }

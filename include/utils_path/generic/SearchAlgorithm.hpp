@@ -126,7 +126,7 @@ public:
 
 public:
     GenericSearchAlgorithm()
-        : start(NULL), goal(NULL), heuristic_goal(NULL), has_cost_(false), expansions(0), multi_expansions(0), updates(0), time_limit_(-1.0)
+        : start(NULL), goal(NULL), heuristic_goal(NULL), has_cost_(false), expansions(0), multi_expansions(0), touched(0), updates(0), time_limit_(-1.0)
     {}
 
     virtual void setMap(const MapT* map) {
@@ -172,6 +172,20 @@ public:
     MapManager& getMapManager()
     {
         return map_;
+    }
+
+    int getExpansions() const
+    {
+        return expansions;
+    }
+    int getMultiExpansions() const
+    {
+        return multi_expansions;
+    }
+
+    int getTouchedNodes() const
+    {
+        return touched;
     }
 
     void addGoalCandidate(const NodeT* current, double cost)
@@ -345,7 +359,7 @@ protected:
 
         // iterate until no more points can be looked at
         while(!open.empty()) {
-            boost::this_thread::interruption_point();
+//            boost::this_thread::interruption_point();
 
             if(time_limit_ > 0.0) {
                 auto now = std::chrono::high_resolution_clock::now();
@@ -580,6 +594,7 @@ public:
             }
             neighbor->mark(NodeT::MARK_OPEN);
 
+            ++touched;
             open.add(neighbor);
 
             return NeighborhoodBase::PR_ADDED_TO_OPEN_LIST;
@@ -652,6 +667,7 @@ protected:
 
     int expansions;
     int multi_expansions;
+    int touched;
     int updates;
 
     double time_limit_;

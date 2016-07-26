@@ -89,9 +89,9 @@ public:
             if(!map_->isFree(x,y,theta)) {
                 return false;
             }
-//            if(bresenham.isOccupied()) {
-//                return false;
-//            }
+            //            if(bresenham.isOccupied()) {
+            //                return false;
+            //            }
         }
 
         return true;
@@ -156,7 +156,7 @@ protected:
 
 template <class NodeT>
 struct GridMapManager :
-    public Manager<NodeT, GridMap2d>
+        public Manager<NodeT, GridMap2d>
 {
     typedef Manager<NodeT, GridMap2d> ManagerT;
     typedef typename ManagerT::NodeType NodeType;
@@ -231,7 +231,7 @@ public:
 
 template <class NodeT>
 class StateSpaceManager :
-    public Manager<NodeT, GridMap2d>
+        public Manager<NodeT, GridMap2d>
 {
 public:
     typedef Manager<NodeT, GridMap2d> ManagerT;
@@ -321,7 +321,7 @@ public:
 
 template <class NodeT>
 class DirectionalStateSpaceManager :
-    public Manager<NodeT, GridMap2d>
+        public Manager<NodeT, GridMap2d>
 {
 public:
     typedef Manager<NodeT, GridMap2d> ManagerT;
@@ -440,7 +440,7 @@ public:
 
     struct Cell {
         //std::map<int, NodeT> node;
-//        NodeT node[121];
+        //        NodeT node[121];
         NodeT node[1];
     };
 
@@ -460,9 +460,9 @@ public:
                             int nx = ox+x;
                             int ny = oy+y;
                             std::size_t ci = chunk_index(nx, ny, t, f);
-//                            for(unsigned s = 0; s < 160; ++s) {
-//                                NodeType::init(chunk_data[ci].node[s], nx, ny, stheta + dtheta * t);
-//                            }
+                            //                            for(unsigned s = 0; s < 160; ++s) {
+                            //                                NodeType::init(chunk_data[ci].node[s], nx, ny, stheta + dtheta * t);
+                            //                            }
                             NodeType::init(chunk_data[ci].node[0], nx, ny, stheta + dtheta * t);
                         }
                     }
@@ -486,22 +486,22 @@ public:
         }
 
         inline NodeType* lookup(int mx, int my, int t=0, int s=0, bool forward=true) const {
-//            std::size_t index = chunk_index(mx,my,t,forward);
-//            Cell& cell = chunk_data[index];
-//            auto it = cell.node.find(s);
-//            if(it == cell.node.end()) {
-//                NodeType* res = &cell.node[s];
-//                NodeType::init(*res, mx, my, t);
-//                return res;
-//            } else {
-//                return &it->second;
-//            }
+            //            std::size_t index = chunk_index(mx,my,t,forward);
+            //            Cell& cell = chunk_data[index];
+            //            auto it = cell.node.find(s);
+            //            if(it == cell.node.end()) {
+            //                NodeType* res = &cell.node[s];
+            //                NodeType::init(*res, mx, my, t);
+            //                return res;
+            //            } else {
+            //                return &it->second;
+            //            }
             std::size_t index = chunk_index(mx,my,t,forward);
             Cell& cell = chunk_data[index];
             if(s < -60 || s > 60) {
-//                throw std::runtime_error("angle is too high");
+                //                throw std::runtime_error("angle is too high");
             }
-//            return &cell.node[s + 60];
+            //            return &cell.node[s + 60];
             return &cell.node[0];
         }
 
@@ -522,11 +522,13 @@ public:
         chunk_size = 32;
         theta_slots = 32;
 
+        bresenham_skips = 0;
+
         padding_chunks = 1;
         padding = padding_chunks * chunk_size;
     }
 
-     ~DynamicDirectionalStateSpaceManager() {
+    ~DynamicDirectionalStateSpaceManager() {
         clearChunks();
     }
 
@@ -537,6 +539,10 @@ public:
 
         w = map->getWidth();
         h = map->getHeight();
+
+        double eff_step_size = 0.5;
+        int eff_step_cells = eff_step_size / map_->getResolution();
+        bresenham_skips = eff_step_cells;
 
         initMap(replace);
     }
@@ -666,18 +672,22 @@ public:
 
         double theta = std::atan2(ey-sy,ex-sx);
 
+        int skip = 0;
+
         unsigned x,y;
         while(bresenham.next()) {
             bresenham.coordinates(x,y);
-            if(!isFree(x-padding,y-padding,theta)) {
-                return false;
+            if(skip == 0) {
+                if(!isFree(x-padding,y-padding,theta)) {
+                    return false;
+                }
             }
-//            if(bresenham.isOccupied()) {
-//                return false;
-//            }
+            if(++skip > bresenham_skips) {
+                skip = 0;
+            }
         }
 
-        return true;
+        return isFree(ex,ey,theta);
     }
 
     bool isFreeOrUnknown(const double sx, const double sy, const double ex, const double ey) const {
@@ -685,15 +695,47 @@ public:
 
         double theta = std::atan2(ey-sy,ex-sx);
 
+        int skip = 0;
+
         unsigned x,y;
         while(bresenham.next()) {
             bresenham.coordinates(x,y);
-            if(!isNoInformation(x-padding,y-padding,theta) && !isFree(x-padding,y-padding,theta)) {
-                return false;
+            if(skip == 0) {
+                if(!isFreeOrUnknown(x-padding,y-padding,theta)) {
+                    //            if(isOccupied(x-padding,y-padding,theta)) {
+                    return false;
+                }
+            }
+            if(++skip > bresenham_skips) {
+                skip = 0;
             }
         }
 
-        return true;
+        return isFreeOrUnknown(sx,sy,theta);
+    }
+
+
+    bool isOccupied(const double sx, const double sy, const double ex, const double ey) const {
+        bresenham.setGrid(map_, std::floor(sx + padding), std::floor(sy + padding), std::floor(ex + padding),std::floor(ey + padding));
+
+        double theta = std::atan2(ey-sy,ex-sx);
+
+        int skip = 0;
+
+        unsigned x,y;
+        while(bresenham.next()) {
+            bresenham.coordinates(x,y);
+            if(skip == 0) {
+                if(isOccupied(x-padding,y-padding,theta)){
+                    return true;
+                }
+            }
+            if(++skip > bresenham_skips) {
+                skip = 0;
+            }
+        }
+
+        return isOccupied(ex,ey,theta);
     }
 
     bool isFree(int x, int y, double theta) const {
@@ -702,11 +744,11 @@ public:
         }
         return map_->isFree(x,y,theta);
     }
-    bool isNoInformation(int x, int y, double theta) const {
+    bool isFreeOrUnknown(int x, int y, double theta) const {
         if((x < 0) || (y < 0) || (x >= (int) (w)) || (y >= (int) (h))) {
             return true;
         }
-        return map_->isNoInformation(x,y,theta);
+        return !map_->isOccupied(x,y,theta);
     }
 
     bool isOccupied(const NodeType* reference) const {
@@ -731,6 +773,7 @@ public:
 protected:
     const MapT* map_;
     mutable Bresenham2d bresenham;
+    int bresenham_skips;
 
 private:
     unsigned dimension;

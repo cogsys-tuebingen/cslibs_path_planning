@@ -21,6 +21,11 @@ CurveSegment::CurveSegment(DIRECTION direction)
 {
 }
 
+CurveSegment::~CurveSegment()
+{
+
+}
+
 void CurveSegment::set_map(const GridMap2d* map)
 {
     m_map = map;

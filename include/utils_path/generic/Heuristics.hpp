@@ -257,11 +257,8 @@ struct HeuristicLInf {
 
 /**
  * @brief The HeuristicNonholonomicObstacles struct represents a norm that respects non-holonomic constraits
- * @note WORK IN PROGRESS, NOT YET FUNCTIONAL
  */
 struct HeuristicHolonomicObstacles {
-#define cost__(c,r)  cost[((int) r) * w + ((int) c)]
-
     struct Parameter {
         Parameter()
         {}
@@ -274,36 +271,47 @@ struct HeuristicHolonomicObstacles {
 
     template <class A, class B>
     static void compute(A* current, const B* goal, double res) {
-        if(cost != NULL) {
-            current->h = cost__(current->x, current->y);
-            if(current->h != std::numeric_limits<double>::max()) {
-                current->h *= res;
+        if(costs) {
+            auto h = cost__(current->x, current->y);
+            if(h != std::numeric_limits<double>::max()) {
+                current->h = h * res;
+            } else {
+                current->h = 0;
             }
         } else {
             current->h = 0;
         }
     }
 
+    static inline double& cost__(int c, int r) {
+        return costs[(r + padding) * w + (c + padding)];
+    }
+
+    static inline double& cost(int c, int r) {
+        return costs[(r) * w + (c)];
+    }
+
     template <class Map, class NodeType>
     static void setMap(const Map* map, const NodeType& goal) {
-        if(cost != NULL) {
-            delete [] cost;
-        }
+        delete [] costs;
+        costs = NULL;
 
-        w = map->getWidth();
-        h = map->getHeight();
+        padding = map->padding;
+        w = map->w + 2 * padding;
+        h = map->h + 2 * padding;
 
-        cost = new double[w * h];
+        costs = new double[w * h];
+        memset(costs, 0, sizeof(double) * w * h);
 
         double HORIZ = 1.0;
         double DIAG = std::sqrt(2) * HORIZ;
 
         for(int row = 0; row < h; ++row) {
             for(int col = 0; col < w; ++col) {
-                if(map->isFree(col, row)) {
-                    cost__(col, row) = std::numeric_limits<double>::max();
+                if(!map->isOccupied(col, row, 0)) {
+                    cost(col, row) = std::numeric_limits<double>::max();
                 } else {
-                    cost__(col, row) = INFINITY;
+                    cost(col, row) = std::numeric_limits<double>::infinity();
                 }
             }
         }
@@ -319,14 +327,14 @@ struct HeuristicHolonomicObstacles {
 
             for(int row = 1; row < h-1; ++row) {
                 for(int col = 1; col < w-1; ++col) {
-                    double& d = cost__(col, row);
-                    bool free = d != INFINITY;
+                    double& d = cost(col, row);
+                    bool free = d != std::numeric_limits<double>::infinity();
 
                     if(free) {
-                        double d1 = cost__(col-1, row  ) + HORIZ;
-                        double d2 = cost__(col-1, row-1) + DIAG;
-                        double d3 = cost__(col,   row-1) + HORIZ;
-                        double d4 = cost__(col+1, row-1) + DIAG;
+                        double d1 = cost(col-1, row  ) + HORIZ;
+                        double d2 = cost(col-1, row-1) + DIAG;
+                        double d3 = cost(col,   row-1) + HORIZ;
+                        double d4 = cost(col+1, row-1) + DIAG;
 
                         double dmin = std::min(d1, std::min(d2, std::min(d3, d4)));
 
@@ -340,14 +348,14 @@ struct HeuristicHolonomicObstacles {
 
             for(int row = h-2; row >= 1; --row) {
                 for(int col = w-2; col >= 1; --col) {
-                    double& d = cost__(col, row);
-                    bool free = d != INFINITY;
+                    double& d = cost(col, row);
+                    bool free = d != std::numeric_limits<double>::infinity();
 
                     if(free) {
-                        double d1 = cost__(col+1, row  ) + HORIZ;
-                        double d2 = cost__(col-1, row+1) + DIAG;
-                        double d3 = cost__(col,   row+1) + HORIZ;
-                        double d4 = cost__(col+1, row+1) + DIAG;
+                        double d1 = cost(col+1, row  ) + HORIZ;
+                        double d2 = cost(col-1, row+1) + DIAG;
+                        double d3 = cost(col,   row+1) + HORIZ;
+                        double d4 = cost(col+1, row+1) + DIAG;
 
                         double dmin = std::min(d1, std::min(d2, std::min(d3, d4)));
 
@@ -366,10 +374,10 @@ struct HeuristicHolonomicObstacles {
     }
 
 private:
-    static double * cost;
+    static double * costs;
     static unsigned w;
     static unsigned h;
-#undef cost__
+    static int padding;
 };
 
 

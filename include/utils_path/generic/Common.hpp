@@ -22,6 +22,17 @@
 
 namespace lib_path
 {
+struct OutsideMapException : public std::exception
+{
+};
+
+struct SearchOptions
+{
+    double penalty_backward = 2.5;
+    double penalty_turn = 4.0;
+    double oversearch_distance = 0.0;
+};
+
 /// INTERFACES
 
 struct NeighborhoodBase {
@@ -78,6 +89,7 @@ struct Node : public PointT {
         memory.distance = INFINITY;
         memory.prev = NULL;
         memory.marked = MARK_NONE;
+        memory.custom = 0;
     }
 
     template <typename V>
@@ -87,10 +99,12 @@ struct Node : public PointT {
         memory.distance = INFINITY;
         memory.prev = NULL;
         memory.marked = MARK_NONE;
+        memory.custom = 0;
     }
 
     double distance;
     char marked;
+    char custom;
     Node* prev;
 };
 

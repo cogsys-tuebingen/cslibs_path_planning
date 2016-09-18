@@ -13,9 +13,7 @@
 
   <build_depend>utils_general</build_depend>
   <build_depend>utils_generic</build_depend>
-  <build_depend>cmake_modules</build_depend>
 
   <run_depend>utils_general</run_depend>
   <run_depend>utils_generic</run_depend>
-  <run_depend>cmake_modules</run_depend>
 </package>

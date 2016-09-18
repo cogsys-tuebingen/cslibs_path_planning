@@ -153,6 +153,14 @@ public:
             return false;
         return true;
     }
+    virtual bool point2cellSubPixel( const double px, const double py, double& x, double& y ) const {
+        x = (px - origin_.x)/res_;
+        y = (py - origin_.y)/res_;
+
+        if ( !isInMap( (int)x, (int)y ))
+            return false;
+        return true;
+    }
 
     void cell2point( const unsigned int x, const unsigned int y, double& px, double& py ) const {
         px = res_*(double)(x+0.5) + origin_.x;

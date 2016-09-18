@@ -23,11 +23,6 @@ template <class NodeT, class MapType>
 class Manager
 {
 public:
-    struct OutsideMapException : public std::exception
-    {
-    };
-
-public:
     typedef MapType MapT;
     typedef NodeT NodeType;
 
@@ -37,22 +32,22 @@ public:
     };
 
     Manager()
-        : w(0), h(0), theta_slots(1), map_(NULL)
+        : w(0), h(0), theta_slots(1), padding(0), map_(NULL)
     {}
 
     virtual ~Manager() {
     }
 
-    const MapT* getMap() {
+    const MapT* getMap() const {
         assert(map_ != NULL);
         return map_;
     }
 
-    uint8_t getValue(const double sx, const double sy) {
+    uint8_t getValue(const double sx, const double sy) const {
         return map_->getValue(sx, sy);
     }
 
-    void setMap(const MapT* map) {
+    virtual void setMap(const MapT* map) {
         map_ = map;
 
         bool replace = w != map->getWidth() || h != map_->getHeight();
@@ -63,29 +58,22 @@ public:
         initMap(replace);
     }
 
-    double getResolution() {
+    double getResolution() const {
         return map_->getResolution();
     }
 
     virtual void initMap(bool replace) = 0;
 
-    bool isFree(const NodeType* reference) {
+    bool isFree(const NodeType* reference) const {
         //return map_->isFree(reference->x, reference->y);
         return isFree(reference->x, reference->y, reference->theta);
     }
-    bool isFree(int x, int y, double theta) {
-        return map_->isFree(x,y,theta);
-    }
 
-
-    bool isOccupied(const NodeType* reference) {
+    bool isOccupied(const NodeType* reference) const {
         return isOccupied(reference->x, reference->y, reference->theta);
     }
-    bool isOccupied(int x, int y, double theta) {
-        return map_->isOccupied(x,y,theta);
-    }
 
-    bool isFree(const double sx, const double sy, const double ex, const double ey) {
+    bool isFree(const double sx, const double sy, const double ex, const double ey) const {
         assert(sx >= 0);
         assert(sy >= 0);
         assert(ex >= 0);
@@ -101,15 +89,15 @@ public:
             if(!map_->isFree(x,y,theta)) {
                 return false;
             }
-//            if(bresenham.isOccupied()) {
-//                return false;
-//            }
+            //            if(bresenham.isOccupied()) {
+            //                return false;
+            //            }
         }
 
         return true;
     }
 
-    bool isFreeOrUnknown(const double sx, const double sy, const double ex, const double ey) {
+    bool isFreeOrUnknown(const double sx, const double sy, const double ex, const double ey) const {
         assert(sx >= 0);
         assert(sy >= 0);
         assert(ex >= 0);
@@ -130,15 +118,24 @@ public:
         return true;
     }
 
-    bool contains(const int x, const int y) {
+    bool isFree(int x, int y, double theta) const {
+        return map_->isFree(x,y,theta);
+    }
+
+    bool isOccupied(int x, int y, double theta) const {
+        return map_->isOccupied(x,y,theta);
+    }
+
+
+    bool contains(const int x, const int y) const {
         return map_->isInMap(x, y);
     }
 
-    bool contains(const double x, const double y) {
+    bool contains(const double x, const double y) const {
         return map_->isInMap((int) std::floor(x), (int) std::floor(y));
     }
 
-    virtual bool hasNode(const int x, const int y, unsigned t, bool forward) {
+    bool hasNode(const int x, const int y, unsigned t, bool forward) const {
         return contains(x,y);
     }
 
@@ -147,9 +144,11 @@ public:
     unsigned h;
     unsigned theta_slots;
 
+    int padding;
+
 protected:
     const MapT* map_;
-    Bresenham2d bresenham;
+    mutable Bresenham2d bresenham;
 
 };
 
@@ -157,7 +156,7 @@ protected:
 
 template <class NodeT>
 struct GridMapManager :
-    public Manager<NodeT, GridMap2d>
+        public Manager<NodeT, GridMap2d>
 {
     typedef Manager<NodeT, GridMap2d> ManagerT;
     typedef typename ManagerT::NodeType NodeType;
@@ -198,29 +197,29 @@ struct GridMapManager :
         }
     }
 
-    inline unsigned index(unsigned x, unsigned y, unsigned t = 1, bool f = true) {
+    inline unsigned index(unsigned x, unsigned y, unsigned t = 1, bool f = true) const {
         return y * w + x;
     }
 
     template <class PointT>
-    NodeType* lookup(const PointT& reference) {
+    NodeType* lookup(const PointT& reference) const {
         unsigned y = reference.y;
         unsigned x = reference.x;
         if((x < 0) || (y < 0) || (x >= w) || (y >= h)) {
-            throw typename ManagerT::OutsideMapException();
+            throw OutsideMapException();
         }
         return &data[index(x,y)];
     }
 
-    NodeType* lookup(const int x, const int y) {
+    NodeType* lookup(const int x, const int y) const {
         if((x < 0) || (y < 0) || (x >= w) || (y >= h)) {
-            throw typename ManagerT::OutsideMapException();
+            throw OutsideMapException();
         }
         return &data[index(x,y)];
     }
-    NodeType* lookup(const double x, const double y, double ignored = 0) {
+    NodeType* lookup(const double x, const double y, double ignored = 0) const {
         if((x < 0) || (y < 0)) {
-            throw typename ManagerT::OutsideMapException();
+            throw OutsideMapException();
         }
         return lookup((int) std::floor(x), (int) std::floor(y));
     }
@@ -232,7 +231,7 @@ public:
 
 template <class NodeT>
 class StateSpaceManager :
-    public Manager<NodeT, GridMap2d>
+        public Manager<NodeT, GridMap2d>
 {
 public:
     typedef Manager<NodeT, GridMap2d> ManagerT;
@@ -283,31 +282,31 @@ public:
     }
 
 
-    inline unsigned index(unsigned x, unsigned y, unsigned t) {
+    inline unsigned index(unsigned x, unsigned y, unsigned t) const {
         if((x < 0) || (y < 0) || (x >= w) || (y >= h) || (t < 0) || (t >= theta_slots)) {
             throw typename ManagerT::OutsideMapException();
         }
         return y * w + x + t*w*h;
     }
-    inline unsigned angle2index(double theta) {
+    inline unsigned angle2index(double theta) const {
         return (MathHelper::AngleClamp(theta) + M_PI) / (2 * M_PI) * (theta_slots - 1);
     }
 
     template <class PointT>
-    NodeType* lookup(const PointT& reference) {
+    NodeType* lookup(const PointT& reference) const {
         unsigned y = reference.y;
         unsigned x = reference.x;
         unsigned t = angle2index(reference.theta);
         return &data[index(x,y,t)];
     }
 
-    NodeType* lookup(const int x, const int y, double theta) {
+    NodeType* lookup(const int x, const int y, double theta) const {
         if((x < 0) || (y < 0) || (x >= w) || (y >= h)) {
             throw typename ManagerT::OutsideMapException();
         }
         return &data[index(x,y,angle2index(theta))];
     }
-    NodeType* lookup(const double x, const double y, double theta) {
+    NodeType* lookup(const double x, const double y, double theta) const {
         if((x < 0) || (y < 0) || (x >= w) || (y >= h)) {
             throw typename ManagerT::OutsideMapException();
         }
@@ -322,7 +321,7 @@ public:
 
 template <class NodeT>
 class DirectionalStateSpaceManager :
-    public Manager<NodeT, GridMap2d>
+        public Manager<NodeT, GridMap2d>
 {
 public:
     typedef Manager<NodeT, GridMap2d> ManagerT;
@@ -381,13 +380,13 @@ public:
 
     inline unsigned index(int x, int y, int t=0, bool forward=true) {
         if((x < 0) || (y < 0) || (x >= (int) w) || (y >= (int) h) || (t < 0) || (t >= (int) theta_slots)) {
-            throw typename ManagerT::OutsideMapException();
+            throw OutsideMapException();
         }
 
         return y * w + x + t*w*h + (forward ? 0 : dimension);
 
     }
-    inline unsigned angle2index(double theta) {
+    inline unsigned angle2index(double theta) const {
         return (MathHelper::AngleClamp(theta) + M_PI) / (2 * M_PI) * (theta_slots - 1);
     }
 
@@ -408,13 +407,13 @@ public:
     NodeType* lookup(const int x, const int y, double theta, bool forward) {
         int t = angle2index(theta);
         if((x < 0) || (y < 0) || (x >= (int) w) || (y >= (int) h) || (t < 0) || (t >= (int) theta_slots)) {
-            throw typename ManagerT::OutsideMapException();
+            throw OutsideMapException();
         }
         return &data[index(x,y,t, forward)];
     }
     NodeType* lookup(const double x, const double y, double theta, bool forward) {
         if((x < 0) || (y < 0) || (x >= w) || (y >= h)) {
-            throw typename ManagerT::OutsideMapException();
+            throw OutsideMapException();
         }
         return lookup((int) std::floor(x), (int) std::floor(y), theta, forward);
     }
@@ -433,22 +432,23 @@ public:
  * This state space manager lazily allocates memory in chunks instead of a monolithic block.
  */
 template <class NodeT>
-class DynamicDirectionalStateSpaceManager :
-    public Manager<NodeT, GridMap2d>
+class DynamicDirectionalStateSpaceManager
 {
 public:
-    typedef Manager<NodeT, GridMap2d> ManagerT;
-    typedef typename ManagerT::NodeType NodeType;
+    typedef GridMap2d MapT;
+    typedef NodeT NodeType;
 
-    using ManagerT::w;
-    using ManagerT::h;
-    using ManagerT::theta_slots;
+    struct Cell {
+        //std::map<int, NodeT> node;
+        //        NodeT node[121];
+        NodeT node[1];
+    };
 
     class Chunk
     {
     public:
         Chunk(int cx, int cy, unsigned size, unsigned theta_slots)
-            : ox(cx), oy(cy), chunk_size(size), chunk_dimension(chunk_size * chunk_size * theta_slots), chunk_data(new NodeType[2*chunk_dimension])
+            : ox(cx), oy(cy), chunk_size(size), chunk_dimension(chunk_size * chunk_size * theta_slots), chunk_data(new Cell[2*chunk_dimension])
         {
             double stheta = 0 - M_PI;
             double dtheta = 2 * M_PI / theta_slots;
@@ -460,7 +460,10 @@ public:
                             int nx = ox+x;
                             int ny = oy+y;
                             std::size_t ci = chunk_index(nx, ny, t, f);
-                            NodeType::init(chunk_data[ci], nx, ny, stheta + dtheta * t);
+                            //                            for(unsigned s = 0; s < 160; ++s) {
+                            //                                NodeType::init(chunk_data[ci].node[s], nx, ny, stheta + dtheta * t);
+                            //                            }
+                            NodeType::init(chunk_data[ci].node[0], nx, ny, stheta + dtheta * t);
                         }
                     }
                 }
@@ -472,19 +475,34 @@ public:
             delete [] chunk_data;
         }
 
-        inline unsigned chunk_index(int mx, int my, int t=0, bool forward=true) {
+        inline unsigned chunk_index(int mx, int my, int t=0, bool forward=true) const {
             int cx = mx - ox;
             int cy = my - oy;
             if((cx < 0) || (cy < 0) || (cx >= (int) chunk_size) || (cy >= (int) chunk_size)) {
-                throw typename ManagerT::OutsideMapException();
+                throw OutsideMapException();
             }
 
-            return cy * chunk_size + cx + t*chunk_size*chunk_size + (forward ? 0 : chunk_dimension);
+            return cx + cy * chunk_size + t*chunk_size*chunk_size + (forward ? 0 : chunk_dimension);
         }
 
-        inline NodeType* lookup(int mx, int my, int t=0, bool forward=true) {
+        inline NodeType* lookup(int mx, int my, int t=0, int s=0, bool forward=true) const {
+            //            std::size_t index = chunk_index(mx,my,t,forward);
+            //            Cell& cell = chunk_data[index];
+            //            auto it = cell.node.find(s);
+            //            if(it == cell.node.end()) {
+            //                NodeType* res = &cell.node[s];
+            //                NodeType::init(*res, mx, my, t);
+            //                return res;
+            //            } else {
+            //                return &it->second;
+            //            }
             std::size_t index = chunk_index(mx,my,t,forward);
-            return &chunk_data[index];
+            Cell& cell = chunk_data[index];
+            if(s < -60 || s > 60) {
+                //                throw std::runtime_error("angle is too high");
+            }
+            //            return &cell.node[s + 60];
+            return &cell.node[0];
         }
 
     private:
@@ -494,16 +512,51 @@ public:
         unsigned chunk_size;
 
         unsigned chunk_dimension;
-        NodeType* chunk_data;
+        Cell* chunk_data;
     };
 
 
     DynamicDirectionalStateSpaceManager()
         : chunks_w(0), chunks_h(0)
-    {}
+    {
+        chunk_size = 32;
+        theta_slots = 32;
 
-    virtual ~DynamicDirectionalStateSpaceManager() {
+        bresenham_skips = 0;
+
+        padding_chunks = 1;
+        padding = padding_chunks * chunk_size;
+    }
+
+    ~DynamicDirectionalStateSpaceManager() {
         clearChunks();
+    }
+
+    void setMap(const MapT* map) {
+        map_ = map;
+
+        bool replace = w != map->getWidth() || h != map_->getHeight();
+
+        w = map->getWidth();
+        h = map->getHeight();
+
+        double eff_step_size = 0.5;
+        int eff_step_cells = eff_step_size / map_->getResolution();
+        bresenham_skips = eff_step_cells;
+
+        initMap(replace);
+    }
+
+    const MapT* getMap() {
+        assert(map_ != NULL);
+        return map_;
+    }
+    double getResolution() {
+        return map_->getResolution();
+    }
+
+    uint8_t getValue(const double sx, const double sy) {
+        return map_->getValue(sx, sy);
     }
 
     void clearChunks() noexcept
@@ -523,14 +576,15 @@ public:
         typedef DirectionalNode<PointT> NodeType;
     };
 
-    void initMap(bool replace) {
-        chunk_size = 32;
-        theta_slots = 32;
+    void initMap(bool /*replace*/) {
 
-        chunks_w = w / chunk_size + 1;
-        chunks_h = h / chunk_size + 1;
+        int ww = w + 2 * padding;
+        int hh = h + 2 * padding;
 
-        dimension = w * h * theta_slots;
+        chunks_w = ww / chunk_size + 1;
+        chunks_h = hh / chunk_size + 1;
+
+        dimension = ww * hh * theta_slots;
 
 
         clearChunks();
@@ -540,46 +594,52 @@ public:
     }
 
 
-    inline unsigned angle2index(double theta) {
+    inline unsigned angle2index(double theta) const {
         return (MathHelper::AngleClamp(theta) + M_PI) / (2 * M_PI) * (theta_slots - 1);
     }
 
     template <class PointT>
-    NodeType* lookup(const PointT& reference) {
-        return lookup(reference.x,reference.y,reference.theta, reference.forward);
+    NodeType* lookup(const PointT& reference) const {
+        return lookup(reference.x,reference.y,reference.theta, reference.steering_angle, reference.forward);
     }
-    NodeType* lookup(const Pose2d& reference) {
-        return lookup(reference.x,reference.y,reference.theta, true);
+    NodeType* lookup(const Pose2d& reference) const {
+        return lookup(reference.x,reference.y,reference.theta, 0, true);
     }
 
-    NodeType* lookup(const int x, const int y, double theta, bool forward) {
-        return lookup(x,y,angle2index(theta), forward);
+    NodeType* lookup(const int x, const int y, double theta, int steering_angle, bool forward) const {
+        return lookup(x,y,angle2index(theta), steering_angle, forward);
     }
-    NodeType* lookup(const double x, const double y, double theta, bool forward) {
-        return lookup((int) std::floor(x), (int) std::floor(y), theta, forward);
+    NodeType* lookup(const double x, const double y, double theta, int steering_angle, bool forward) const {
+        return lookup((int) std::floor(x), (int) std::floor(y), theta, steering_angle, forward);
     }
-    NodeType* lookup(const int x, const int y, unsigned t, bool forward) {
-        if((x < 0) || (y < 0) || (x >= (int) w) || (y >= (int) h) || (t < 0) || (t >= (int) theta_slots)) {
-            throw typename ManagerT::OutsideMapException();
+    NodeType* lookup(const int x, const int y, unsigned t, int steering_angle, bool forward) const {
+        if((x < -padding) || (y < -padding) || (x >= (int) (w + padding)) || (y >= (int) (h + padding)) || (t < 0) || (t >= (int) theta_slots)) {
+            throw OutsideMapException();
         }
-        int cx = (x / chunk_size);
-        int cy = (y / chunk_size);
+        int cx = (x / (int) chunk_size);
+        if(x < 0) cx -= 1;
+        int cy = (y / (int) chunk_size);
+        if(y < 0) cy -= 1;
 
-        Chunk* chunk = chunks.at(cy * chunks_w + cx);
+        int cxp = cx + padding_chunks;
+        int cyp = cy + padding_chunks;
+
+
+        Chunk* chunk = chunks.at(cyp * chunks_w + cxp);
 
         if(!chunk) {
-            std::cerr << "allocating new chunk " << cx << ", " << cy << " of size " << chunk_size << " x " << chunk_size << std::endl;
             chunk = new Chunk(cx * chunk_size, cy * chunk_size, chunk_size, theta_slots);
-            chunks.at(cy * chunks_w + cx) = chunk;
+            chunks.at(cyp * chunks_w + cxp) = chunk;
         }
 
-        return chunk->lookup(x,y,t, forward);
+        return chunk->lookup(x,y ,t, steering_angle, forward);
     }
 
 
-    bool hasNode(const int x, const int y, unsigned t, bool forward) {
-        if((x < 0) || (y < 0) || (x >= (int) w) || (y >= (int) h) || (t < 0) || (t >= (int) theta_slots)) {
-            throw typename ManagerT::OutsideMapException();
+    bool hasNode(const int x, const int y, unsigned t, bool forward) const {
+        if((x < -padding) || (y < -padding) || (x >= (int) (w + padding)) || (y >= (int) (h + padding)) || (t < 0) || (t >= (int) theta_slots)) {
+            std::cerr << "! has node: " << x << " / " << y << std::endl;
+            throw OutsideMapException();
         }
         int cx = (x / chunk_size);
         int cy = (y / chunk_size);
@@ -588,15 +648,143 @@ public:
         return chunk != nullptr;
     }
 
+
+    bool contains(const int x, const int y) const {
+        if((x < -padding) || (y < -padding) || (x >= (int) (w + padding)) || (y >= (int) (h + padding))) {
+            return false;
+        }
+        return true;
+    }
+
+    bool contains(const double wx, const double wy) const {
+        int x = std::floor(wx);
+        int y = std::floor(wy);
+
+        if((x < -padding) || (y < -padding) || (x >= (int) (w + padding)) || (y >= (int) (h + padding))) {
+            return false;
+
+        }
+        return true;
+    }
+
+    bool isFree(const double sx, const double sy, const double ex, const double ey) const {
+        bresenham.setGrid(map_, std::floor(sx + padding), std::floor(sy + padding), std::floor(ex + padding),std::floor(ey + padding));
+
+        double theta = std::atan2(ey-sy,ex-sx);
+
+        int skip = 0;
+
+        unsigned x,y;
+        while(bresenham.next()) {
+            bresenham.coordinates(x,y);
+            if(skip == 0) {
+                if(!isFree(x-padding,y-padding,theta)) {
+                    return false;
+                }
+            }
+            if(++skip > bresenham_skips) {
+                skip = 0;
+            }
+        }
+
+        return isFree(ex,ey,theta);
+    }
+
+    bool isFreeOrUnknown(const double sx, const double sy, const double ex, const double ey) const {
+        bresenham.setGrid(map_, std::floor(sx + padding), std::floor(sy + padding), std::floor(ex + padding),std::floor(ey + padding));
+
+        double theta = std::atan2(ey-sy,ex-sx);
+
+        int skip = 0;
+
+        unsigned x,y;
+        while(bresenham.next()) {
+            bresenham.coordinates(x,y);
+            if(skip == 0) {
+                if(!isFreeOrUnknown(x-padding,y-padding,theta)) {
+                    //            if(isOccupied(x-padding,y-padding,theta)) {
+                    return false;
+                }
+            }
+            if(++skip > bresenham_skips) {
+                skip = 0;
+            }
+        }
+
+        return isFreeOrUnknown(sx,sy,theta);
+    }
+
+
+    bool isOccupied(const double sx, const double sy, const double ex, const double ey) const {
+        bresenham.setGrid(map_, std::floor(sx + padding), std::floor(sy + padding), std::floor(ex + padding),std::floor(ey + padding));
+
+        double theta = std::atan2(ey-sy,ex-sx);
+
+        int skip = 0;
+
+        unsigned x,y;
+        while(bresenham.next()) {
+            bresenham.coordinates(x,y);
+            if(skip == 0) {
+                if(isOccupied(x-padding,y-padding,theta)){
+                    return true;
+                }
+            }
+            if(++skip > bresenham_skips) {
+                skip = 0;
+            }
+        }
+
+        return isOccupied(ex,ey,theta);
+    }
+
+    bool isFree(int x, int y, double theta) const {
+        if((x < 0) || (y < 0) || (x >= (int) (w)) || (y >= (int) (h))) {
+            return false;
+        }
+        return map_->isFree(x,y,theta);
+    }
+    bool isFreeOrUnknown(int x, int y, double theta) const {
+        if((x < 0) || (y < 0) || (x >= (int) (w)) || (y >= (int) (h))) {
+            return true;
+        }
+        return !map_->isOccupied(x,y,theta);
+    }
+
+    bool isOccupied(const NodeType* reference) const {
+        return isOccupied(reference->x, reference->y, reference->theta);
+    }
+    bool isOccupied(int x, int y, double theta) const {
+        if((x < 0) || (y < 0) || (x >= (int) (w)) || (y >= (int) (h))) {
+            return false;
+        }
+        return map_->isOccupied(x,y,theta);
+    }
+
+public:
+    unsigned w;
+    unsigned h;
+    unsigned theta_slots;
+    unsigned steer_slots;
+
+    int padding_chunks;
+    int padding;
+
+protected:
+    const MapT* map_;
+    mutable Bresenham2d bresenham;
+    int bresenham_skips;
+
 private:
     unsigned dimension;
     unsigned chunk_size;
+
 
     std::size_t chunks_w;
     std::size_t chunks_h;
 
 public:
-    std::vector<Chunk*> chunks;
+    mutable std::vector<Chunk*> chunks;
 };
 }
 

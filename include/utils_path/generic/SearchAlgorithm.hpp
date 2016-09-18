@@ -15,6 +15,7 @@
 /// PROJECT
 #include <utils_generic/Intermission.hpp>
 #include "../common/Path.h"
+#include <utils_path/common/Path.h>
 
 /// SYSTEM
 #include <algorithm>
@@ -24,6 +25,8 @@
 #include <boost/thread.hpp>
 #include <stdexcept>
 #include <queue>
+#include <chrono>
+#include <functional>
 
 namespace lib_path
 {
@@ -123,7 +126,7 @@ public:
 
 public:
     GenericSearchAlgorithm()
-        : start(NULL), goal(NULL), heuristic_goal(NULL), has_cost_(false), expansions(0), multi_expansions(0), updates(0)
+        : start(NULL), goal(NULL), heuristic_goal(NULL), has_cost_(false), expansions(0), multi_expansions(0), touched(0), updates(0), time_limit_(-1.0)
     {}
 
     virtual void setMap(const MapT* map) {
@@ -133,6 +136,10 @@ public:
 
     virtual void setCostFunction(bool is_cost_function) {
         has_cost_ = is_cost_function;
+    }
+
+    void setTimeLimit(double seconds) {
+        time_limit_ = seconds;
     }
 
     virtual void setStart(const PointT& from) {
@@ -167,12 +174,34 @@ public:
         return map_;
     }
 
+    int getExpansions() const
+    {
+        return expansions;
+    }
+    int getMultiExpansions() const
+    {
+        return multi_expansions;
+    }
+
+    int getTouchedNodes() const
+    {
+        return touched;
+    }
+
     void addGoalCandidate(const NodeT* current, double cost)
     {
         if(goal_candidates.empty()) {
-            first_candidate_weight = current->distance;
+            first_candidate_weight = current->getTotalCost();
+            std::cerr << "find first candidate with distance " << current->getTotalCost() << ", oversearch is " << search_options.oversearch_distance << std::endl;
         }
         goal_candidates.push(std::make_tuple(current, cost));
+
+        if(goal_candidate_function) {
+            PathT p = backtrack(start, current);
+            if(goal_candidate_function(p)) {
+                // TODO: return this path
+            }
+        }
     }
 
 
@@ -186,8 +215,9 @@ public:
      * @return
      */
     virtual PathT findPath(const PointT& from, const PointT& to,
-                           double oversearch_distance = 0.0) {
-        oversearch_distance_ = oversearch_distance;
+                           SearchOptions so = SearchOptions()) {
+        search_options = so;
+
         if(NeighborhoodType::reversed) {
             PathT path = findPathPose<generic::NoIntermission>(to, from, boost::function<void()>());
             std::reverse(path.begin(), path.end());
@@ -210,9 +240,9 @@ public:
      */
     virtual PathT findPath(const PointT& from, const PointT& to,
                            boost::function<void()> intermission,
-                           double oversearch_distance = 0.0)
+                           SearchOptions so = SearchOptions())
     {
-        oversearch_distance_ = oversearch_distance;
+        search_options = so;
         if(NeighborhoodType::reversed) {
             PathT path = findPathPose<
                     generic::CallbackIntermission<INTERMISSION_N_STEPS, INTERMISSION_START_STEPS>
@@ -231,23 +261,33 @@ public:
 
     template <class GoalTest>
     PathT findPath(const PointT& from, const GoalTest& goal_test,
-                   double oversearch_distance = 0.0)
+                   SearchOptions so = SearchOptions())
     {
-        oversearch_distance_ = oversearch_distance;
-        return findPathMap<GoalTest, generic::NoIntermission>
+        search_options = so;
+        return findPathMapPose<GoalTest, generic::NoIntermission>
                 (from, goal_test, boost::function<void()>());
     }
 
     template <class GoalTest>
     PathT findPath(const PointT& from, const GoalTest& goal_test,
                    boost::function<void()> intermission,
-                   double oversearch_distance = 0.0)
+                   SearchOptions so = SearchOptions())
     {
-        oversearch_distance_ = oversearch_distance;
-        return findPathMap<GoalTest, generic::CallbackIntermission<INTERMISSION_N_STEPS, INTERMISSION_START_STEPS>
+        search_options = so;
+        return findPathMapPose<GoalTest, generic::CallbackIntermission<INTERMISSION_N_STEPS, INTERMISSION_START_STEPS>
                 >
                 (from, goal_test, intermission);
     }
+
+    template <class GoalTest>
+    PathT findPathWithStartConfiguration(const NodeT& from, const GoalTest& goal_test,
+                                         SearchOptions so = SearchOptions())
+    {
+        search_options = so;
+        return findPathMapNode<GoalTest, generic::NoIntermission>
+                (from, goal_test, boost::function<void()>());
+    }
+
 
 protected:
     template <class SearchAlgo, class NodeType>
@@ -282,7 +322,7 @@ protected:
     }
 
     template <class GoalTest, class Intermission>
-    PathT findPathMap(const PointT& from, const GoalTest& goal_test,
+    PathT findPathMapPose(const PointT& from, const GoalTest& goal_test,
                       boost::function<void()> intermission)
     {
         init();
@@ -294,16 +334,46 @@ protected:
                 (goal_test, intermission);
     }
 
+
+    template <class GoalTest, class Intermission>
+    PathT findPathMapNode(const NodeT& from, const GoalTest& goal_test,
+                      boost::function<void()> intermission)
+    {
+        init();
+        initStartNode(from);
+
+        heuristic_goal = goal_test.getHeuristicGoal();
+
+        return findPathImp<GoalTest, Intermission>
+                (goal_test, intermission);
+    }
+
     template <class GoalTest, class Intermission>
     PathT findPathImp(const GoalTest& goal_test,
                       boost::function<void()> intermission)
     {
+        if(time_limit_ > 0.0) {
+            auto now = std::chrono::high_resolution_clock::now();
+            std::chrono::milliseconds duration_milli{(int64_t) (time_limit_ * 1e3)};
+            stamp_abort_ = now + duration_milli;
+        }
+
         // iterate until no more points can be looked at
         while(!open.empty()) {
-            boost::this_thread::interruption_point();
+//            boost::this_thread::interruption_point();
+
+            if(time_limit_ > 0.0) {
+                auto now = std::chrono::high_resolution_clock::now();
+                if(now >= stamp_abort_) {
+                    std::cerr << "abort, search took longer than " << time_limit_ << " seconds" << std::endl;
+                    break;
+                }
+            }
+
 
             // mark the next node closed
             NodeT* current = open.next();
+
             current->unMark(NodeT::MARK_OPEN);
             current->mark(NodeT::MARK_CLOSED);
 
@@ -330,8 +400,8 @@ protected:
             }
 
             // check if we can return
-            if(!goal_candidates.empty()) {
-                if(current->distance > first_candidate_weight + oversearch_distance_) {
+            if(!goal_candidates.empty() && search_options.oversearch_distance != 0.0) {
+                if(current->getTotalCost() > first_candidate_weight + search_options.oversearch_distance) {
                     break;
                 }
             }
@@ -348,8 +418,10 @@ protected:
             // generate the path
             GoalCandidate best = goal_candidates.top();
             std::cout << "done, selecting the best goal out of " << goal_candidates.size() << " candidates\n";
-            std::cout << "dist: " <<  std::get<1>(best) << std::endl;
-            return backtrack(start,  std::get<0>(best));
+            std::cout << "best dist: " <<  std::get<1>(best) << std::endl;
+            auto res = backtrack(start,  std::get<0>(best));
+            std::cout << "length: " <<  res.size() << std::endl;
+            return res;
         }
 
         std::cerr << "done, no path found" << std::endl;
@@ -372,9 +444,11 @@ protected:
 
     void initStartPose(const PointT& pose)
     {
+        std::cerr << "start: " << pose.x <<  " / " << pose.y << std::endl;
+
         try {
             start = map_.lookup(pose);
-        } catch(const typename MapManager::OutsideMapException& e) {
+        } catch(const OutsideMapException& e) {
             throw StartOutOfMapException();
         }
         if(map_.isOccupied(start)) {
@@ -389,16 +463,46 @@ protected:
             // put start node in open data structure
             open.add(start);
         }
+
+        std::cerr << "start pose: " << start->x <<  " / " << start->y << std::endl;
+    }
+
+
+    void initStartNode(const NodeT& node)
+    {
+        std::cerr << "start node: " << node.x <<  " / " << node.y << " / " << node.theta << std::endl;
+
+        try {
+            start = map_.lookup(node);
+        } catch(const OutsideMapException& e) {
+            throw StartOutOfMapException();
+        }
+        if(map_.isOccupied(start)) {
+            throw StartNotFreeException();
+
+        } else {
+            *start = node;
+            start->distance = 0;
+            start->depth = 0;
+            start->mark(NodeT::MARK_OPEN);
+
+            // put start node in open data structure
+            open.add(start);
+        }
+
+        std::cerr << "start node: " << start->x <<  " / " << start->y << " / " << start->theta << std::endl;
     }
 
     void initGoalPose(const PointT& pose)
     {
+        std::cerr << "goal: " << pose.x <<  " / " << pose.y << std::endl;
+
         try {
             goal = map_.lookup(pose);
-        } catch(const typename MapManager::OutsideMapException& e) {
+        } catch(const OutsideMapException& e) {
             throw GoalOutOfMapException();
         }
-        Heuristic::setMap(map_.getMap(), *goal);
+        Heuristic::setMap(&map_, *goal);
 
         if(map_.isOccupied(goal)) {
             throw GoalNotFreeException();
@@ -423,7 +527,7 @@ protected:
             tmp.theta = expansion.begin()->theta;
 
             PathT path = backtrack(start, &tmp);
-            path += expansion;
+            path.insert(path.end(), expansion.begin(), expansion.end());
             result = path;
             return true;
         }
@@ -491,6 +595,7 @@ public:
             }
             neighbor->mark(NodeT::MARK_OPEN);
 
+            ++touched;
             open.add(neighbor);
 
             return NeighborhoodBase::PR_ADDED_TO_OPEN_LIST;
@@ -505,7 +610,16 @@ public:
         const NodeT* current = goal;
         path.push_back(*goal);
 
+        std::set<const NodeT*> contained;
+
         while(current != start){
+            if(contained.find(current) != contained.end()) {
+                std::cerr << "found path contains a loop! abort!" << std::endl;
+                return {};
+            }
+
+            contained.insert(current);
+
             current = dynamic_cast<NodeT*>(current->prev);
             assert(current != NULL);
             assert(current != current->prev);
@@ -517,6 +631,29 @@ public:
         return path;
     }
 
+    std::vector<PathT> getPathCandidates() {
+        std::vector<PathT> paths;
+
+        std::priority_queue<GoalCandidate, std::vector<GoalCandidate>, PairDistance> tmp = goal_candidates;
+
+        while(!tmp.empty()) {
+            const GoalCandidate gc = tmp.top();
+            tmp.pop();
+
+            paths.emplace_back(backtrack(start,  std::get<0>(gc)));
+        }
+
+        return paths;
+    }
+
+    template <typename CB>
+    void setPathCandidateCallback(CB cb) {
+        goal_candidate_function = cb;
+    }
+
+public:
+    SearchOptions search_options;
+
 protected:
     OpenNodesManager open;
     MapManager map_;
@@ -527,14 +664,20 @@ protected:
 
     std::priority_queue<GoalCandidate, std::vector<GoalCandidate>, PairDistance> goal_candidates;
     double first_candidate_weight;
-    double oversearch_distance_;
     PathT result;
 
     bool has_cost_;
 
     int expansions;
     int multi_expansions;
+    int touched;
     int updates;
+
+    double time_limit_;
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> stamp_abort_;
+
+    std::function<bool(const PathT&)> goal_candidate_function;
 };
 
 template <class Param>

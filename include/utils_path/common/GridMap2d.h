@@ -242,7 +242,7 @@ public:
 
     virtual bool isAreaFree( MapArea2d& area ) const;
 
-    virtual bool isAreaFreeOrUnknown( MapArea2d& area ) const;
+    virtual bool isAreaNoInformation( MapArea2d& area ) const;
 
     virtual bool isAreaOccupied( MapArea2d& area ) const;
 

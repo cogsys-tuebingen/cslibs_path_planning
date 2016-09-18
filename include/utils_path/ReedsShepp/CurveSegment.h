@@ -39,6 +39,8 @@ public:
      */
     CurveSegment(DIRECTION direction);
 
+    virtual ~CurveSegment();
+
     /**
      * Creates a new segment that is an exact copy of this one
      *

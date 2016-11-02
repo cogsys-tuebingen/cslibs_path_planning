@@ -263,8 +263,13 @@ public:
                    SearchOptions so = SearchOptions())
     {
         search_options = so;
-        return findPathMapPose<GoalTest, generic::NoIntermission>
+        PathT path = findPathMapPose<GoalTest, generic::NoIntermission>
                 (from, goal_test, boost::function<void()>());
+
+        if(NeighborhoodType::reversed) {
+            reverse(path);
+        }
+        return path;
     }
 
     template <class GoalTest>
@@ -273,9 +278,14 @@ public:
                    SearchOptions so = SearchOptions())
     {
         search_options = so;
-        return findPathMapPose<GoalTest, generic::CallbackIntermission<INTERMISSION_N_STEPS, INTERMISSION_START_STEPS>
+        PathT path = findPathMapPose<GoalTest, generic::CallbackIntermission<INTERMISSION_N_STEPS, INTERMISSION_START_STEPS>
                 >
                 (from, goal_test, intermission);
+
+        if(NeighborhoodType::reversed) {
+            reverse(path);
+        }
+        return path;
     }
 
     template <class GoalTest>
@@ -283,8 +293,28 @@ public:
                                          SearchOptions so = SearchOptions())
     {
         search_options = so;
-        return findPathMapNode<GoalTest, generic::NoIntermission>
+        PathT path = findPathMapNode<GoalTest, generic::NoIntermission>
                 (from, goal_test, boost::function<void()>());
+
+        if(NeighborhoodType::reversed) {
+            reverse(path);
+        }
+        return path;
+    }
+
+protected:
+    template <typename NodeType>
+    void reverse(std::vector<NodeType>& path, typename boost::enable_if_c<NodeTraits<NodeType>::HasForwardField, NodeType>::type* = 0)
+    {
+        std::reverse(path.begin(), path.end());
+        for(auto& pt : path) {
+            pt.forward = !pt.forward;
+        }
+    }
+    template <typename NodeType>
+    void reverse(std::vector<NodeType>& path, typename boost::enable_if_c<!NodeTraits<NodeType>::HasForwardField, NodeType>::type* = 0)
+    {
+        std::reverse(path.begin(), path.end());
     }
 
 
@@ -322,7 +352,7 @@ protected:
 
     template <class GoalTest, class Intermission>
     PathT findPathMapPose(const PointT& from, const GoalTest& goal_test,
-                      boost::function<void()> intermission)
+                          boost::function<void()> intermission)
     {
         init();
         initStartPose(from);
@@ -336,7 +366,7 @@ protected:
 
     template <class GoalTest, class Intermission>
     PathT findPathMapNode(const NodeT& from, const GoalTest& goal_test,
-                      boost::function<void()> intermission)
+                          boost::function<void()> intermission)
     {
         init();
         initStartNode(from);
@@ -359,7 +389,7 @@ protected:
 
         // iterate until no more points can be looked at
         while(!open.empty()) {
-//            boost::this_thread::interruption_point();
+            boost::this_thread::interruption_point();
 
             if(time_limit_ > 0.0) {
                 auto now = std::chrono::high_resolution_clock::now();
@@ -624,7 +654,7 @@ public:
             assert(current != current->prev);
             path.push_back(*current);
         };
- 
+
         std::reverse(path.begin(), path.end());
 
         return path;

@@ -13,8 +13,7 @@
 #include "Heuristics.hpp"
 
 /// PROJECT
-#include <utils_generic/Intermission.hpp>
-#include "../common/Path.h"
+#include <utils_path/generic/Intermission.hpp>
 #include <utils_path/common/Path.h>
 
 /// SYSTEM

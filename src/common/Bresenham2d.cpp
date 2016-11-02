@@ -5,7 +5,7 @@
  */
 
 // Project
-#include <utils_path/common/Bresenham2d.h>
+#include <cslibs_path_planning/common/Bresenham2d.h>
 
 namespace lib_path {
 

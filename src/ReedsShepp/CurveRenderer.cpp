@@ -6,7 +6,7 @@
  */
 
 /// HEADER
-#include <utils_path/ReedsShepp/CurveRenderer.h>
+#include <cslibs_path_planning/ReedsShepp/CurveRenderer.h>
 
 /// SYSTEM
 #include <sstream>

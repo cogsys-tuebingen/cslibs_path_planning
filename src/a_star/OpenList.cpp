@@ -8,7 +8,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <iomanip>
-#include <utils_path/a_star/OpenList.h>
+#include <cslibs_path_planning/a_star/OpenList.h>
 
 
 using namespace std;

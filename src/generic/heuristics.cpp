@@ -1,6 +1,6 @@
 /// HEADER
-#include <utils_path/generic/NodeManager.hpp>
-#include <utils_path/generic/Heuristics.hpp>
+#include <cslibs_path_planning/generic/NodeManager.hpp>
+#include <cslibs_path_planning/generic/Heuristics.hpp>
 
 using namespace lib_path;
 

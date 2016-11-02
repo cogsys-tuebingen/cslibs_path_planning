@@ -6,10 +6,10 @@
  */
 
 /// HEADER
-#include <utils_path/ReedsShepp/Curve.h>
+#include <cslibs_path_planning/ReedsShepp/Curve.h>
 
 /// PROJECT
-#include <utils_path/common/MapMath.h>
+#include <cslibs_path_planning/common/MapMath.h>
 
 /// COMPONENT
 #include <iostream>

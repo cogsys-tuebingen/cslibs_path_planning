@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <iostream>
-#include <utils_path/common/path4ws_simulator.h>
+#include <cslibs_path_planning/common/path4ws_simulator.h>
 
 void Bot4ws::update(float d)
 {

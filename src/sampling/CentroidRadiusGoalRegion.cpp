@@ -5,7 +5,7 @@
 */ 
 
 #include <math.h>
-#include <utils_path/sampling/CentroidRadiusGoalRegion.h>
+#include <cslibs_path_planning/sampling/CentroidRadiusGoalRegion.h>
 
 using namespace lib_path;
 

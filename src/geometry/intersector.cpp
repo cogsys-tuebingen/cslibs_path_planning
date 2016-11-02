@@ -12,7 +12,7 @@
 #include <Eigen/Core>
 #include <cmath>
 #include <iostream>
-#include <utils_path/geometry/intersector.h>
+#include <cslibs_path_planning/geometry/intersector.h>
 #include <cslibs_utils/MathHelper.h>
 
 using namespace path_geom;

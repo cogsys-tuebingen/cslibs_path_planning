@@ -8,7 +8,7 @@
 */ 
 #include <float.h>
 #include <stdio.h>
-#include <utils_path/sampling/SamplingPlanner.h>
+#include <cslibs_path_planning/sampling/SamplingPlanner.h>
 
 using namespace lib_path;
 

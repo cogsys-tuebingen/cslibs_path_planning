@@ -12,9 +12,9 @@
 #include <cmath>
 #include <iostream>
 #include <cslibs_utils/MathHelper.h>
-#include <utils_path/geometry/intersector.h>
-#include <utils_path/geometry//line.h>
-#include <utils_path/geometry//circle.h>
+#include <cslibs_path_planning/geometry/intersector.h>
+#include <cslibs_path_planning/geometry//line.h>
+#include <cslibs_path_planning/geometry//circle.h>
 using namespace path_geom;
 using namespace Eigen;
 

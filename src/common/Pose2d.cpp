@@ -8,7 +8,7 @@
 
 #include <cslibs_utils/MathHelper.h>
 
-#include <utils_path/common/Pose2d.h>
+#include <cslibs_path_planning/common/Pose2d.h>
 
 using namespace lib_path;
 using namespace std;

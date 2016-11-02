@@ -5,7 +5,7 @@
  *      Author: buck <sebastian.buck@uni-tuebingen.de>
  */
 
-#include <utils_path/common/Point2d.h>
+#include <cslibs_path_planning/common/Point2d.h>
 
 using namespace lib_path;
 

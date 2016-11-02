@@ -6,7 +6,7 @@
  */
 
 /// HEADER
-#include <utils_path/ReedsShepp/CurveGenerator.h>
+#include <cslibs_path_planning/ReedsShepp/CurveGenerator.h>
 
 /// SYSTEM
 #include <stdio.h>

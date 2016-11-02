@@ -13,7 +13,7 @@
 #include <iostream>
 #include <unistd.h>
 
-#include <utils_path/common/path4ws_simulator.h>
+#include <cslibs_path_planning/common/path4ws_simulator.h>
 
 
 using namespace std;

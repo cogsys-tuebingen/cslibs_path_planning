@@ -1,7 +1,7 @@
 #ifndef STEERINGNODE_HPP
 #define STEERINGNODE_HPP
 
-#include <utils_path/generic/Common.hpp>
+#include <cslibs_path_planning/generic/Common.hpp>
 
 namespace lib_path
 {

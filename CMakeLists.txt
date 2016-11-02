@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(utils_path)
+project(cslibs_path_planning)
 
 add_definitions(-W -Wall -Wno-unused-parameter -fno-strict-aliasing -Wno-unused-function -Wno-deprecated-register)
 

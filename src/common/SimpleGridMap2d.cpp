@@ -5,7 +5,7 @@
  */
 
 // Project
-#include <utils_path/common/SimpleGridMap2d.h>
+#include <cslibs_path_planning/common/SimpleGridMap2d.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // class SimpleGridMap2d

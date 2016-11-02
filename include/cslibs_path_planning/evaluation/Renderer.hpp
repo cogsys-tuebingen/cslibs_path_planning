@@ -13,7 +13,7 @@
 #include "../generic/Common.hpp"
 
 /// PROJECT
-#include <utils_path/generic/Utils.hpp>
+#include <cslibs_path_planning/generic/Utils.hpp>
 #include <cslibs_utils/CDUniTuebingen.hpp>
 
 /// SYSTEM

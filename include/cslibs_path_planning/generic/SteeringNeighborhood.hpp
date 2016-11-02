@@ -1,9 +1,9 @@
 #ifndef STEERINGNEIGHBORHOOD_HPP
 #define STEERINGNEIGHBORHOOD_HPP
 
-#include <utils_path/generic/NonHolonomicNeighborhood.hpp>
-#include <utils_path/generic/SteeringNode.hpp>
-#include <utils_path/generic/Common.hpp>
+#include <cslibs_path_planning/generic/NonHolonomicNeighborhood.hpp>
+#include <cslibs_path_planning/generic/SteeringNode.hpp>
+#include <cslibs_path_planning/generic/Common.hpp>
 
 namespace lib_path
 {

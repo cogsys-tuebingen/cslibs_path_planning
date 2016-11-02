@@ -10,7 +10,7 @@
 
 /// PROJECT
 #include <cslibs_utils/MathHelper.h>
-#include <utils_path/generic/Utils.hpp>
+#include <cslibs_path_planning/generic/Utils.hpp>
 
 /// SYSTEM
 #include <boost/static_assert.hpp>

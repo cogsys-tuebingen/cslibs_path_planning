@@ -5,7 +5,7 @@
  *      Author: dube
  */
 
-#include <utils_path/a_star/Node.h>
+#include <cslibs_path_planning/a_star/Node.h>
 #include <iostream>
 #include <sstream>
 

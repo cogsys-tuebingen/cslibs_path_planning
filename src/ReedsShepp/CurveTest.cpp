@@ -16,12 +16,12 @@
  */
 
 /// COMPONENT
-#include <utils_path/ReedsShepp/Curve.h>
-#include <utils_path/ReedsShepp/CurveGenerator.h>
-#include <utils_path/ReedsShepp/CurveRenderer.h>
+#include <cslibs_path_planning/ReedsShepp/Curve.h>
+#include <cslibs_path_planning/ReedsShepp/CurveGenerator.h>
+#include <cslibs_path_planning/ReedsShepp/CurveRenderer.h>
 
 /// PROJECT
-#include <utils_path/common/SimpleGridMap2d.h>
+#include <cslibs_path_planning/common/SimpleGridMap2d.h>
 
 /// SYSTEM
 #include <iostream>

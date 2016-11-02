@@ -5,10 +5,10 @@
  *      Author: Sebastian Scherer <sebastian.scherer@uni-tuebingen.de>
  */
 
-#include <utils_path/common/MapMath.h>
+#include <cslibs_path_planning/common/MapMath.h>
 
-#include <utils_path/common/Pose2d.h>
-#include <utils_path/common/GridMap2d.h>
+#include <cslibs_path_planning/common/Pose2d.h>
+#include <cslibs_path_planning/common/GridMap2d.h>
 
 namespace lib_path {
 

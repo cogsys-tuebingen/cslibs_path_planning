@@ -1,5 +1,5 @@
 /// HEADER
-#include <utils_path/common/RotatedGridMap2d.h>
+#include <cslibs_path_planning/common/RotatedGridMap2d.h>
 
 lib_path::RotatedGridMap2d::RotatedGridMap2d( const unsigned int w, const unsigned int h, const double yaw, const double r )
     : SimpleGridMap2d(w, h, r), yaw_(yaw)

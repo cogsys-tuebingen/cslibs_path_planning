@@ -6,10 +6,10 @@
  */
 
 /// HEADER
-#include <utils_path/evaluation/evaluator.h>
+#include <cslibs_path_planning/evaluation/evaluator.h>
 
 /// COMPONENT
-#include <utils_path/evaluation/MapGenerators.hpp>
+#include <cslibs_path_planning/evaluation/MapGenerators.hpp>
 
 /// PROJECT
 #include <utils_general/Stopwatch.h>

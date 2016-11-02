@@ -14,7 +14,7 @@
 
 /// PROJECT
 #include <utils_generic/Utils.hpp>
-#include <utils_general/CDUniTuebingen.hpp>
+#include <cslibs_utils/CDUniTuebingen.hpp>
 
 /// SYSTEM
 #include <boost/static_assert.hpp>

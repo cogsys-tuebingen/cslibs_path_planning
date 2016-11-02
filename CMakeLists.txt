@@ -15,13 +15,13 @@ else()
     message(STATUS "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif()
 
-find_package(catkin REQUIRED COMPONENTS utils_general utils_generic)
+find_package(catkin REQUIRED COMPONENTS cslibs_utils utils_generic)
 
 find_package(Boost COMPONENTS program_options system filesystem thread REQUIRED)
 catkin_package(
     INCLUDE_DIRS include
     LIBRARIES ${PROJECT_NAME}
-    CATKIN_DEPENDS utils_generic utils_general
+    CATKIN_DEPENDS utils_generic cslibs_utils
     )
 
 find_package(OpenCV)

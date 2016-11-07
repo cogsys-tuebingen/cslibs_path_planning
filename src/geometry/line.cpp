@@ -58,7 +58,6 @@ void Line::toPoses(double resolution, PathPoseVec &poses, int move_direction, bo
     Vector2d step=ds.normalized()*resolution;
 
     double theta;
-    int start_idx;
     Vector2d p;
     if (move_direction==path_geom::BACKWARD) {
         p = end_;

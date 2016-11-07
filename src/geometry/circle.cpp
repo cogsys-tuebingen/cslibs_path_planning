@@ -33,7 +33,7 @@ Circle::Circle(const Vector2d& center, double radius, int direction)
 path_geom::Circle Circle::createArcFrom(const PathPose &start, double radius, double arc_angle,
                                     int arc_direction)
 {
-    double start_angle, end_angle;
+    double start_angle;
     if (arc_direction==path_geom::ARC_LEFT) {
         start_angle=start.theta_- M_PI/2.0;
     } else {

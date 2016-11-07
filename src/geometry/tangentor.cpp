@@ -243,11 +243,7 @@ void Tangentor::tangentPath(const Circle &small, const Circle &large, double rad
         Intersector::intersectArcs(tcircle, large, ipoints_large,tol);
         if (ipoints_small.size()==1 && ipoints_large.size()==1) {
             std::cout << "touches both small and large" << std::endl;
-            if (from_small) {
-                bool ponline1 = tcircle.selectStartPoint(ipoints_small.front());
-                bool ponline2 = tcircle.selectEndPoint(ipoints_large.front());
-
-            } else {
+            if (!from_small) {
                 tcircle.selectStartPoint(ipoints_large.front());
                 tcircle.selectEndPoint(ipoints_small.front());
             }
@@ -274,7 +270,6 @@ void Tangentor::tangentPath(const Circle &small, const Circle &large, double rad
     std::shared_ptr<Circle> tangent_arc = make_aligned<Circle>(*min_it);
     std::shared_ptr<Circle> small_arc = make_aligned<Circle>(small);
     std::shared_ptr<Circle> large_arc = make_aligned<Circle>(large);
-    bool status;
     if (from_small) {
         small_arc->selectEndPoint(tangent_arc->startPoint());
         large_arc->selectStartPoint(tangent_arc->endPoint());

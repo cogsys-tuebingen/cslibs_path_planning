@@ -100,11 +100,7 @@ void Intersector::intersectArcs(const Circle &c1, const Circle &c2, std::vector<
     intersect(c1,c2,ipoints,tol);
 
     for (auto& ip : ipoints) {
-        // check each intersection point if it is part of both arcs
-//        std::cout << "ipoitn to check "<<ip << std::endl;
-        Vector2d d1=c1.center()-ip;
-        Vector2d d2=c2.center()-ip;
-
+        // check each intersection point if it is part of both arcs      
         if (c1.isPointOnArc(ip) && c2.isPointOnArc(ip)) {
             res_points.push_back(ip);
         }

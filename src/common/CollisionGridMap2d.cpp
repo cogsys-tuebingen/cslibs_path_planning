@@ -108,7 +108,7 @@ void RobotArea::begin() {
      * @return False if there are no more cells.
      */
 bool RobotArea::next() {
-    return ++idx < cells_.size();
+    return ++idx < (int) cells_.size();
 }
 
 /**

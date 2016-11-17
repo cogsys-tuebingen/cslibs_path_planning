@@ -8,6 +8,7 @@
 /// HEADER
 #include <cslibs_path_planning/ReedsShepp/CircleSegment.h>
 
+using namespace std;
 using namespace lib_path;
 
 CircleSegment::CircleSegment(ORIENTATION orientation, DIRECTION direction)

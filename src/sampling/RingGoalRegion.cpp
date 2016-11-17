@@ -10,6 +10,7 @@
 #include <time.h>
 #include <cslibs_path_planning/sampling/RingGoalRegion.h>
 
+using namespace std;
 using namespace lib_path;
 
 RingGoalRegion::RingGoalRegion(const Point2d &center, double radius, double width)

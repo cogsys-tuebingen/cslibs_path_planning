@@ -57,7 +57,7 @@ namespace path_geom {
     * eigen::aligend make_shared replacement
     */
    template <class T, class... Args>
-   shared_ptr<T> make_aligned(Args&&... args)
+   std::shared_ptr<T> make_aligned(Args&&... args)
    {
        return std::allocate_shared<T>(Eigen::aligned_allocator<T>(),std::forward<Args>(args)...);
    }
@@ -98,7 +98,7 @@ public:
         return ((pos_-other).norm()<dist_tol);
     }
 
-    friend ostream& operator<<(ostream& os, const PathPose& pp);
+    friend std::ostream& operator<<(std::ostream& os, const PathPose& pp);
 
 
 
@@ -126,7 +126,7 @@ public:
     virtual double distanceTo(const Eigen::Vector2d& point) const = 0;
     virtual Eigen::Vector2d nearestPointTo(const Eigen::Vector2d& p) const  = 0;
 
-    static shared_ptr<Shape> deepCopy(const shared_ptr<Shape>&src);
+    static std::shared_ptr<Shape> deepCopy(const std::shared_ptr<Shape>&src);
 };
 }
 #endif // SHAPE_H

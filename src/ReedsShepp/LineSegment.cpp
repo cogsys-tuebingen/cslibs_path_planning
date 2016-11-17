@@ -14,6 +14,7 @@
 /// SYSTEM
 #include <stdlib.h>
 
+using namespace std;
 using namespace lib_path;
 
 LineSegment::LineSegment(DIRECTION direction)

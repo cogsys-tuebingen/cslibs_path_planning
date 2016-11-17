@@ -21,7 +21,7 @@ class Intersector
 public:
 
     static bool intersect (const Line& l1, const Line& l2,
-                           Vector2d &intersection, double tol = path_geom::DIST_EPS);
+                           Eigen::Vector2d &intersection, double tol = path_geom::DIST_EPS);
     static void intersect (const Circle& c1, const Circle& c2,
                            std::vector<Eigen::Vector2d>& res_points, double tol = path_geom::DIST_EPS);
     static void intersect(const Line& line, const Circle& circle,std::vector<Eigen::Vector2d> &res_points,

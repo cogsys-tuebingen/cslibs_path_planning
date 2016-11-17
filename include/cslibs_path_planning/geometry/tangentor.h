@@ -25,7 +25,7 @@ public:
 
 
 
-    static void tangentPath(const shared_ptr<path_geom::Shape>& shape, const path_geom::Circle& circle, double radius,
+    static void tangentPath(const std::shared_ptr<path_geom::Shape>& shape, const path_geom::Circle& circle, double radius,
                             bool first_to_second, std::vector<std::shared_ptr<Shape>>& path, double tol=path_geom::DIST_EPS);
 
     /**

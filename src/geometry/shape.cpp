@@ -11,11 +11,10 @@
 #include <cslibs_path_planning/geometry/shape.h>
 #include <cslibs_path_planning/geometry/line.h>
 #include <cslibs_path_planning/geometry/circle.h>
+
+using namespace std;
 using namespace Eigen;
 using namespace path_geom;
-
-
-
 
 ostream& operator<<(ostream& os, const PathPose& pp)
 {

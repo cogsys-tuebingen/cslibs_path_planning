@@ -65,7 +65,7 @@ public:
         }
     }
 
-    virtual double distanceTo(const Vector2d &point) const;
+    virtual double distanceTo(const Eigen::Vector2d &point) const;
     virtual Eigen::Vector2d nearestPointTo(const Eigen::Vector2d& p) const;
 
     /**
@@ -132,7 +132,7 @@ public:
      */
     static bool compareArcAngle(const Circle& a, const Circle& b);
 
-    static bool compareArcAnglePtr(const shared_ptr<Circle>& a, const shared_ptr<Circle>& b);
+    static bool compareArcAnglePtr(const std::shared_ptr<Circle>& a, const std::shared_ptr<Circle>& b);
 
 protected:
     Eigen::Vector2d center_;

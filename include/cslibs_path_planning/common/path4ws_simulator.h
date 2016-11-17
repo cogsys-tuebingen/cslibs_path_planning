@@ -12,7 +12,6 @@
 #include <vector>
 #include <opencv/cv.h>
 
-using namespace std;
 struct Bot4ws
 {
   Bot4ws()

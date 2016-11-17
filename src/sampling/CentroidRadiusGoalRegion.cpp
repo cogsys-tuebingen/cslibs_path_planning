@@ -8,6 +8,7 @@
 #include <cslibs_path_planning/sampling/CentroidRadiusGoalRegion.h>
 
 using namespace lib_path;
+using namespace Eigen;
 
 CentroidRadiusGoalRegion::CentroidRadiusGoalRegion (const Point2d &src, const Point2d &center, double radius, double angle_rad)
   : src_ (src), center_ (center), radius_ (radius), angle_rad_ (angle_rad), counter_ (0), samples_num_ (0)

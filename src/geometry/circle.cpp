@@ -15,6 +15,8 @@
 #include <cslibs_path_planning/geometry/intersector.h>
 #include <cslibs_path_planning/geometry//line.h>
 #include <cslibs_path_planning/geometry//circle.h>
+
+using namespace std;
 using namespace path_geom;
 using namespace Eigen;
 

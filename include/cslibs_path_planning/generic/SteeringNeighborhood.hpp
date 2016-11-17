@@ -119,9 +119,9 @@ struct SteeringNeighborhood :
     template <class NodeType>
     static double advance(const NodeType* reference, SearchOptions& so, int i, int step, double& x_, double& y_, double& theta_, bool& forward_, int& steering_angle_, char& custom, double map_rotation) {
         bool initial = reference->depth < 1;
-        if(initial && (i != 0 && i != 5)) {
-            return -1;
-        }
+//        if(initial && (i != 0 && i != 5)) {
+//            return -1;
+//        }
 
         int max_steer_angle_for_turn = 0;
 

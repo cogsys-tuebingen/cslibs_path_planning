@@ -12,8 +12,10 @@
 
 #include <cslibs_path_planning/geometry/line.h>
 
+using namespace std;
 using namespace path_geom;
 using namespace Eigen;
+
 Line::Line(const Eigen::Vector2d& start, const Eigen::Vector2d& end)
     :start_(start), end_(end)
 {

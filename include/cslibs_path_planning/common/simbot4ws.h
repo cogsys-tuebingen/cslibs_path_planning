@@ -10,7 +10,6 @@
 #ifndef SIMBOT4WS_H
 #define SIMBOT4WS_H
 #include <Eigen/Core>
-using namespace Eigen;
 class SimBot4Ws
 {
 public:

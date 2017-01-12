@@ -464,7 +464,7 @@ protected:
         updates = 0;
 
         result = {};
-        goal_candidates = {};
+        goal_candidates = std::priority_queue<GoalCandidate, std::vector<GoalCandidate>, PairDistance>();
         open.clear();
 
         start = nullptr;

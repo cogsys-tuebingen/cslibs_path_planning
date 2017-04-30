@@ -60,6 +60,7 @@ set(SOURCES
     src/geometry/shape.cpp
     src/geometry/tangentor.cpp
     src/generic/heuristics.cpp
+    src/generic/DynamicSteeringNeighborhood.cpp
     src/sampling/GoalRegion.cpp
     src/sampling/RingGoalRegion.cpp
     src/sampling/CentroidRadiusGoalRegion.cpp

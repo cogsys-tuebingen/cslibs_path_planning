@@ -30,7 +30,7 @@ struct DynamicSteeringNeighborhood : public NeighborhoodBase
     static double goal_dist_threshold;
     static double goal_angle_threshold;
 
-    static int steer_steps;
+    static unsigned int steer_steps;
 
     static double setResolution(double res) {
         resolution = res;

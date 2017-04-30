@@ -306,8 +306,8 @@ struct HeuristicHolonomicObstacles {
         double HORIZ = 1.0;
         double DIAG = std::sqrt(2) * HORIZ;
 
-        for(int row = 0; row < h; ++row) {
-            for(int col = 0; col < w; ++col) {
+        for(unsigned int row = 0; row < h; ++row) {
+            for(unsigned int col = 0; col < w; ++col) {
                 if(!map->isOccupied(col, row, 0)) {
                     cost(col, row) = std::numeric_limits<double>::max();
                 } else {
@@ -325,8 +325,8 @@ struct HeuristicHolonomicObstacles {
             ++iteration;
             change = false;
 
-            for(int row = 1; row < h-1; ++row) {
-                for(int col = 1; col < w-1; ++col) {
+            for(unsigned int row = 1; row < h-1; ++row) {
+                for(unsigned int col = 1; col < w-1; ++col) {
                     double& d = cost(col, row);
                     bool free = d != std::numeric_limits<double>::infinity();
 

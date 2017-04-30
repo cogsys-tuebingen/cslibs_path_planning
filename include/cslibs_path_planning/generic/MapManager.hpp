@@ -212,7 +212,7 @@ struct GridMapManager :
     }
 
     NodeType* lookup(const int x, const int y) const {
-        if((x < 0) || (y < 0) || (x >= w) || (y >= h)) {
+        if((x < 0) || (y < 0) || (x >= (int) w) || (y >= (int) h)) {
             throw OutsideMapException();
         }
         return &data[index(x,y)];
@@ -613,7 +613,7 @@ public:
         return lookup((int) std::floor(x), (int) std::floor(y), theta, steering_angle, forward);
     }
     NodeType* lookup(const int x, const int y, unsigned t, int steering_angle, bool forward) const {
-        if((x < -padding) || (y < -padding) || (x >= (int) (w + padding)) || (y >= (int) (h + padding)) || (t < 0) || (t >= (int) theta_slots)) {
+        if((x < -padding) || (y < -padding) || (x >= (int) (w + padding)) || (y >= (int) (h + padding)) || (t < 0) || (t >= theta_slots)) {
             throw OutsideMapException();
         }
         int cx = (x / (int) chunk_size);

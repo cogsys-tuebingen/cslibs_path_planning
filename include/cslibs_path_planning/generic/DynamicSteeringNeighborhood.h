@@ -215,11 +215,14 @@ struct DynamicSteeringNeighborhood : public NeighborhoodBase
 
         double r_map = r_world / resolution;
 
-        if(allow_forward && allow_backward) {
+        //if(allow_forward && allow_backward) {
             int straight_dir_switch = std::round(2.0 / distance_step);
 
             bool direction_switch = reference->forward != forward_;
             if(direction_switch) {
+                if(!allow_forward || !allow_backward) {
+                    return -1;
+                }
                 if(reference->custom > 0) {
                     return -1;
                 }
@@ -256,7 +259,7 @@ struct DynamicSteeringNeighborhood : public NeighborhoodBase
                     custom = 0;
                 }
             }
-        }
+        //}
 
 
         double dx, dy;

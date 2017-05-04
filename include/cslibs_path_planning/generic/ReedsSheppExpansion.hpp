@@ -67,7 +67,6 @@ struct ReedsSheppExpansion
             min_cost = cost;
 
             n = N * (min_cost / initial_cost);
-            //            std::cout << initial_cost << " vs. " << cost << " -> N from " << N << " to " << n << std::endl;
         }
 
         if(current < n) {

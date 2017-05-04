@@ -182,12 +182,10 @@ struct GridMapManager :
         bool delete_first = alloc && data != NULL;
 
         if(delete_first) {
-            std::cout << "delete old map" << std::endl;
             delete[] data;
         }
 
         if(alloc) {
-            std::cout << "[GMM] allocate new map" << std::endl;
             data = new NodeType[w * h];
         }
         for(unsigned y = 0; y < h; ++y) {
@@ -263,12 +261,10 @@ public:
         bool delete_first = alloc && data != NULL;
 
         if(delete_first) {
-            std::cout << "delete old map" << std::endl;
             delete[] data;
         }
 
         if(alloc) {
-            std::cout << "[SSM] allocate new map" << std::endl;
             data = new NodeType[w * h * theta_slots];
         }
 
@@ -356,12 +352,10 @@ public:
         bool delete_first = alloc && data != NULL;
 
         if(delete_first) {
-            std::cout << "delete old map" << std::endl;
             delete[] data;
         }
 
         if(alloc) {
-            std::cout << "[DSSM] allocate new map of size " << (2 * dimension * sizeof(NodeType) / 1e6) << " MB" << std::endl;
             data = new NodeType[2 * dimension];
         }
 
@@ -638,7 +632,6 @@ public:
 
     bool hasNode(const int x, const int y, unsigned t, bool forward) const {
         if((x < -padding) || (y < -padding) || (x >= (int) (w + padding)) || (y >= (int) (h + padding)) || (t < 0) || (t >= (int) theta_slots)) {
-            std::cerr << "! has node: " << x << " / " << y << std::endl;
             throw OutsideMapException();
         }
         int cx = (x / chunk_size);

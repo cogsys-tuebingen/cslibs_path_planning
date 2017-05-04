@@ -367,10 +367,8 @@ struct HeuristicHolonomicObstacles {
                 }
             }
         }
-        std::cout << "initializing heuristic took " << iteration << " iteratiions" << std::endl;
     }
     static void init(const Parameter& param) {
-        std::cout << "init called" << std::endl;
     }
 
 private:
@@ -467,19 +465,15 @@ private:
         assert(a < angles);
 
         if(x_precomp < 0 || x_precomp >= dimension) {
-//            std::cout << "x=" << x_grid_rot * resolution_map << " is out of range +-" << (dimension / 2 * resolution_precomp) << std::endl;
             current->h = 0;
             return;
         }
         if(y_precomp < 0 || y_precomp >= dimension) {
-//            std::cout << "y=" << y_grid_rot * resolution_map << " is out of range +-" << (dimension / 2 * resolution_precomp) << std::endl;
             current->h = 0;
             return;
         }
 
         int idx = (dimension - y_precomp) * dimension + x_precomp;
-
-//        assert(std::abs(current->h - hypot(current->x-goal->x, current->y-goal->y)) < 0.1);
 
         current->h = res * costs[a].second[idx] * resolution_factor;
     }
@@ -491,7 +485,6 @@ private:
     void read() {
         std::ifstream ifs(param.file_.c_str());
 
-        std::cout << "reading: " << param.file_ << std::endl;
         assert(ifs.is_open());
 
         ifs >> dimension;

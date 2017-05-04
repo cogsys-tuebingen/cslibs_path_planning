@@ -50,12 +50,10 @@ public:
                 open.pop();
 
             } else {
-                std::cout << "find random" << std::endl;
                 current = getRandomUnvisitedCell();
                 mark(current);
             }
         }
-        std::cout << "done" << std::endl;
 
         assert(expanded == N);
     }
@@ -206,7 +204,6 @@ public:
     HilbertCurve(int width, cv::Mat orig_map)
         : Maze<Pt>(width, orig_map)
     {
-        std::cout << "width: " << width << std::endl;
     }
 
     void run(const Pt& start, const Pt& goal) {

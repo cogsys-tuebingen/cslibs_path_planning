@@ -25,21 +25,16 @@ Node::Node(waypoint_t position, double distance, double prediction, Node* parent
 void Node::update(Node* node) {
 	if (node->mDistance >= mDistance)
 		return;
-	if (mVisited)
-		std::cout << "Node was already visited and should not be updated." << std::endl;
 	mDistance = node->mDistance;
 	mParent = node->mParent;
 }
 
 void Node::update(double distance, Node* newParent) {
-	if (mVisited)
-		std::cout << "Node was already visited and should not be updated." << std::endl;
 	mDistance = distance;
 	mParent = newParent;
 }
 
 void Node::setVisited() {
-	//cout << "Set visited Node " << mPosition.x << ", " << mPosition.y << endl;
 	mVisited = true;
 }
 

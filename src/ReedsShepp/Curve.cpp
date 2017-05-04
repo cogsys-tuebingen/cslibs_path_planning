@@ -96,7 +96,6 @@ double Curve::check_if_admissible()
     m_weight = NOT_FREE;
 
     if(m_sequence.size() < 3 || m_sequence.size() > 4) {
-        std::cerr << "invalid sequence" << std::endl;
         return NOT_FREE;
     }
 
@@ -106,14 +105,12 @@ double Curve::check_if_admissible()
     }
 
     if(m_sequence.size() < 3) {
-        std::cerr << "invalid sequence, length " << m_sequence.size() << " < 3" << std::endl;
         return NOT_FREE;
     }
 
     init_segments();
 
     if(!handle_sequence()) {
-        std::cerr << "unknown sequence" << std::endl;
     }
 
     return m_weight;
@@ -260,7 +257,6 @@ void Curve::init_circle_pairs(Pose2d& next_to, circle_pair& target)
 bool Curve::is_valid()
 {
     if(m_weight < 0.001) {
-        std::cout << "WARNING:curve with cost 0"<<std::endl;
         return false;
     }  else {
         return m_weight < NOT_FREE;
@@ -299,7 +295,7 @@ void Curve::reset_iteration()
 bool Curve::has_next()
 {
     if(!m_iterating) {
-        std::cerr << "*** [RS] SEVERE CODE ERROR, ITERATION NOT STARTET ***" << std::endl;
+        std::cerr << "*** [RS] SEVERE CODE ERROR, ITERATION NOT STARTED ***" << std::endl;
     }
 
     if(m_output_number < m_sequence.size()) {
@@ -315,7 +311,7 @@ bool Curve::has_next()
 Pose2d Curve::next()
 {
     if(!m_iterating) {
-        std::cerr << "*** [RS] SEVERE CODE ERROR, ITERATION NOT STARTET ***" << std::endl;
+        std::cerr << "*** [RS] SEVERE CODE ERROR, ITERATION NOT STARTED ***" << std::endl;
     }
 
     CurveSegment* current_segment = m_sequence[m_output_number];

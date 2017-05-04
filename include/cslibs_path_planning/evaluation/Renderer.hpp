@@ -241,7 +241,6 @@ struct MapRenderer : public SearchAlgorithm {
 
     void render_factor_mult(double d) {
         render_factor = std::max(0.2, render_factor * d);
-        std::cout << "new factor:" << render_factor << std::endl;
     }
 
     void render_offset_add(double offset) {

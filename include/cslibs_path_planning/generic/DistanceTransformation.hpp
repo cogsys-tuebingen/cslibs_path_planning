@@ -167,7 +167,6 @@ protected:
         path.push_back(*start);
 
         while(current != goal) {
-            std::cout << current->x << ", " << current->y << std::endl;
             NodeT* best = current;
             for(int i = 0; i < NeighborhoodType::SIZE; ++i) {
                 int xx = NeighborhoodType::dx(current->x,i);
@@ -183,7 +182,6 @@ protected:
             }
 
             if(best == current) {
-                std::cout << "done, no path found" << std::endl;
                 return path;
             }
 
@@ -192,7 +190,6 @@ protected:
             current = best;
         }
 
-        std::cout << "found path" << std::endl;
         return path;
     }
 

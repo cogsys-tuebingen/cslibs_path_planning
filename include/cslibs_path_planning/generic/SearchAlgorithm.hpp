@@ -191,7 +191,6 @@ public:
     {
         if(goal_candidates.empty()) {
             first_candidate_weight = current->getTotalCost();
-            std::cerr << "find first candidate with distance " << current->getTotalCost() << ", oversearch is " << search_options.oversearch_distance << std::endl;
         }
         goal_candidates.push(std::make_tuple(current, cost));
 
@@ -446,14 +445,10 @@ protected:
         if(!goal_candidates.empty()) {
             // generate the path
             GoalCandidate best = goal_candidates.top();
-            std::cout << "done, selecting the best goal out of " << goal_candidates.size() << " candidates\n";
-            std::cout << "best dist: " <<  std::get<1>(best) << std::endl;
             auto res = backtrack(start,  std::get<0>(best));
-            std::cout << "length: " <<  res.size() << std::endl;
             return res;
         }
 
-        std::cerr << "done, no path found" << std::endl;
         return {};
     }
 
@@ -473,8 +468,6 @@ protected:
 
     void initStartPose(const PointT& pose)
     {
-        std::cerr << "start: " << pose.x <<  " / " << pose.y << std::endl;
-
         try {
             start = map_.lookup(pose);
         } catch(const OutsideMapException& e) {
@@ -492,15 +485,11 @@ protected:
             // put start node in open data structure
             open.add(start);
         }
-
-        std::cerr << "start pose: " << start->x <<  " / " << start->y << std::endl;
     }
 
 
     void initStartNode(const NodeT& node)
     {
-        std::cerr << "start node: " << node.x <<  " / " << node.y << " / " << node.theta << std::endl;
-
         try {
             start = map_.lookup(node);
         } catch(const OutsideMapException& e) {
@@ -518,14 +507,10 @@ protected:
             // put start node in open data structure
             open.add(start);
         }
-
-        std::cerr << "start node: " << start->x <<  " / " << start->y << " / " << start->theta << std::endl;
     }
 
     void initGoalPose(const PointT& pose)
     {
-        std::cerr << "goal: " << pose.x <<  " / " << pose.y << std::endl;
-
         try {
             goal = map_.lookup(pose);
         } catch(const OutsideMapException& e) {
@@ -540,15 +525,11 @@ protected:
             NodeT::init(*goal, pose);
             goal->theta = pose.theta;
         }
-
-        std::cerr << "goal pose: " << goal->x <<  " / " << goal->y << std::endl;
     }
 
     bool hasPoseBeenReached(const NodeT* current)
     {
         if(AnalyticExpansionType::canExpand(current, goal, map_.getMap())) {
-            std::cout << "found an expansion: theta=" << current->theta << ", goal=" << goal->theta << std::endl;
-
             PathT expansion;
             AnalyticExpansionType::getPath(&expansion);
 
@@ -566,7 +547,6 @@ protected:
             double dist_to_goal = std::hypot(goal->x - current->x, goal->y - current->y);
 
             if(dist_to_goal < 1e-3) {
-                std::cout << "done, found the goal - dist: " << dist_to_goal << std::endl;
                 result = backtrack(start, current);
                 return true;
             }
@@ -643,7 +623,6 @@ public:
 
         while(current != start){
             if(contained.find(current) != contained.end()) {
-                std::cerr << "found path contains a loop! abort!" << std::endl;
                 return {};
             }
 

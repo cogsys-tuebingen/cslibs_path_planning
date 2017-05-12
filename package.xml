@@ -1,13 +1,14 @@
 <?xml version="1.0"?>
 <package>
   <name>cslibs_path_planning</name>
-  <version>0.0.1</version>
+  <version>1.0.0</version>
   <description>This package provides different path planning algorithms.</description>
 
-  <maintainer email="sebastian.buck@uni-tuebingen.de">buck</maintainer>
+  <author email="sebastian.buck@uni-tuebingen.de">Sebastian Buck</author>
+
+  <maintainer email="sebastian.buck@uni-tuebingen.de">Sebastian Buck</maintainer>
 
   <license>BSD</license>
-  <author email="sebastian.buck@uni-tuebingen.de">buck</author>
 
   <buildtool_depend>catkin</buildtool_depend>
 

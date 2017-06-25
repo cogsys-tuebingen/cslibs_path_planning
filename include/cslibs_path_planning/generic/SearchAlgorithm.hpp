@@ -571,17 +571,19 @@ protected:
 
     bool hasPoseBeenReached(const NodeT* current)
     {
-        if(AnalyticExpansionType::canExpand(current, goal, map_.getMap())) {
-            PathT expansion;
-            AnalyticExpansionType::getPath(&expansion);
+        for(const NodeT* g : goal) {
+            if(AnalyticExpansionType::canExpand(current, g, map_.getMap())) {
+                PathT expansion;
+                AnalyticExpansionType::getPath(&expansion);
 
-            NodeT tmp = *current;
-            tmp.theta = expansion.begin()->theta;
+                NodeT tmp = *current;
+                tmp.theta = expansion.begin()->theta;
 
-            PathT path = backtrack(&tmp);
-            path.insert(path.end(), expansion.begin(), expansion.end());
-            result = path;
-            return true;
+                PathT path = backtrack(&tmp);
+                path.insert(path.end(), expansion.begin(), expansion.end());
+                result = path;
+                return true;
+            }
         }
 
         // check if the current node is a goal candiate

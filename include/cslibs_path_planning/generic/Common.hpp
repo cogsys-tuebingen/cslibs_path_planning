@@ -154,6 +154,28 @@ struct DirectionalNode : public Node {
         Node::init(memory, x, y, theta);
         memory.forward = forward;
     }
+
+    template <class AnyPoint, class Map>
+    static std::vector<NodeType*> getPoses(Map& map, const AnyPoint& p)
+    {
+        std::vector<NodeType*> res;
+
+        NodeType forward;
+        NodeType::init(forward, p);
+        forward.forward = true;
+        auto* start_forward = map.lookup(forward);
+        start_forward->forward = true;
+        res.push_back(start_forward);
+
+        NodeType reverse;
+        NodeType::init(reverse, p);
+        reverse.forward = false;
+        auto* start_reverse = map.lookup(reverse);
+        start_reverse->forward = false;
+        res.push_back(start_reverse);
+
+        return res;
+    }
 };
 
 

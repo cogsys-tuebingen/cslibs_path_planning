@@ -46,6 +46,19 @@ struct HeuristicNode : public Node<PointT> {
         memory.h = 0;
     }
 
+    template <class AnyPoint, class Map>
+    static std::vector<NodeType*> getPoses(Map& map, const AnyPoint& p)
+    {
+        std::vector<NodeType*> res;
+
+        NodeType n;
+        NodeType::init(n, p);
+        auto* start_forward = map.lookup(n);
+        res.push_back(start_forward);
+
+        return res;
+    }
+
     double h;
 };
 
@@ -95,6 +108,20 @@ struct DHeuristicNode : public HeuristicNode<PointT> {
         memory.rhs = INFINITY;
         memory.key1 = INFINITY;
         memory.key2 = INFINITY;
+    }
+
+
+    template <class AnyPoint, class Map>
+    static std::vector<NodeType*> getPoses(Map& map, const AnyPoint& p)
+    {
+        std::vector<NodeType*> res;
+
+        NodeType n;
+        NodeType::init(n, p);
+        auto* start_forward = map.lookup(n);
+        res.push_back(start_forward);
+
+        return res;
     }
 
     double rhs, key1, key2;

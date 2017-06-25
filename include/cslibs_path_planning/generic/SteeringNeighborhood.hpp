@@ -118,10 +118,13 @@ struct SteeringNeighborhood :
 
     template <class NodeType>
     static double advance(const NodeType* reference, SearchOptions& so, int i, int step, double& x_, double& y_, double& theta_, bool& forward_, int& steering_angle_, char& custom, double map_rotation) {
+        forward_ = (i < 3) ;
         bool initial = reference->depth < 1;
-//        if(initial && (i != 0 && i != 5)) {
-//            return -1;
-//        }
+
+        if(initial &&  reference->forward != forward_) {
+            // initially keep the last direction
+            return -1;
+        }
 
         int max_steer_angle_for_turn = 0;
 
@@ -131,35 +134,35 @@ struct SteeringNeighborhood :
                 return -1;
             }
         }
-        if(!reversed) {
-            if(initial) {
-                // if we begin at the start and go backwards, we add a special straight segment here
-                if (i > 3) {
-                    return -1;
-                }
-                if (i == 3) {
-                    if(step != 0) {
-                        return -1;
-                    }
+//        if(!reversed) {
+//            if(initial) {
+//                // if we begin at the start and go backwards, we add a special straight segment here
+//                if (i > 3) {
+//                    return -1;
+//                }
+//                if (i == 3) {
+//                    if(step != 0) {
+//                        return -1;
+//                    }
 
-                    forward_ = false;
+//                    forward_ = false;
 
-                    double ds = -LA;
-                    double ds_map = ds / resolution;
-                    double dx = ds_map * std::cos(reference->theta);
-                    double dy = ds_map * std::sin(reference->theta);
+//                    double ds = -LA;
+//                    double ds_map = ds / resolution;
+//                    double dx = ds_map * std::cos(reference->theta);
+//                    double dy = ds_map * std::sin(reference->theta);
 
-                    steering_angle_ = 0;
-                    custom = 0;
+//                    steering_angle_ = 0;
+//                    custom = 0;
 
-                    x_ = reference->x + dx;
-                    y_ = reference->y + dy;
-                    theta_ = reference->theta;
-                    return std::abs(ds_map) * so.penalty_backward;
-                }
-            }
+//                    x_ = reference->x + dx;
+//                    y_ = reference->y + dy;
+//                    theta_ = reference->theta;
+//                    return std::abs(ds_map) * so.penalty_backward;
+//                }
+//            }
 
-        }
+//        }
 
         double cost = distance_step_pixel;
 
@@ -206,7 +209,6 @@ struct SteeringNeighborhood :
         //        cost *= std::abs(steering_angle) / MAX_STEER_ANGLE * 1.1;
 
         // check driving direction
-        forward_ = (i < 3) ;
         double dir = forward_ ? 1.0 : -1.0;
         if(reversed) {
             dir *= -1.0;

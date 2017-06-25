@@ -11,9 +11,9 @@ struct SteeringNode : public Node {
     typedef typename Node::PointType PointType;
     typedef SteeringNode<Node> NodeType;
 
-    float theta;
+//    float theta;
     int steering_angle;
-    bool forward;
+//    bool forward;
     int depth;
 
     template <class AnyPoint>
@@ -21,7 +21,7 @@ struct SteeringNode : public Node {
         Node::init(memory, p);
         memory.theta = 0.0f;
         memory.steering_angle = 0.0f;
-        memory.forward = true;
+//        memory.forward = true;
         memory.depth = 0;
     }
 
@@ -30,7 +30,7 @@ struct SteeringNode : public Node {
         Node::init(memory, x, y);
         memory.theta = theta;
         memory.steering_angle = steering_angle;
-        memory.forward = forward;
+//        memory.forward = forward;
         memory.depth = 0;
     }
 };

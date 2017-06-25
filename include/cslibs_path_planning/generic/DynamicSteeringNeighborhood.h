@@ -49,30 +49,31 @@ struct DynamicSteeringNeighborhood : public NeighborhoodBase
         double eff_gx = goal->x;
         double eff_gy = goal->y;
 
-        if(reversed) {
-            if(reference->custom > 0) {
-                return false;
-            }
+//        if(reversed) {
+//            if(reference->custom > 0) {
+//                return false;
+//            }
 
-            // if we begin at the goal and go backwards, we add a special straight segment at the start
-            if(!reference->forward) {
-                double theta = goal->theta;
-                double dx = -std::cos(theta) * LA / resolution;
-                double dy = -std::sin(theta) * LA / resolution;
+//            // if we begin at the goal and go backwards, we add a special straight segment at the start
+//            if(!reference->forward) {
+//                double theta = goal->theta;
+//                double dx = -std::cos(theta) * LA / resolution;
+//                double dy = -std::sin(theta) * LA / resolution;
 
-                eff_gx += dx;
-                eff_gy += dy;
-            }
-        }
+//                eff_gx += dx;
+//                eff_gy += dy;
+//            }
+//        }
 
-        int delta = 4 * distance_step_pixel;
-        if(std::abs(eff_gx - reference->x) > delta ||
-                std::abs(eff_gy - reference->y) > delta) {
-            return false;
-        }
+//        int delta = 4 * distance_step_pixel;
+//        if(std::abs(eff_gx - reference->x) > delta ||
+//                std::abs(eff_gy - reference->y) > delta) {
+//            return false;
+//        }
 
         double cell_dist = hypot(eff_gx - reference->x, eff_gy - reference->y);
         double dist = cell_dist * resolution;
+
 
         // euclidean distance
         if(dist < goal_dist_threshold) {
@@ -81,42 +82,46 @@ struct DynamicSteeringNeighborhood : public NeighborhoodBase
 
 
         // check, if goal is near the segment through reference an its predecessor
-        if(reference->prev) {
-            Eigen::Vector2d p (reference->prev->x, reference->prev->y);
-            Eigen::Vector2d r (reference->x, reference->y);
-            Eigen::Vector2d g (eff_gx, eff_gy);
+//        if(reference->prev) {
+//            Eigen::Vector2d p (reference->prev->x, reference->prev->y);
+//            Eigen::Vector2d r (reference->x, reference->y);
+//            Eigen::Vector2d g (eff_gx, eff_gy);
 
-            p *=  resolution;
-            r *=  resolution;
-            g *=  resolution;
+//            p *=  resolution;
+//            r *=  resolution;
+//            g *=  resolution;
 
-            // calculate distance of goal to the line segment through current and prev
-            //  if the projection of goal falls onto the segment, check if the distance is small enough
-            double line_distance;
-            double l2 = (p-r).squaredNorm();
-            if(l2 <= 0.0001) { // v ~= w
-                line_distance = (g - p).norm();
-            } else {
-                double t = (g - p).dot(r - p) / l2;
+//            // calculate distance of goal to the line segment through current and prev
+//            //  if the projection of goal falls onto the segment, check if the distance is small enough
+//            double line_distance;
+//            double l2 = (p-r).squaredNorm();
+//            if(l2 <= 0.0001) { // v ~= w
+//                line_distance = (g - p).norm();
+//            } else {
+//                double t = (g - p).dot(r - p) / l2;
 
-                t = std::max(0.0, std::min(1.0, t));
+//                t = std::max(0.0, std::min(1.0, t));
 
-                Eigen::Vector2d project = p + t * (r-p);
+//                Eigen::Vector2d project = p + t * (r-p);
 
-                line_distance = (g-project).norm();
-            }
-            return line_distance < 0.1;
-        }
+//                line_distance = (g-project).norm();
+//            }
+//            return line_distance < 0.1;
+//        }
 
         return false;
     }
 
     template <class NodeType>
     static double advance(const NodeType* reference, SearchOptions& so, int i, int step, double& x_, double& y_, double& theta_, bool& forward_, int& steering_angle_, char& custom, double map_rotation) {
+        forward_ = (i < 3) ;
         bool initial = reference->depth < 1;
-//        if(initial && (i != 0 && i != 5)) {
-//            return -1;
-//        }
+
+        if(initial &&  reference->forward != forward_) {
+            // initially keep the last direction
+            return -1;
+        }
+
 
         int max_steer_angle_for_turn = 0;
 
@@ -201,12 +206,14 @@ struct DynamicSteeringNeighborhood : public NeighborhoodBase
         //        cost *= std::abs(steering_angle) / MAX_STEER_ANGLE * 1.1;
 
         // check driving direction
-        forward_ = (i < 3) ;
         double dir = forward_ ? 1.0 : -1.0;
         if(reversed) {
             dir *= -1.0;
         }
 
+//        if(forward_) {
+//            return -1;
+//        }
         steering_angle_ = steering_angle;
 
         double r_world = LA / std::tan(steering_angle / 180. * M_PI);
@@ -216,22 +223,23 @@ struct DynamicSteeringNeighborhood : public NeighborhoodBase
         double r_map = r_world / resolution;
 
         //if(allow_forward && allow_backward) {
-            int straight_dir_switch = std::round(2.0 / distance_step);
 
-            bool direction_switch = reference->forward != forward_;
+            bool direction_switch = (reference->forward != forward_) && !initial;
             if(direction_switch) {
                 if(!allow_forward || !allow_backward) {
                     return -1;
                 }
+
                 if(reference->custom > 0) {
                     return -1;
                 }
-
                 // only allow to drive straight, if direction changes!
                 if(std::abs(steering_angle) > max_steer_angle_for_turn) {
                     return -1;
                 }
 
+
+                int straight_dir_switch = 1;//std::round(2.0 / distance_step);
                 const NodeType* test = reference;
                 for(int straight_parts = 0; straight_parts < straight_dir_switch - 1; ++straight_parts) {
                     if(!test->prev) {
@@ -283,7 +291,7 @@ struct DynamicSteeringNeighborhood : public NeighborhoodBase
         if(!forward_) {
             // penalize driving backwards
             cost *= so.penalty_backward;
-        }
+        };
 
         return cost * 1;
     }
@@ -292,17 +300,10 @@ struct DynamicSteeringNeighborhood : public NeighborhoodBase
     static void iterateFreeNeighbors(T& algo, Map& map, NodeType* reference) {
         double map_rotation = map.getMap()->getRotation();
 
-        unsigned SIZE = 0;
-        if(allow_forward && !allow_backward) {
-            SIZE = 3;
-        } else if(allow_forward && allow_backward) {
-            SIZE = 6;
-        } else {
-            std::cerr << "backwards only planning is currently not supported." << std::endl;
-            std::abort();
-        }
+        unsigned start = allow_forward ? 0 : 3;
+        unsigned end = allow_backward ? 6 : 3;
 
-        for(unsigned i = 0; i < SIZE; ++i) {
+        for(unsigned i = start; i < end; ++i) {
             for(unsigned step = 0; step <= steer_steps; ++step) {
                 double to_x,to_y, to_theta;
                 bool forward;

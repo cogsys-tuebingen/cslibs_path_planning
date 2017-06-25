@@ -125,7 +125,7 @@ public:
 
 public:
     GenericSearchAlgorithm()
-        : start(NULL), goal(NULL), heuristic_goal(NULL), has_cost_(false), expansions(0), multi_expansions(0), touched(0), updates(0), time_limit_(-1.0)
+        : heuristic_goal(NULL), has_cost_(false), expansions(0), multi_expansions(0), touched(0), updates(0), time_limit_(-1.0)
     {}
 
     virtual void setMap(const MapT* map) {
@@ -141,26 +141,26 @@ public:
         time_limit_ = seconds;
     }
 
-    virtual void setStart(const PointT& from) {
-        assert(map_.getMap() != NULL);
-        start = map_.lookup(from);
-    }
+//    virtual void setStart(const PointT& from) {
+//        assert(map_.getMap() != NULL);
+//        start = map_.lookup(from);
+//    }
 
-    virtual void setGoal(const PointT& to) {
-        assert(map_.getMap() != NULL);
-        goal = map_.lookup(to);
-    }
+//    virtual void setGoal(const PointT& to) {
+//        assert(map_.getMap() != NULL);
+//        goal = map_.lookup(to);
+//    }
 
-    NodeT* getStart() const
-    {
-        return start;
-    }
+//    NodeT* getStart() const
+//    {
+//        return start;
+//    }
 
 
-    NodeT* getGoal() const
-    {
-        return goal;
-    }
+//    NodeT* getGoal() const
+//    {
+//        return goal;
+//    }
 
 
     OpenNodesManager& getOpenList()
@@ -193,13 +193,6 @@ public:
             first_candidate_weight = current->getTotalCost();
         }
         goal_candidates.push(std::make_tuple(current, cost));
-
-        if(goal_candidate_function) {
-            PathT p = backtrack(start, current);
-            if(goal_candidate_function(p)) {
-                // TODO: return this path
-            }
-        }
     }
 
 
@@ -246,7 +239,7 @@ public:
                     generic::CallbackIntermission<INTERMISSION_N_STEPS, INTERMISSION_START_STEPS>
                     >
                     (to, from, intermission);
-            std::reverse(path.begin(), path.end());
+            reverse(path);
             return path;
 
         } else {
@@ -306,9 +299,9 @@ protected:
     void reverse(std::vector<NodeType>& path, typename boost::enable_if_c<NodeTraits<NodeType>::HasForwardField, NodeType>::type* = 0)
     {
         std::reverse(path.begin(), path.end());
-        for(auto& pt : path) {
-            pt.forward = !pt.forward;
-        }
+//        for(auto& pt : path) {
+//            pt.forward = !pt.forward;
+//        }
     }
     template <typename NodeType>
     void reverse(std::vector<NodeType>& path, typename boost::enable_if_c<!NodeTraits<NodeType>::HasForwardField, NodeType>::type* = 0)
@@ -411,8 +404,8 @@ protected:
             }
             current->mark(NodeT::MARK_EXPANDED);
 
-            if(goal) {
-                Heuristic::compute(current, goal, map_.getMap()->getResolution());
+            if(!goal.empty()) {
+                Heuristic::compute(current, *goal.begin(), map_.getMap()->getResolution());
 
             } else if(heuristic_goal) {
                 Heuristic::compute(current, heuristic_goal, map_.getMap()->getResolution());
@@ -428,7 +421,7 @@ protected:
             }
 
             // check if we can return
-            if(!goal_candidates.empty() && search_options.oversearch_distance != 0.0) {
+            if(use_candidates && !goal_candidates.empty()) {
                 if(current->getTotalCost() > first_candidate_weight + search_options.oversearch_distance) {
                     break;
                 }
@@ -445,7 +438,7 @@ protected:
         if(!goal_candidates.empty()) {
             // generate the path
             GoalCandidate best = goal_candidates.top();
-            auto res = backtrack(start,  std::get<0>(best));
+            auto res = backtrack(std::get<0>(best));
             return res;
         }
 
@@ -459,71 +452,120 @@ protected:
         updates = 0;
 
         result = {};
+        use_candidates = search_options.oversearch_distance != 0.0;
         goal_candidates = std::priority_queue<GoalCandidate, std::vector<GoalCandidate>, PairDistance>();
         open.clear();
 
-        start = nullptr;
-        goal = nullptr;
+        start.clear();
+        goal.clear();
     }
 
     void initStartPose(const PointT& pose)
     {
-        try {
-            start = map_.lookup(pose);
-        } catch(const OutsideMapException& e) {
-            throw StartOutOfMapException();
+        bool outside = false;
+        bool occupied = false;
+        auto start_poses = NodeT::getPoses(map_, pose);
+        for(NodeT* s : start_poses) {
+            try {
+                if(!map_.isOccupied(s)) {
+                    // put start node in open data structure
+                    s->distance = 0;
+                    s->mark(NodeT::MARK_OPEN);
+                    s->theta = pose.theta;
+
+                    open.add(s);
+                    start.insert(s);
+                }
+
+            } catch(const OutsideMapException& e) {
+                outside = true;
+            }
         }
-        if(map_.isOccupied(start)) {
-            throw StartNotFreeException();
 
-        } else {
-            NodeT::init(*start, pose);
-            start->distance = 0;
-            start->mark(NodeT::MARK_OPEN);
-            start->theta = pose.theta;
-
-            // put start node in open data structure
-            open.add(start);
+        if(start.empty()) {
+            if(occupied) {
+                throw StartNotFreeException();
+            } else if(outside) {
+                throw StartOutOfMapException();
+            }
         }
     }
 
 
     void initStartNode(const NodeT& node)
     {
-        try {
-            start = map_.lookup(node);
-        } catch(const OutsideMapException& e) {
-            throw StartOutOfMapException();
+        bool outside = false;
+        bool occupied = false;
+        auto start_poses = NodeT::getPoses(map_, node);
+        for(NodeT* s : start_poses) {
+            try {
+                if(!map_.isOccupied(s)) {
+                    // put start node in open data structure
+//                    *s = node;
+                    s->distance = 0;
+                    s->mark(NodeT::MARK_OPEN);
+                    s->theta = node.theta;
+                    s->depth = 0;
+
+                    open.add(s);
+                    start.insert(s);
+                }
+
+            } catch(const OutsideMapException& e) {
+                outside = true;
+            }
         }
-        if(map_.isOccupied(start)) {
-            throw StartNotFreeException();
 
-        } else {
-            *start = node;
-            start->distance = 0;
-            start->depth = 0;
-            start->mark(NodeT::MARK_OPEN);
-
-            // put start node in open data structure
-            open.add(start);
+        if(start.empty()) {
+            if(occupied) {
+                throw StartNotFreeException();
+            } else if(outside) {
+                throw StartOutOfMapException();
+            }
         }
     }
 
     void initGoalPose(const PointT& pose)
     {
-        try {
-            goal = map_.lookup(pose);
-        } catch(const OutsideMapException& e) {
-            throw GoalOutOfMapException();
+//        try {
+//            goal = map_.lookup(pose);
+//        } catch(const OutsideMapException& e) {
+//            throw GoalOutOfMapException();
+//        }
+//        Heuristic::setMap(&map_, *goal);
+
+//        if(map_.isOccupied(goal)) {
+//            throw GoalNotFreeException();
+
+//        } else {
+//            NodeT::init(*goal, pose);
+//            goal->theta = pose.theta;
+//        }
+
+
+        bool outside = false;
+        bool occupied = false;
+        auto goal_poses = NodeT::getPoses(map_, pose);
+        for(NodeT* g : goal_poses) {
+            try {
+                if(!map_.isOccupied(g)) {
+                    // put start node in open data structure
+                    g->theta = pose.theta;
+
+                    goal.insert(g);
+                }
+
+            } catch(const OutsideMapException& e) {
+                outside = true;
+            }
         }
-        Heuristic::setMap(&map_, *goal);
 
-        if(map_.isOccupied(goal)) {
-            throw GoalNotFreeException();
-
-        } else {
-            NodeT::init(*goal, pose);
-            goal->theta = pose.theta;
+        if(start.empty()) {
+            if(occupied) {
+                throw GoalNotFreeException();
+            } else if(outside) {
+                throw GoalOutOfMapException();
+            }
         }
     }
 
@@ -536,22 +578,33 @@ protected:
             NodeT tmp = *current;
             tmp.theta = expansion.begin()->theta;
 
-            PathT path = backtrack(start, &tmp);
+            PathT path = backtrack(&tmp);
             path.insert(path.end(), expansion.begin(), expansion.end());
             result = path;
             return true;
         }
 
         // check if the current node is a goal candiate
-        if(NeighborhoodType::isGoal(goal, current)) {
-            double dist_to_goal = std::hypot(goal->x - current->x, goal->y - current->y);
 
-            if(dist_to_goal < 1e-3) {
-                result = backtrack(start, current);
-                return true;
+        for(const auto& g : goal) {
+            if(NeighborhoodType::isGoal(g, current)) {
+                double dist_to_goal = std::hypot(g->x - current->x, g->y - current->y);
+                if(use_candidates) {
+                    addGoalCandidate(current, dist_to_goal);
+
+                    if(goal_candidate_function) {
+                        PathT p = backtrack(current);
+                        if(goal_candidate_function(p)) {
+                            result = backtrack(current);
+                            return true;
+                        }
+                    }
+
+                } else { // no candidates
+                    result = backtrack(current);
+                    return true;
+                }
             }
-
-            addGoalCandidate(current, dist_to_goal);
         }
 
         return false;
@@ -599,8 +652,8 @@ public:
 
             neighbor->distance = distance;
 
-            if(goal) {
-                Heuristic::compute(neighbor, goal, res);
+            if(!goal.empty()) {
+                Heuristic::compute(neighbor, *goal.begin(), res);
             }
             neighbor->mark(NodeT::MARK_OPEN);
 
@@ -613,7 +666,7 @@ public:
         return NeighborhoodBase::PR_IGNORED;
     }
 
-    PathT backtrack(const NodeT* start, const NodeT* goal) {
+    PathT backtrack(const NodeT* goal) {
         PathT path;
 
         const NodeT* current = goal;
@@ -621,7 +674,7 @@ public:
 
         std::set<const NodeT*> contained;
 
-        while(current != start){
+        while(start.find(current) == start.end()){
             if(contained.find(current) != contained.end()) {
                 return {};
             }
@@ -648,7 +701,7 @@ public:
             const GoalCandidate gc = tmp.top();
             tmp.pop();
 
-            paths.emplace_back(backtrack(start,  std::get<0>(gc)));
+            paths.emplace_back(backtrack(std::get<0>(gc)));
         }
 
         return paths;
@@ -665,11 +718,12 @@ public:
 protected:
     OpenNodesManager open;
     MapManager map_;
-    NodeT* start;
-    NodeT* goal;
+    std::set<const NodeT*> start;
+    std::set<const NodeT*> goal;
 
     const PointT* heuristic_goal;
 
+    bool use_candidates;
     std::priority_queue<GoalCandidate, std::vector<GoalCandidate>, PairDistance> goal_candidates;
     double first_candidate_weight;
     PathT result;

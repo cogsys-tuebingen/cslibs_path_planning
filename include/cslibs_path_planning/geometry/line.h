@@ -62,5 +62,7 @@ protected:
 
 typedef std::vector<Line,Eigen::aligned_allocator<Line>> LineVec;
 
+std::ostream& operator<<(std::ostream& os, const Line& line);
+
 }
 #endif // LINE_H

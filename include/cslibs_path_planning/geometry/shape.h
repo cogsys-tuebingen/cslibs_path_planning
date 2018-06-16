@@ -25,7 +25,8 @@ EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector2d)
 
 // ***todo templatisieren http://eigen.tuxfamily.org/dox/TopicFunctionTakingEigenTypes.html
 // Fwrd. decl:
-   namespace Eigen { template<class T> class aligned_allocator; }
+namespace Eigen { template<class T> class aligned_allocator; }
+
 namespace path_geom {
 
     const double DIST_EPS   = 1e-5;

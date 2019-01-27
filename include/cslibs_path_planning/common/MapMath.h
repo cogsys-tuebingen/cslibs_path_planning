@@ -9,7 +9,7 @@
 #define MAPMATH_H
 
 #include <cmath>
-#include <cslibs_utils/MathHelper.h>
+#include <cslibs_navigation_utilities/MathHelper.h>
 
 #define RTOD(r)   ((r) * 180 / M_PI)
 #define DTOR(d)   ((d) * M_PI / 180)

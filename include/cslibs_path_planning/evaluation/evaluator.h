@@ -16,7 +16,7 @@
 #include "../generic/Algorithms.hpp"
 #include "../generic/DistanceTransformation.hpp"
 #include "../generic/ReedsSheppExpansion.hpp"
-#include <cslibs_utils/VideoWriter.hpp>
+#include <cslibs_navigation_utilities/VideoWriter.hpp>
 
 /// SYSTEM
 #include <iostream>

@@ -9,7 +9,7 @@
 #define HEURISTICS_HPP
 
 /// PROJECT
-#include <cslibs_utils/MathHelper.h>
+#include <cslibs_navigation_utilities/MathHelper.h>
 #include <cslibs_path_planning/generic/Utils.hpp>
 
 /// SYSTEM

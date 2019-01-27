@@ -12,7 +12,7 @@
 #include "Common.hpp"
 
 /// PROJECT
-#include <cslibs_utils/DynamicPriorityQueue.hpp>
+#include <cslibs_navigation_utilities/DynamicPriorityQueue.hpp>
 
 /// SYSTEM
 #include <stack>

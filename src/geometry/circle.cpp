@@ -11,7 +11,7 @@
 */
 #include <cmath>
 #include <iostream>
-#include <cslibs_utils/MathHelper.h>
+#include <cslibs_navigation_utilities/MathHelper.h>
 #include <cslibs_path_planning/geometry/intersector.h>
 #include <cslibs_path_planning/geometry//line.h>
 #include <cslibs_path_planning/geometry//circle.h>

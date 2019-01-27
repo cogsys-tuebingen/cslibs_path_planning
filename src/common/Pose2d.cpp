@@ -6,7 +6,7 @@
  */
 
 
-#include <cslibs_utils/MathHelper.h>
+#include <cslibs_navigation_utilities/MathHelper.h>
 
 #include <cslibs_path_planning/common/Pose2d.h>
 

@@ -14,7 +14,7 @@
 #include<Eigen/StdVector>
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Vector2d)
 #include <memory>
-#include "cslibs_utils/MathHelper.h"
+#include "cslibs_navigation_utilities/MathHelper.h"
 #include <Eigen/Core>
 #include <map>
 #include <list>

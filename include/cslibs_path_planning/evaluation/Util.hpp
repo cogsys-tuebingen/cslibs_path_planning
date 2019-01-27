@@ -11,7 +11,7 @@
 /// PROJECT
 #include "../generic/Common.hpp"
 #include "../common/GridMap2d.h"
-#include <cslibs_utils/CDUniTuebingen.hpp>
+#include <cslibs_navigation_utilities/CDUniTuebingen.hpp>
 
 /// SYSTEM
 #include <opencv2/opencv.hpp>

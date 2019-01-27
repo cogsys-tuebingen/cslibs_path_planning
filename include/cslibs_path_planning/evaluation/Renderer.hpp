@@ -14,7 +14,7 @@
 
 /// PROJECT
 #include <cslibs_path_planning/generic/Utils.hpp>
-#include <cslibs_utils/CDUniTuebingen.hpp>
+#include <cslibs_navigation_utilities/CDUniTuebingen.hpp>
 
 /// SYSTEM
 #include <boost/static_assert.hpp>

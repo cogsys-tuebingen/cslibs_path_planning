@@ -4,6 +4,7 @@
 #include <cslibs_path_planning/generic/NonHolonomicNeighborhood.hpp>
 #include <cslibs_path_planning/generic/SteeringNode.hpp>
 #include <cslibs_path_planning/generic/Common.hpp>
+#include <cslibs_path_planning/common/TmpMath.hpp>
 
 namespace lib_path
 {
@@ -17,7 +18,7 @@ struct SteeringMoves
 };
 
 template <int distance, int steer_steps, int steer_step_deg, int max_steer, int la, int moves = SteeringMoves::FORWARD_BACKWARD, bool reversed = false,
-          int straight_dir_switch = static_cast<int>(std::round((la / (double) distance)))>
+          int straight_dir_switch = tmpmath::round((la / (double) distance))>
 struct SteeringNeighborhood :
         public NonHolonomicNeighborhood<distance, max_steer, moves, reversed, straight_dir_switch> {
     typedef NonHolonomicNeighborhood<distance, max_steer, moves, reversed, straight_dir_switch> Parent;

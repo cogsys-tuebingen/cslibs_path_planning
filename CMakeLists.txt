@@ -166,7 +166,11 @@ target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 #)
 
 
+#
+# TESTS
+#
 
+add_subdirectory(tests)
 
 #
 # INSTALL

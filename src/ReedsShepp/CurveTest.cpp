@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
                       CV_FILLED, CV_AA, 0);
     }
 
-    cv::cvtColor(orig_map, img, CV_GRAY2BGR);
+    cv::cvtColor(orig_map, img, cv::COLOR_GRAY2BGR);
 
     lib_path::CurveRenderer renderer(img);
 

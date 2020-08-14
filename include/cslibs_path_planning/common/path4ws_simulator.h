@@ -10,7 +10,7 @@
 #ifndef BOT4WS_SIMULATOR_H
 #define BOT4WS_SIMULATOR_H
 #include <vector>
-#include <opencv/cv.h>
+#include <opencv2/core/core_c.h>
 
 struct Bot4ws
 {

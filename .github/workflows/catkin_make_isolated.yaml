@@ -17,7 +17,7 @@ jobs:
       run: |
         cd ..
         git clone https://github.com/cogsys-tuebingen/cslibs_navigation_utilities
-    - uses: betwo/github-setup-catkin@v1.1.1
+    - uses: betwo/github-setup-catkin@master
       with:
         ros-version: 'melodic'
         workspace: $HOME/work/cslibs_path_planning/ws
@@ -45,7 +45,7 @@ jobs:
       run: |
         cd ..
         git clone https://github.com/cogsys-tuebingen/cslibs_navigation_utilities
-    - uses: betwo/github-setup-catkin@v1.1.1
+    - uses: betwo/github-setup-catkin@master
       with:
         ros-version: 'noetic'
         workspace: $HOME/work/cslibs_path_planning/ws

@@ -30,6 +30,8 @@ struct HeuristicNode : public Node<PointT> {
     typedef PointT PointType;
     typedef HeuristicNode<PointT> NodeType;
 
+    virtual ~HeuristicNode() = default;
+
     virtual double getTotalCost() const {
         return distance + h;
     }
@@ -72,6 +74,8 @@ struct DHeuristicNode : public HeuristicNode<PointT> {
 
     typedef PointT PointType;
     typedef DHeuristicNode<PointT> NodeType;
+
+    virtual ~DHeuristicNode() = default;
 
     virtual double getTotalCost() const {
         return key1+(key2/key1);//Adaptierung für die 2 Keys (Experimental!)

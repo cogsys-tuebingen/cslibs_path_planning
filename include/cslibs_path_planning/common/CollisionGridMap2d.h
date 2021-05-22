@@ -40,9 +40,9 @@ public:
     CollisionGridMap2d( const CollisionGridMap2d& copy);
     ~CollisionGridMap2d();
 
-    virtual bool isOccupied( const unsigned int x, const unsigned int y, const double theta ) const;
-    virtual bool isFree( const unsigned int x, const unsigned int y, const double theta ) const;
-    virtual bool isNoInformation(const unsigned int x, const unsigned int y, const double theta) const;
+    bool isOccupiedRotated( const unsigned int x, const unsigned int y, const double theta ) const;
+    bool isFreeRotated( const unsigned int x, const unsigned int y, const double theta ) const;
+    bool isNoInformationRotated(const unsigned int x, const unsigned int y, const double theta) const;
 
 
 private:
@@ -68,9 +68,6 @@ private:
     double x_;
     double y_;
     double hw_;
-    double fw_;
-    double bw_;
-    double theta_;
     bool init_;
 
     int idx;

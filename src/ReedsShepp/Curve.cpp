@@ -141,9 +141,8 @@ void Curve::init_segments()
 
         c->set_trace(m_trace);
 
-        if(typeid(**it) == typeid(CircleSegment)) {
-            CircleSegment* c = dynamic_cast<CircleSegment*>(*it);
-            c->set_radius(m_circle_radius);
+        if(CircleSegment* circle = dynamic_cast<CircleSegment*>(c)) {
+            circle->set_radius(m_circle_radius);
         }
     }
 
@@ -169,7 +168,7 @@ void Curve::init_segments()
 bool Curve::handle_sequence()
 {
     if(m_sequence.size() == 3) {
-        if(typeid(*m_sequence[1]) == typeid(CircleSegment)) {
+        if(dynamic_cast<CircleSegment*>(m_sequence[1])) {
             m_weight = handle_sequence_C3();
             return true;
 
@@ -179,7 +178,7 @@ bool Curve::handle_sequence()
         }
 
     } else if(m_sequence.size() == 4) {
-        if(typeid(*m_sequence[1]) == typeid(CircleSegment) && typeid(*m_sequence[2]) == typeid(CircleSegment)) {
+        if(dynamic_cast<CircleSegment*>(m_sequence[1]) && dynamic_cast<CircleSegment*>(m_sequence[2])) {
             m_weight = handle_sequence_C4();
             return true;
         }

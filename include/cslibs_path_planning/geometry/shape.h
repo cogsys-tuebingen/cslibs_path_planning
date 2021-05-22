@@ -76,12 +76,8 @@ public:
         :pos_(x,y),theta_(theta),weight_(0.0) {
     }
 
-    PathPose & operator= (const PathPose& src) {
-        pos_=src.pos_;
-        theta_=src.theta_;
-        weight_=src.weight_;
-        return (*this);
-    }
+    PathPose(const PathPose& copy) = default;
+    PathPose & operator= (const PathPose& src)  = default;
 
     PathPose & assign (const Eigen::Vector2d& pos, double theta) {
         pos_=pos;
@@ -116,6 +112,8 @@ typedef std::vector<PathPose,Eigen::aligned_allocator<PathPose>> PathPoseVec;
 class Shape
 {
 public:
+    virtual ~Shape() = default;
+
     virtual bool selectStartPoint(const Eigen::Vector2d& start,  double tol=path_geom::DIST_EPS) = 0;
     virtual bool selectEndPoint(const Eigen::Vector2d& end,  double tol=path_geom::DIST_EPS) = 0;
     virtual Eigen::Vector2d startPoint() const = 0 ;

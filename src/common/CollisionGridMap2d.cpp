@@ -18,7 +18,7 @@
 using namespace lib_path;
 
 RobotArea::RobotArea(CollisionGridMap2d const*  parent, double forward, double backward, double width, double theta)
-    : parent_(parent), x_(0), y_(0), hw_(width/2.0), fw_(forward), bw_(backward),  theta_(theta), init_(false)
+    : parent_(parent), x_(0), y_(0), hw_(width/2.0), init_(false)
 {
     Eigen::Vector2d fr_(forward, -hw_);
     Eigen::Vector2d fl_(forward, hw_);
@@ -172,7 +172,7 @@ CollisionGridMap2d::~CollisionGridMap2d()
     }
 }
 
-bool CollisionGridMap2d::isOccupied(const unsigned int x, const unsigned int y, const double theta) const
+bool CollisionGridMap2d::isOccupiedRotated(const unsigned int x, const unsigned int y, const double theta) const
 {
     if(!isInMap((int) x,(int) y)) {
         return false;
@@ -193,7 +193,7 @@ bool CollisionGridMap2d::isOccupied(const unsigned int x, const unsigned int y, 
     return occ;
 }
 
-bool CollisionGridMap2d::isFree(const unsigned int x, const unsigned int y, const double theta) const
+bool CollisionGridMap2d::isFreeRotated(const unsigned int x, const unsigned int y, const double theta) const
 {
     if(!isInMap((int) x,(int) y) || !SimpleGridMap2d::isFree(x, y)) {
         return false;
@@ -211,7 +211,7 @@ bool CollisionGridMap2d::isFree(const unsigned int x, const unsigned int y, cons
 }
 
 
-bool CollisionGridMap2d::isNoInformation(const unsigned int x, const unsigned int y, const double theta) const
+bool CollisionGridMap2d::isNoInformationRotated(const unsigned int x, const unsigned int y, const double theta) const
 {
     if(!isInMap((int) x,(int) y)) {
         return false;

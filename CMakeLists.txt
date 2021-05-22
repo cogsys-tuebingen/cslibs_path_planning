@@ -66,18 +66,11 @@ set(SOURCES
     src/sampling/CentroidRadiusGoalRegion.cpp
     src/sampling/SamplingPlanner.cpp
     )
-if()
+# if()
     set(SOURCES ${SOURCES}
         src/common/CollisionGridMap2d.cpp
         )
-endif()
-
-
-#
-# LIST EVERYTHING IN QT
-#
-file(GLOB_RECURSE ALL_HEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} FOLLOW_SYMLINKS include/*.hpp include/*.h)
-add_custom_target(${PROJECT_NAME}_show_all_headers_in_qtc SOURCES ${ALL_HEADERS})
+# endif()
 
 
 add_library(${PROJECT_NAME}  ${SOURCES})
